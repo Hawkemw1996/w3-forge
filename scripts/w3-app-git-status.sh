@@ -1,30 +1,61 @@
 #!/usr/bin/env bash
+#
+# w3-app-git-status.sh
+#
+# Reports git status for an app's configured workspace.
+#
+# Usage:
+#   w3-app-git-status.sh --app <app_id>
+#
 set -euo pipefail
 
-APP="${2:-}"
+W3_FORGE_ROOT="${W3_FORGE_ROOT:-/opt/w3forge-deploy}"
 
-if [[ "${1:-}" != "--app" || -z "$APP" ]]; then
-  echo "ERROR: Usage: $0 --app <app_id>"
+APP=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --app)
+      APP="${2:-}"
+      shift 2
+      ;;
+    *)
+      echo "ERROR: Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$APP" ]]; then
+  echo "ERROR: Missing --app <app_id>"
   exit 1
 fi
 
-CONFIG="/opt/w3forge-deploy/config/apps/${APP}.yml"
+# Validate config first.
+"$W3_FORGE_ROOT/scripts/w3-app-config-validate.sh" --app "$APP" >/dev/null
 
-if [[ ! -f "$CONFIG" ]]; then
-  echo "ERROR: App config not found: $CONFIG"
-  exit 1
-fi
+CONFIG="$W3_FORGE_ROOT/config/apps/${APP}.yml"
 
-WORKSPACE="$(awk '
-  $0 == "paths:" {inside=1; next}
-  inside && /^[^ ]/ {inside=0}
-  inside && $1 == "workspaces:" {
-    sub("^[ ]*workspaces: ", "")
-    gsub("\"", "")
-    print
-    exit
-  }
-' "$CONFIG")"
+# Section-aware nested scalar extractor.
+section_value() {
+  local section="$1"
+  local key="$2"
+  awk -v section="$section" -v key="$key" '
+    $0 == section ":" { inside=1; next }
+    inside && /^[^ \t#]/ { inside=0 }
+    inside {
+      if (match($0, "^[ \t]+"key":")) {
+        line = $0
+        sub("^[ \t]+"key":[ \t]*", "", line)
+        gsub(/^["'\'']|["'\'']$/, "", line)
+        print line
+        exit
+      }
+    }
+  ' "$CONFIG"
+}
+
+WORKSPACE="$(section_value paths workspaces)"
 
 if [[ ! -d "$WORKSPACE/.git" ]]; then
   echo "ERROR: Workspace is not a git repo: $WORKSPACE"

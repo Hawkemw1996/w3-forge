@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
+#
+# w3-app-branch-check.sh
+#
+# Verifies that the current branch in the app's workspace matches the
+# allowed_branch_pattern from config/apps/<app_id>.yml and is not a blocked
+# branch (e.g. main, master).
+#
+# Usage:
+#   w3-app-branch-check.sh --app <app_id>
+#
 set -euo pipefail
+
+W3_FORGE_ROOT="${W3_FORGE_ROOT:-/opt/w3forge-deploy}"
 
 APP=""
 
@@ -21,18 +33,42 @@ if [[ -z "$APP" ]]; then
   exit 1
 fi
 
-CONFIG="/opt/w3forge-deploy/config/apps/${APP}.yml"
+CONFIG="$W3_FORGE_ROOT/config/apps/${APP}.yml"
 
 if [[ ! -f "$CONFIG" ]]; then
   echo "ERROR: App config not found: $CONFIG"
   exit 1
 fi
 
-WORKSPACE="$(grep -A20 '^paths:' "$CONFIG" | awk -F': ' '/workspaces:/ {print $2; exit}' | tr -d '"')"
-PATTERN="$(grep -A20 '^repo:' "$CONFIG" | awk -F': ' '/allowed_branch_pattern:/ {print $2; exit}' | sed "s/^'//; s/'$//")"
+# Section-aware nested scalar extractor.
+section_value() {
+  local section="$1"
+  local key="$2"
+  awk -v section="$section" -v key="$key" '
+    $0 == section ":" { inside=1; next }
+    inside && /^[^ \t#]/ { inside=0 }
+    inside {
+      if (match($0, "^[ \t]+"key":")) {
+        line = $0
+        sub("^[ \t]+"key":[ \t]*", "", line)
+        gsub(/^["'\'']|["'\'']$/, "", line)
+        print line
+        exit
+      }
+    }
+  ' "$CONFIG"
+}
+
+WORKSPACE="$(section_value paths workspaces)"
+PATTERN="$(section_value repo allowed_branch_pattern)"
 
 if [[ -z "$WORKSPACE" ]]; then
   echo "ERROR: Missing paths.workspaces in $CONFIG"
+  exit 1
+fi
+
+if [[ -z "$PATTERN" ]]; then
+  echo "ERROR: Missing repo.allowed_branch_pattern in $CONFIG"
   exit 1
 fi
 
