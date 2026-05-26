@@ -1,0 +1,30 @@
+app_id: w3core
+name: W3 Core
+
+repo:
+  url: ""
+  default_dev_branch: dev/v0.5.40
+  allowed_branch_pattern: '^dev/v[0-9]+\.[0-9]+\.[0-9]+$'
+  blocked_branches:
+    - main
+    - master
+
+paths:
+  deploy: /opt/w3core-deploy
+  runtime: /opt/w3core
+  workspaces: /opt/w3forge-workspaces/w3-core
+  scripts: /opt/scripts
+  logs: /opt/logs/w3core
+  backups: /opt/backups/w3core
+
+service:
+  name: w3core
+
+authority:
+  may_inspect: true
+  may_edit_dev_branch: true
+  may_commit_dev_branch: true
+  may_push_dev_branch: true
+  may_deploy: false
+  may_tag_release: false
+  may_modify_production_data: false
