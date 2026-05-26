@@ -426,3 +426,107 @@ not deploy, does not tag releases, does not push to `main`, does not
 merge into `main`, does not move packages into `/opt/update-packages`,
 and does not modify persistent production data. W3 Core remains the
 production deployment authority.
+
+## v0.4.0 — Admin Interface Foundation
+
+This section is appended for W3 Forge v0.4.0. It does not replace
+earlier content; it extends the standard with conventions for the new
+admin HTTP API and web console.
+
+### Admin console config block
+
+Each app config (`config/apps/<app_id>.yml`) may declare an
+`admin_console:` block. The config validator enforces the following
+required fields:
+
+- `enabled` — boolean, must be present.
+- `listen_host` — defaults to `127.0.0.1`. The validator emits WARN
+  if `listen_host` is not a loopback address.
+- `listen_port` — integer in `1..65535`.
+- `audit_log` — relative path beneath the forge root. The launcher
+  resolves it via `fs.realpath` so symlinks cannot escape.
+- `allowed_scripts` — list of relative script paths (under
+  `paths.scripts`) that the admin layer is permitted to invoke. The
+  validator emits ERROR if any entry matches a forbidden pattern:
+  `deploy`, `release`, `tag`, `publish`, `apply`, `package`,
+  `production`, `migrate`.
+
+### Uniform API envelope
+
+Every `/api/admin/*` route returns the same envelope on success and
+on failure. No route is allowed to call `res.json` directly. The
+shape is:
+
+```ts
+type ApiEnvelope<T> =
+  | { success: true;  data: T }
+  | { success: false; error: { code: string; message: string; details?: unknown } };
+```
+
+Error codes are uppercase identifiers (e.g. `CONTROL_NOT_FOUND`,
+`FORBIDDEN_REMOTE`, `PROTECTED_BRANCH`, `INVALID_REQUEST_BODY`,
+`CONTROL_BUSY`, `PATH_ESCAPE`, `ENDPOINT_NOT_FOUND`). The envelope
+error handler is the only path that emits failure responses; it
+captures the code into the audit log via a `res.json` wrap.
+
+### Body schema lockdown
+
+Control runs accept exactly one body shape:
+
+```ts
+{ controlId: string; appId: string; inputs?: Record<string, string|number|boolean> }
+```
+
+The Zod schema is `.strict()`, so any other key (`args`, `command`,
+`extraArgs`, `cwd`, `env`, `flags`, …) is rejected with
+`INVALID_REQUEST_BODY`. Both `controlId` and `appId` must match
+`^[a-z0-9][a-z0-9-]{0,63}$`.
+
+### Safe runner invariants
+
+The control runner is hardened:
+
+- Array-form `spawn` only. `shell: false` is a hardcoded literal in
+  the source. Never `exec` or `execSync`.
+- Env passed to the child process is built from an allowlist of
+  exactly `[PATH, HOME, LANG, W3_FORGE_ROOT]`. `process.env` is never
+  spread into the child env.
+- The resolved script path is verified via `fs.realpath` to live
+  beneath the forge root; symlinks pointing outside are rejected.
+- `--app <appId>` is always appended. Body `inputs` never become
+  positional CLI arguments — controls that need parameters consume
+  them as named flags declared in the registry.
+- A per-`appId::controlId` in-memory mutex (`actionLock`) blocks
+  concurrent runs with `CONTROL_BUSY`.
+
+### Read-only foundation
+
+The v0.4.0 admin layer is read-only by construction. Every control
+declares:
+
+- `riskLevel: LOW`
+- `runStrategy: 'safe-direct'`
+- `readOnly: true`
+
+No control deploys, publishes, applies a release, tags a release,
+moves packages, or modifies persistent production data. The launcher
+refuses to start on `main` / `master` and the `git/status` route
+returns `403 PROTECTED_BRANCH` on protected refs.
+
+### Network exposure
+
+The Express server binds to the configured `listen_host` (default
+`127.0.0.1`). A guard middleware enforces an IP allowlist of
+loopback, RFC1918 LAN, and Tailscale CGNAT (`100.64.0.0/10`). Other
+sources receive `403 FORBIDDEN_REMOTE`. `ADMIN_ALLOWED_IPS=*`
+disables the guard for local development only — production
+deployments must not expose `/admin` or `/api/admin/*` through
+Caddy / Cloudflare.
+
+### Authority boundary (unchanged)
+
+v0.4.0 stays inside the W3 Forge proposal/development layer. It
+does not deploy, does not tag releases, does not push to `main`,
+does not merge into `main`, does not move packages into
+`/opt/update-packages`, and does not modify persistent production
+data. W3 Core remains the production deployment authority.

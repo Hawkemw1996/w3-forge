@@ -1,5 +1,126 @@
 # Changelog
 
+## v0.4.0
+
+Admin Interface Foundation. v0.4.0 introduces a read-only admin
+console (HTTP API + web UI) for W3 Forge. The console is a
+*foundation* layer only: it inspects state, validates configs, runs
+read-only diagnostics, and proposes review reports. It does not
+deploy, does not tag releases, does not move packages, and does not
+modify persistent production data. W3 Core remains the production
+deployment authority.
+
+### Config + scripts
+
+- Extended `scripts/w3-app-config-validate.sh` to validate a new
+  `admin_console:` block on each app config. The validator enforces:
+  required `enabled`, `listen_host`, `listen_port`, `audit_log`, and
+  `allowed_scripts` fields; WARN when `listen_host` is non-loopback;
+  ERROR if any `allowed_scripts` entry matches a forbidden pattern
+  (`deploy`, `release`, `tag`, `publish`, `apply`, `package`,
+  `production`, `migrate`).
+- Bumped `config/apps/w3forge.yml` to v0.4.0 and added the
+  `admin_console` block: listens on `127.0.0.1:8765`, writes audit
+  log to `logs/admin/audit.jsonl`, allows exactly 11 read-only
+  scripts (config-validate, branch-check, git-status, app-status,
+  local-model-test, inspect, test, workflow-status, diff-summary,
+  review-report, review-ready).
+- Added `scripts/w3-admin-console.sh` launcher. Guards against
+  running on `main`/`master`, runs config validation, locates
+  `backend/dist/index.js`, exports `W3_FORGE_*` env vars, and starts
+  the Express server either foregrounded or backgrounded.
+
+### Backend (`backend/`)
+
+Express + TypeScript admin API. All routes mount at `/api/admin/*`
+and return a uniform `ApiEnvelope<T>` on both success and failure.
+No route ever calls `res.json` directly.
+
+- `src/index.ts` — boot, binds loopback only unless
+  `ADMIN_ALLOW_NON_LOOPBACK=1`, serves built frontend at `/admin`,
+  mounts admin router at `/api/admin`.
+- `src/admin/envelope.ts` — `ApiEnvelopeSuccess<T>`,
+  `ApiEnvelopeFailure`, `AdminError`, `respond.ok` / `respond.err`,
+  `envelopeErrorHandler`, `envelopeNotFound`.
+- `src/admin/forgeConfig.ts` — loads `config/apps/<app>.yml`,
+  enforces the `^[a-z0-9][a-z0-9-]{0,63}$` app-id regex, and
+  resolves any script path via `fs.realpath` so symlinks cannot
+  escape `W3_FORGE_ROOT`.
+- `src/admin/adminGuard.ts` — IP allowlist (loopback, RFC1918 LAN,
+  Tailscale CGNAT `100.64.0.0/10`). Returns `FORBIDDEN_REMOTE` on
+  any other source IP. `ADMIN_ALLOWED_IPS=*` disables in dev.
+- `src/admin/adminAudit.ts` — JSONL audit log. Wraps `res.json` to
+  capture envelope `error.code` on failure responses.
+- `src/admin/index.ts` — `buildAdminRouter`: json(64kb) → guard →
+  audit → 6 sub-routers → `envelopeNotFound` → `envelopeErrorHandler`.
+- Routes: `overviewRoutes`, `systemRoutes` (`/version`, `/system`),
+  `logsRoutes` (`/logs`, `/logs/tail` with 256KB cap +
+  path-traversal guard), `filesRoutes` (`/files`, scoped to
+  `FORGE_ROOT`, hides `.git`/`.env`), `forgeGitRoutes`
+  (`/git/status`, dev/v* filter, 403 `PROTECTED_BRANCH` on
+  main/master), `controlsRoutes` (`GET /controls`,
+  `POST /controls/:id/run`).
+- Controls registry (`src/admin/controls/registry.ts`): 11 entries,
+  every one `riskLevel: LOW`, `runStrategy: 'safe-direct'`,
+  `readOnly: true`. Each control always passes `--app <appId>`.
+- `src/admin/controls/validator.ts` — `RunBodySchema.strict()`
+  accepts exactly `{ controlId, appId, inputs? }` and rejects every
+  other key (`args`, `command`, `extraArgs`, `cwd`, `env`, `flags`,
+  …) with `INVALID_REQUEST_BODY`.
+- `src/admin/controls/safeRunner.ts` — array-form `spawn`,
+  `shell: false` (hardcoded literal), env allowlist exactly
+  `[PATH, HOME, LANG, W3_FORGE_ROOT]`, no `process.env` spread, no
+  `exec` / `execSync`, `fs.realpath` check on the resolved script
+  path.
+- `src/admin/controls/actionLock.ts` — per-`appId::controlId`
+  in-memory mutex; concurrent runs return `CONTROL_BUSY`.
+
+### Frontend (`frontend/admin/`)
+
+Adapted from the W3 Core admin console (Vite + React + Tailwind).
+W3 Core's deploy/release/package/backup pages and dashboard tile
+system were pruned. UI primitives (`Card`, `Badge`, `MetricTile`,
+`SectionHeader`, `States`, `StatusPill`, …) were copied verbatim so
+the Forge console matches the W3 Core look and feel.
+
+- 6 routes: Dashboard, System Status, Controls, Logs, File Browser,
+  Settings.
+- `src/lib/api.ts` typed fetch client unwraps `ApiEnvelope<T>` and
+  throws `AdminApiError` with the envelope's `code` and `message`.
+- `src/components/AdminLayout.tsx` — W3 Forge brand, 6-item nav,
+  footer text: "Forge Foundation · v{version}" and "W3 Core
+  remains deployment authority."
+- No production controls. No deploy / publish / apply / release /
+  package-move affordance anywhere in the UI.
+
+### Tests
+
+Vitest + supertest. 30/30 tests pass.
+
+- `test/envelope.test.ts` — 11 tests. Every route returns the
+  envelope shape on success and on failure. Unknown routes return
+  `404 ENDPOINT_NOT_FOUND`. Unknown control id returns
+  `404 CONTROL_NOT_FOUND`.
+- `test/safeRunner.test.ts` — 19 tests. Body schema lockdown
+  (rejects `args`, `command`, `extraArgs`, `cwd`, `env`, `flags`
+  each with `INVALID_REQUEST_BODY`), argv invariants (always
+  array-form, always `--app <appId>`, no body inputs leak into
+  argv), source-code audit (no `execSync`, no `shell: true`,
+  hardcoded env allowlist), and a `SECRET_LEAK_CANARY` env-spread
+  check.
+
+### Authority boundary (unchanged)
+
+v0.4.0 stays inside the W3 Forge proposal/development layer. The
+admin console is read-only by construction:
+
+- no deploy, no publish, no apply
+- no release tags, no `main` writes, no `main` merges
+- no package movement into `/opt/update-packages`
+- no modification of persistent production data
+
+W3 Core remains the production deployment authority.
+
 ## v0.3.2
 
 Review artifact cleanup. v0.3.1 made the workflow and review-ready

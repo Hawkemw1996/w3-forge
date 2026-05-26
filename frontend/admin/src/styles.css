@@ -1,0 +1,1306 @@
+@import './styles/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* v0.5.26: switch from fixed-height (height: 100%) to min-height so the
+     Admin Console body grows naturally with its content. The Admin Console
+     header and sidebar are no longer pinned to the viewport - the whole
+     page scrolls as one document. */
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+  body {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    background-color: var(--w3-bg);
+    color: var(--w3-text);
+  }
+  /* Native form control palette so date/time pickers and scrollbars match dark. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--w3-navy-950);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--w3-border);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--w3-border-strong);
+  }
+}
+
+@layer components {
+  /* ---------- Card / Tile Shell (v0.5.10) --------------------------------
+     Single, uniform tile shell used by every dashboard / admin tile. The
+     border, header divider, padding, and radius all come from v0.5.10
+     tokens so tiles read as one designed system. Header / body / footer
+     padding follow the documented spacing scale (16-18px desktop,
+     14-16px mobile, see media query below). */
+  .card {
+    background-color: var(--w3-card);
+    border: 1px solid var(--w3-border-tile);
+    border-radius: var(--w3-radius-md);
+    box-shadow: var(--w3-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    color: var(--w3-text);
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+  .card-hover:hover {
+    background-color: var(--w3-card-hover);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--w3-space-2);
+    border-bottom: 1px solid var(--w3-border-section);
+    padding: var(--w3-tile-header-pad-y) var(--w3-tile-header-pad-x);
+  }
+  .card-title {
+    font-size: 0.9375rem;   /* 15px desktop */
+    font-weight: 600;
+    color: var(--w3-text);
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+  }
+  .card-body {
+    padding: var(--w3-tile-body-pad-y) var(--w3-tile-body-pad-x);
+    font-size: 0.875rem;
+    color: var(--w3-text);
+  }
+  .card-footer {
+    border-top: 1px solid var(--w3-border-section);
+    padding: var(--w3-space-3) var(--w3-tile-body-pad-x);
+    font-size: 0.75rem;
+    color: var(--w3-text-muted);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.1rem;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .badge-success {
+    background: var(--status-success-bg);
+    color: var(--status-success);
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+  .badge-info {
+    background: var(--status-info-bg);
+    color: var(--status-info);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+  .badge-warning {
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  .badge-danger {
+    background: var(--status-danger-bg);
+    color: var(--status-danger);
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+  .badge-purple {
+    background: var(--status-purple-bg);
+    color: var(--status-purple);
+    border-color: rgba(167, 139, 250, 0.4);
+  }
+  .badge-teal {
+    background: var(--status-teal-bg);
+    color: var(--status-teal);
+    border-color: rgba(45, 212, 191, 0.4);
+  }
+  .badge-gold {
+    background: var(--w3-gold-bg);
+    color: var(--w3-gold-400);
+    border-color: rgba(217, 164, 65, 0.4);
+  }
+  .badge-slate {
+    background: rgba(154, 168, 194, 0.1);
+    color: var(--w3-text-muted);
+    border-color: var(--w3-border);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    border-radius: var(--w3-radius-sm);
+    border: 1px solid var(--w3-border);
+    background: var(--w3-navy-800);
+    color: var(--w3-text);
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    box-shadow: var(--w3-shadow-sm);
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--w3-card-hover);
+    border-color: var(--w3-border-strong);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    border-color: var(--w3-gold-500);
+    background: var(--w3-gold-500);
+    color: #1A1206;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--w3-gold-400);
+    border-color: var(--w3-gold-400);
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--w3-text-muted);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--w3-text);
+  }
+
+  .input {
+    background: var(--w3-navy-800);
+    border: 1px solid var(--w3-border);
+    border-radius: var(--w3-radius-sm);
+    color: var(--w3-text);
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .input::placeholder {
+    color: var(--w3-text-dim);
+  }
+  .input:focus {
+    border-color: var(--w3-gold-500);
+    box-shadow: 0 0 0 2px rgba(217, 164, 65, 0.25);
+  }
+
+  .kbd {
+    border-radius: 4px;
+    border: 1px solid var(--w3-border);
+    background: var(--w3-navy-800);
+    padding: 0.0625rem 0.375rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px;
+    color: var(--w3-text-muted);
+  }
+
+  .stat-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--w3-text-muted);
+  }
+
+  /* v0.5.30 - Native <select> dark-mode safety net.
+   *
+   * Browsers render the option list using OS defaults unless explicit colors
+   * are applied to <option>. We set dark backgrounds + light text at the
+   * global level so any existing or future native <select> (FileBrowser,
+   * ManualSetup, ControlCard, etc.) stays readable even before being
+   * migrated to <DarkSelect>. The pipeline pickers use <DarkSelect> for a
+   * fully-styled list, but this rule prevents white-on-light bugs anywhere
+   * else in the Admin Console. */
+  select {
+    color: var(--w3-text);
+    background-color: var(--w3-navy-800);
+  }
+  select:disabled {
+    color: var(--w3-text-muted);
+    opacity: 0.7;
+  }
+  select option {
+    background-color: var(--w3-navy-800);
+    color: var(--w3-text);
+  }
+  select option:checked,
+  select option:hover {
+    background-color: var(--w3-navy-700);
+    color: var(--w3-text);
+  }
+  select option:disabled {
+    color: var(--w3-text-dim);
+  }
+  .stat-value {
+    margin-top: 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--w3-text);
+  }
+
+  .console {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--w3-text);
+    background: var(--w3-navy-950);
+    border: 1px solid var(--w3-border);
+    border-radius: var(--w3-radius-sm);
+    padding: 0.75rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+
+  /* ----- LogViewerPanel (v0.5.9) -----
+     Inset terminal-style window used inside Dashboard tiles and on the main
+     Logs page. The PANEL fills its parent's bounded height (flex: 1 1 auto +
+     min-height: 0 in the parent); the SCROLL AREA inside the panel is the
+     only thing that overflow-y scrolls. The parent tile/card never scrolls
+     itself.
+
+     v0.5.9 border polish:
+       - The bordered SHELL (.log-viewer-panel) owns the visible border,
+         rounded corners, dark background, and `overflow: hidden`. It never
+         scrolls itself, so the right/bottom border can never be clipped
+         or thinned by a scrollbar.
+       - The SCROLL AREA (.log-viewer-scroll) lives INSIDE the shell and
+         is the only overflow-y target. Its scrollbar is rendered inside
+         the bordered frame using `scrollbar-gutter: stable` so the gutter
+         is reserved even when there is nothing to scroll. This keeps the
+         right border the same visual weight whether the panel is full or
+         empty.
+       - Border token matches other tile inner panels (Disk Usage uses
+         `var(--w3-border)` for its inner Root Volume / Folder Usage
+         frames). The previous strong border + inset ring made the right
+         and bottom edges read thinner than the top/left because the
+         scrollbar track sat right against the inner ring.
+       - No inset box-shadow ring. A single, uniform 1 px border is what
+         the spec asks for and what Disk Usage uses. A soft outer drop
+         shadow stays so the frame still feels seated inside the tile. */
+  .log-viewer-panel {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #050d1c;
+    border: 1px solid var(--w3-border);
+    border-radius: var(--w3-radius-sm);
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+  .log-viewer-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Reserve scrollbar gutter so the right edge of the content area is
+       stable and the panel's right border keeps a constant visual weight
+       whether or not the content is currently scrollable. */
+    scrollbar-gutter: stable;
+    padding: 0.625rem 0.75rem;
+    box-sizing: border-box;
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--w3-text);
+  }
+  /* Thin, inset scrollbar so the bar never visually touches, covers, or
+     weakens the right border of the bordered shell. Webkit + Firefox in
+     parallel. */
+  .log-viewer-scroll {
+    scrollbar-color: var(--w3-border-strong) transparent;
+    scrollbar-width: thin;
+  }
+  .log-viewer-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .log-viewer-scroll::-webkit-scrollbar-thumb {
+    background: var(--w3-border-strong);
+    border-radius: 3px;
+    /* Inset the thumb so it never rides flush against the right border. */
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  .log-viewer-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  /* Keep long paths/messages from breaking the row grid. */
+  .log-viewer-scroll .log-row-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .log-viewer-empty {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    color: var(--w3-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  /* ----- Dashboard Recent Logs tile (v0.5.11 clean rebuild) -----
+     v0.5.11 removes the v0.5.10 nested-frame layout (.recent-logs-tile-body /
+     .recent-logs-filter / .recent-logs-chip / .recent-logs-viewer /
+     .recent-logs-scroll) and replaces it with a simple, clean structure where
+     the dark log viewport is visibly inset from the outer card border on all
+     four sides. The card is the tile shell border (no second "section" border
+     fighting it). The inner viewport has its own subtle border to define the
+     terminal-style box, but a fixed `.recent-logs-inset` wrapper guarantees
+     the spacing between the viewport and the card so the viewport can NEVER
+     cover or crowd the card border.
+
+     Layout contract (v0.5.11):
+
+       .card                            <-- tile shell border (only outer border)
+         .card-header                   <-- fixed: title + line-count badge
+         .card-body (.recent-logs-body) <-- !p-0 so the inset wrapper owns padding
+           .recent-logs-meta            <-- fixed meta row (no chips, no filters)
+           .recent-logs-inset           <-- fixed padding wrapper (12-16 px)
+             .recent-logs-viewport      <-- dark terminal box.
+                                            overflow-y scrolls.
+                                            width = 100 % of the padded wrapper,
+                                            not 100 % of the card.
+               .recent-logs-rows        <-- log rows
+  */
+  .recent-logs-body {
+    display: flex;
+    flex-direction: column;
+    /* Gap is 0 — .recent-logs-inset owns its own top padding so the dark
+       viewport never sits flush against the meta row. */
+    gap: 0;
+    /* No padding here — .recent-logs-meta and .recent-logs-inset each own
+       their own padding. !p-0 on the React side overrides the default
+       .card-body padding. */
+    overflow: hidden !important;
+    min-height: 0;
+  }
+  .recent-logs-meta {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--w3-space-2);
+    /* Match the rest of the card-body inset on top + horizontal. The bottom
+       gap to the viewport is owned by .recent-logs-inset's top padding. */
+    padding: var(--w3-space-3) var(--w3-tile-body-pad-x) var(--w3-space-2);
+    font-size: 0.75rem;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .recent-logs-meta .meta-sep {
+    color: var(--w3-text-dim);
+  }
+
+  /* The inset wrapper IS the spacing. It uses 12 px on top (between meta and
+     viewport) and 14 px on the other three sides (between viewport and the
+     outer card border). This is the rule that makes the dark viewport sit
+     visibly inside the card on every density and screen width. */
+  .recent-logs-inset {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    /* Top is tighter because .recent-logs-meta already contributes space.
+       Bottom and sides match the surrounding tile inset so the viewport's
+       gap to the card border is uniform. */
+    padding: 0 14px 14px 14px;
+    box-sizing: border-box;
+  }
+
+  /* The dark terminal viewport. Owns its own subtle inner border + radius so
+     it reads as a contained box. overflow-y scrolls; the card never scrolls.
+     scrollbar-gutter: stable keeps the right border weight uniform whether
+     the content currently scrolls or not. */
+  .recent-logs-viewport {
+    flex: 1 1 auto;
+    min-height: 200px;
+    width: 100%;
+    background: #050d1c;
+    border: 1px solid var(--w3-border-section);
+    border-radius: var(--w3-radius-sm);
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    padding: var(--w3-space-2) var(--w3-space-3);
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--w3-text);
+    scrollbar-color: var(--w3-border-strong) transparent;
+    scrollbar-width: thin;
+  }
+  .recent-logs-viewport::-webkit-scrollbar {
+    width: 6px;
+  }
+  .recent-logs-viewport::-webkit-scrollbar-thumb {
+    background: var(--w3-border-strong);
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
+  .recent-logs-viewport::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .recent-logs-rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .recent-logs-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    width: 100%;
+    padding: var(--w3-space-3);
+    color: var(--w3-text-muted);
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+
+  /* Log row format — consistent grid:
+       [category]  [time]  [method path]  [status]  message
+     Row height stays uniform thanks to `min-height` + `align-items:center`.
+     Hover is subtle, no per-row dividers (color competition was a problem
+     in v0.5.9). */
+  .log-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 22px;
+    padding: 2px 0;
+    border-radius: 4px;
+  }
+  .log-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .log-row .log-row-ts {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--w3-text-dim);
+    white-space: nowrap;
+  }
+  .log-row .log-row-method {
+    flex: 0 0 auto;
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: var(--w3-text-muted);
+    white-space: nowrap;
+    max-width: 38ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .log-row .log-row-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--w3-text);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .log-row-empty {
+    color: var(--w3-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  .table-dark {
+    width: 100%;
+    text-align: left;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+  }
+  .table-dark thead tr {
+    background: var(--w3-navy-800);
+  }
+  .table-dark thead th {
+    color: var(--w3-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 1rem;
+  }
+  .table-dark tbody tr {
+    border-top: 1px solid var(--w3-border);
+    transition: background-color 120ms ease;
+  }
+  .table-dark tbody tr:hover {
+    background: var(--w3-card-hover);
+  }
+  .table-dark tbody td {
+    padding: 0.5rem 1rem;
+    color: var(--w3-text);
+  }
+
+  .progress-track {
+    height: 6px;
+    width: 100%;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 240ms ease;
+  }
+
+  /* ============================================================
+   * Dashboard tile primitives (v0.5.10)
+   * Shared visual building blocks so Recent Logs / Disk Usage /
+   * Memory · CPU / Packages tiles all read against the same
+   * spacing, border, and typography rules.
+   * ============================================================ */
+
+  /* Section label — small uppercase label above an inner section.
+     Used for "Root Volume Usage", "Folder Usage", "Container Memory",
+     "CPU Load", "Process Memory". */
+  .dash-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .dash-section-helper {
+    font-size: 10.5px;
+    color: var(--w3-text-dim);
+    line-height: 1.2;
+  }
+
+  /* Inner bordered section — single inset frame (border-section level).
+     Used for the Root Volume panel and grouped metric blocks. */
+  .dash-section {
+    border: 1px solid var(--w3-border-section);
+    border-radius: var(--w3-radius-sm);
+    background: rgba(7, 18, 37, 0.5);
+    padding: var(--w3-tile-section-pad);
+  }
+  .dash-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--w3-space-2);
+    margin-bottom: var(--w3-space-2);
+  }
+
+  /* Generic row inside a section. Subtle bottom divider so the rows are
+     scannable without looking like a table. The last row's divider is
+     suppressed. */
+  .dash-row {
+    display: flex;
+    align-items: center;
+    gap: var(--w3-space-3);
+    padding: 9px 0;
+    border-bottom: 1px solid var(--w3-border-row);
+  }
+  .dash-row:last-child {
+    border-bottom: 0;
+  }
+
+  /* Folder row used by Disk Usage. Two-line layout: folder name primary
+     on top, muted path beneath; right-aligned size. Rows align vertically
+     so the size column is easy to scan. */
+  .dash-folder-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--w3-space-3);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--w3-border-row);
+  }
+  .dash-folder-row:last-child {
+    border-bottom: 0;
+  }
+  .dash-folder-row__main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .dash-folder-row__name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--w3-text);
+    line-height: 1.2;
+  }
+  .dash-folder-row__path {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 11px;
+    color: var(--w3-text-dim);
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dash-folder-row__size {
+    flex: 0 0 auto;
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    color: var(--w3-text);
+    white-space: nowrap;
+  }
+  .dash-folder-row__size--muted {
+    color: var(--w3-text-muted);
+  }
+
+  /* Inline metric row used by Memory / CPU progress sections. Two lines:
+     a label row (label left, value right) and a progress bar beneath. */
+  .dash-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dash-metric__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--w3-space-2);
+  }
+  .dash-metric__label {
+    font-size: 12px;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .dash-metric__value {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    color: var(--w3-text);
+    line-height: 1.2;
+  }
+  .dash-metric__meta {
+    font-size: 11px;
+    color: var(--w3-text-dim);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  /* Compact stat card used for Process RSS / Heap. Lighter weight than
+     MetricTile so process memory stays visually secondary to container
+     memory. */
+  .dash-stat {
+    border: 1px solid var(--w3-border-section);
+    border-radius: var(--w3-radius-sm);
+    padding: 10px var(--w3-space-3);
+    background: rgba(7, 18, 37, 0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .dash-stat__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .dash-stat__value {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    color: var(--w3-text);
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  /* Optional progress bar size variant for dashboard rows. */
+  .progress-track--lg {
+    height: 8px;
+  }
+
+  /* ============================================================
+   * System Status primitives (v0.5.12)
+   * Roll the working dashboard tile/card pattern out to the
+   * System Status page so every status section reads as an inset
+   * panel inside a polished card — not a raw block of text glued
+   * to the card border. Mirrors `.dash-section` / `.dash-stat` so
+   * the two pages feel like part of one design system.
+   *
+   * v0.5.12 fixes:
+   *   - Replace the broken inline `bg-[var(--w3-bg-deep)]` panel
+   *     (token never existed → transparent panel) with a real
+   *     bordered `.sys-section`.
+   *   - Stop the Folder Usage table from running flush to the
+   *     tile border + overflowing horizontally on mobile by giving
+   *     it a `.sys-table-scroll` shell.
+   *   - Group Memory / CPU / Root Volume / Git sub-blocks inside
+   *     `.sys-section` so each one has a visible inner frame with
+   *     consistent inset spacing.
+   * ============================================================ */
+
+  /* Inner bordered section — the System Status workhorse. Same
+     visual weight as `.dash-section` so the two pages line up. */
+  .sys-section {
+    border: 1px solid var(--w3-border-section);
+    border-radius: var(--w3-radius-sm);
+    background: rgba(7, 18, 37, 0.5);
+    padding: var(--w3-tile-section-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--w3-space-2);
+    min-width: 0;
+  }
+  .sys-section + .sys-section {
+    margin-top: var(--w3-space-3);
+  }
+  .sys-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--w3-space-2);
+  }
+  .sys-section__label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .sys-section__meta {
+    font-size: 11px;
+    color: var(--w3-text-dim);
+    line-height: 1.2;
+  }
+  .sys-section__helper {
+    font-size: 11px;
+    color: var(--w3-text-dim);
+    line-height: 1.35;
+  }
+  /* Compact info paragraph for "Not Wired" tiles — sits inside a
+     sys-section so the placeholder reads as a real panel. */
+  .sys-section__note {
+    font-size: 12px;
+    color: var(--w3-text-muted);
+    line-height: 1.5;
+  }
+
+  /* Stat grids inside a tile body or a sys-section. The grid
+     collapses to a single column on mobile so no MetricTile ever
+     squeezes to an unreadable width. */
+  .sys-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--w3-space-2);
+  }
+  .sys-stat-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (max-width: 767px) {
+    .sys-stat-grid,
+    .sys-stat-grid--3 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Inline metric row used by Memory container + CPU load. Same
+     shape as `.dash-metric` but scoped to System Status so future
+     dashboard tweaks can't accidentally widen this. */
+  .sys-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sys-metric__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--w3-space-2);
+    font-size: 12px;
+  }
+  .sys-metric__label {
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .sys-metric__value {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    color: var(--w3-text);
+    line-height: 1.2;
+  }
+
+  /* Horizontal scroll shell for the Folder Usage table so the
+     table cells never bleed past the tile border on narrow viewports
+     and the tile body's bottom inset stays clean. The shell owns the
+     bottom border-radius mask so the table corners can't visually
+     escape the card. The TILE uses `noBodyPadding`; this shell adds
+     the padding back at the inset level. */
+  .sys-table-scroll {
+    padding: 0 var(--w3-tile-body-pad-x) var(--w3-tile-body-pad-y);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-gutter: stable;
+  }
+  .sys-table-scroll .table-dark {
+    min-width: 640px; /* keep the columns readable; the shell scrolls */
+  }
+  @media (max-width: 767px) {
+    .sys-table-scroll {
+      padding: 0 14px 14px 14px;
+    }
+  }
+
+  /* Subtle in-section divider — replaces the inline
+     `border-t pt-3` we used in v0.5.3 which leaked a Tailwind
+     default color and looked thinner than the tile borders. */
+  .sys-divider {
+    border-top: 1px solid var(--w3-border);
+    margin-top: var(--w3-space-3);
+    padding-top: var(--w3-space-3);
+  }
+
+  /* Commit blurb inside the Git tile — uses sys-section colors so
+     it lines up with every other inset frame on the page. */
+  .sys-commit {
+    border: 1px solid var(--w3-border-section);
+    background: rgba(7, 18, 37, 0.55);
+    border-radius: var(--w3-radius-sm);
+    padding: 10px var(--w3-space-3);
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .sys-commit__subject {
+    font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    color: var(--w3-text);
+  }
+  .sys-commit__meta {
+    margin-top: 2px;
+    color: var(--w3-text-muted);
+    font-size: 11px;
+  }
+}
+
+/* =========================================================================
+ * v0.5.3 — Dashboard tile system + react-grid-layout integration.
+ * Kept in a dedicated section at the bottom so future releases can isolate
+ * the tile chrome from the rest of the theme.
+ * ========================================================================= */
+
+@layer components {
+  /* Base tile shell — extends .card with tile-specific spacing.
+     v0.5.3.1: strict flex column + min-height:0 so the body shrinks to fit
+     the grid cell instead of forcing the cell to grow. overflow:hidden on the
+     shell makes sure NOTHING spills outside the tile boundary, while the body
+     scrolls vertically when its content is taller than the available room. */
+  .w3-tile {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .w3-tile > .card-header {
+    flex: 0 0 auto;
+  }
+  .w3-tile > .card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .w3-tile > .card-footer {
+    flex: 0 0 auto;
+  }
+
+  /* Editing chrome — gold ring + slightly elevated background. */
+  .w3-tile--editing {
+    background-color: var(--w3-card-elev);
+    box-shadow:
+      var(--w3-shadow-md),
+      0 0 0 2px rgba(217, 164, 65, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Drag handle button shown only in edit mode. */
+  .w3-tile-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    width: 24px;
+    border-radius: var(--w3-radius-sm);
+    border: 1px solid var(--w3-border);
+    background: rgba(217, 164, 65, 0.1);
+    color: var(--w3-gold-400);
+    cursor: grab;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+  .w3-tile-drag-handle:hover {
+    background: rgba(217, 164, 65, 0.2);
+    border-color: var(--w3-gold-500);
+  }
+  .w3-tile-drag-handle:active {
+    cursor: grabbing;
+  }
+
+  /* Compact "4 × 3" indicator in the bottom-left corner while editing. */
+  .w3-tile-size-indicator {
+    position: absolute;
+    bottom: 4px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--w3-gold-400);
+    background: rgba(11, 23, 51, 0.7);
+    padding: 1px 6px;
+    border-radius: 9999px;
+    pointer-events: none;
+    letter-spacing: 0.04em;
+  }
+
+  /* Edit-mode toolbar shown above the grid. */
+  .w3-edit-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: var(--w3-card);
+    border: 1px solid var(--w3-gold-500);
+    border-radius: var(--w3-radius-md);
+    padding: 0.625rem 1rem;
+    box-shadow: var(--w3-shadow-sm);
+  }
+  .w3-edit-toolbar__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--w3-gold-100);
+  }
+  .w3-edit-toolbar__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  /* Subtle grid lines on the dashboard while editing. */
+  .w3-dashboard-grid--editing {
+    background-image:
+      linear-gradient(rgba(217, 164, 65, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(217, 164, 65, 0.05) 1px, transparent 1px);
+    background-size: 80px 80px;
+    background-position: 0 0;
+    border-radius: var(--w3-radius-md);
+    padding: 4px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * react-grid-layout overrides.
+ * The library ships /node_modules/react-grid-layout/css/styles.css and
+ * /node_modules/react-resizable/css/styles.css; we import those in main.tsx
+ * for the baseline drag/resize visuals, then override here for W3 dark theme.
+ * ------------------------------------------------------------------------- */
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(217, 164, 65, 0.18) !important;
+  border: 2px dashed var(--w3-gold-500);
+  border-radius: var(--w3-radius-md);
+  opacity: 1 !important;
+  transition-duration: 100ms;
+  z-index: 2;
+  user-select: none;
+}
+
+.react-grid-item > .react-resizable-handle {
+  background-image: none;
+  background-color: transparent;
+  width: 18px;
+  height: 18px;
+  bottom: 2px;
+  right: 2px;
+  z-index: 3;
+}
+
+/* v0.5.3.1: rely on RGL's native isResizable={editMode} to control handle
+   visibility instead of fragile sibling-selector CSS hacks. The previous
+   .w3-tile:not(.w3-tile--editing) ~ .react-resizable-handle rule never fired
+   because .w3-tile is a CHILD of .react-grid-item, not a sibling of the
+   handle. RGL simply omits the handle element when isResizable is false. */
+
+/* Render the gold corner triangle on every visible resize handle inside an
+   edit-mode grid. Scoping to .w3-dashboard-grid--editing keeps it tight to
+   the dashboard. */
+.w3-dashboard-grid--editing .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--w3-gold-500);
+  border-bottom: 2px solid var(--w3-gold-500);
+  border-bottom-right-radius: 2px;
+  pointer-events: none;
+}
+.w3-dashboard-grid--editing .react-resizable-handle:hover::after {
+  border-right-color: var(--w3-gold-300, var(--w3-gold-400));
+  border-bottom-color: var(--w3-gold-300, var(--w3-gold-400));
+}
+
+/* v0.5.3.1: make sure RGL's grid item itself never imposes a hidden floor
+   on its children. Without min-width:0 / min-height:0 a flex/grid descendant
+   forces the cell to expand to fit, defeating overflow:hidden on the tile. */
+.react-grid-item {
+  min-width: 0;
+  min-height: 0;
+}
+
+.react-grid-item.react-draggable-dragging {
+  z-index: 100;
+  cursor: grabbing;
+}
+
+/* ----- v0.5.3 tile frame for widgets that own their own Card chrome ----- */
+/* These widgets render their existing v0.5.2 Card. We wrap them in a
+   transparent frame so we can add a gold ring + drag-handle overlay in
+   edit mode without rewriting the widget body.
+   v0.5.3.1: tightened with min-height:0 + overflow:hidden so the inner Card
+   shrinks inside the grid cell instead of overflowing. The inner Card itself
+   needs to behave like a tile (flex column, body scrolls); we re-apply the
+   same rules here so widgets that did not adopt DashboardTile still fit. */
+.w3-tile-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.w3-tile-frame > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Force the v0.5.2 widget's inner .card to behave like a tile shell so it
+   never spills outside the grid cell. */
+.w3-tile-frame > .card {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.w3-tile-frame > .card > .card-header {
+  flex: 0 0 auto;
+}
+.w3-tile-frame > .card > .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.w3-tile-frame > .card > .card-footer {
+  flex: 0 0 auto;
+}
+
+.w3-tile-frame--editing {
+  outline: 2px solid var(--w3-gold-500);
+  outline-offset: -2px;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: outline-color 120ms ease, box-shadow 120ms ease;
+}
+
+.w3-tile-edit-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.w3-tile-edit-overlay > * {
+  pointer-events: auto;
+}
+
+/* =========================================================================
+ * v0.5.4 — Responsive typography + mobile layout helpers.
+ * Standardize page/section/card title sizes across all admin pages, and
+ * tighten the Dashboard / Packages / Backups / File Browser layouts on
+ * sub-768px screens. Mobile breakpoint = 768px to match Tailwind `md:`.
+ * ========================================================================= */
+
+@layer components {
+  /* ----- Standard typography utility classes (desktop defaults) ----- */
+  .page-eyebrow {
+    font-size: 0.6875rem;       /* 11px */
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--w3-text-muted);
+    line-height: 1.2;
+  }
+  .page-title {
+    font-size: 1.5rem;          /* 24px desktop */
+    font-weight: 600;
+    color: var(--w3-text);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .page-subtitle {
+    font-size: 0.875rem;        /* 14px */
+    font-weight: 400;
+    color: var(--w3-text-muted);
+    line-height: 1.45;
+  }
+  .section-title {
+    font-size: 1rem;            /* 16px */
+    font-weight: 600;
+    color: var(--w3-text);
+    letter-spacing: -0.005em;
+    line-height: 1.3;
+  }
+  /* card-title is already defined in components above; this just upgrades
+     its sizing to 15-17px to match the v0.5.4 spec on desktop and adds the
+     mobile floor. */
+  .main-value {
+    font-size: 1.25rem;         /* 20px desktop */
+    font-weight: 600;
+    color: var(--w3-text);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .body-text {
+    font-size: 0.875rem;        /* 14px desktop */
+    font-weight: 400;
+    color: var(--w3-text);
+    line-height: 1.5;
+  }
+  .body-muted {
+    font-size: 0.8125rem;       /* 13px desktop */
+    font-weight: 400;
+    color: var(--w3-text-muted);
+    line-height: 1.5;
+  }
+
+  /* ----- Mobile overrides (<768px) ----- */
+  @media (max-width: 767px) {
+    .page-title {
+      font-size: 1.5rem;        /* 24px, capped at 28px per spec */
+    }
+    .page-subtitle {
+      font-size: 0.9375rem;     /* 15px */
+    }
+    .section-title {
+      font-size: 1rem;          /* 16px */
+    }
+    .card-title {
+      font-size: 1rem;          /* 16px, capped at 20px per spec */
+    }
+    .main-value {
+      font-size: 1.25rem;       /* 20px, capped at 24px per spec */
+    }
+    .body-text {
+      font-size: 0.9375rem;     /* 15px */
+    }
+    .body-muted {
+      font-size: 0.875rem;      /* 14px */
+    }
+    /* v0.5.10 mobile padding: 14-16px on tile header/body, 12px footer. */
+    .card-header {
+      padding: 12px 14px;
+    }
+    .card-body {
+      padding: 14px;
+    }
+    .card-footer {
+      padding: 10px 14px;
+    }
+    .recent-logs-meta {
+      padding: 12px 14px 8px;
+    }
+    .recent-logs-inset {
+      padding: 0 12px 12px 12px;
+    }
+    .recent-logs-viewport {
+      min-height: 160px;
+    }
+  }
+
+  /* ----- Mobile-card list pattern (Packages / Backups / File Browser) -----
+     Pages render a desktop table (.<x>-desktop-table) and a mobile stacked
+     card list (.<x>-mobile-cards). We toggle visibility with a single rule
+     so the page components stay declarative. */
+  .mobile-cards {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .desktop-table {
+    display: block;
+  }
+  @media (max-width: 767px) {
+    .mobile-cards {
+      display: flex;
+    }
+    .desktop-table {
+      display: none;
+    }
+  }
+
+  /* Generic stacked card row used by Packages / Backups / File Browser. */
+  .stack-card {
+    background: var(--w3-card);
+    border: 1px solid var(--w3-border);
+    border-radius: var(--w3-radius-md);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    transition: background-color 120ms ease, border-color 120ms ease;
+  }
+  .stack-card:hover {
+    background: var(--w3-card-hover);
+    border-color: var(--w3-border-strong);
+  }
+  .stack-card__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--w3-text);
+    word-break: break-all;
+    line-height: 1.35;
+  }
+  .stack-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--w3-text-muted);
+  }
+  .stack-card__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .stack-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+  }
+}

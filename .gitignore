@@ -18,3 +18,10 @@ docs/reports/*
 .env
 .env.*
 *.log
+
+# v0.4.0: backend + frontend build artifacts.
+backend/node_modules/
+backend/dist/
+frontend/admin/node_modules/
+frontend/admin/dist/
+node_modules/

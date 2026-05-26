@@ -1,6 +1,6 @@
 app_id: w3forge
 name: W3 Forge
-version: 0.1.0
+version: 0.4.0
 
 repo:
   url: ""
@@ -44,3 +44,25 @@ tests:
     - bash -n scripts/*.sh
     - ./scripts/w3-app-config-validate.sh --app w3forge
     - ./scripts/w3-app-branch-check.sh --app w3forge
+
+# v0.4.0: Forge Admin Interface foundation.
+# Loopback-bound local admin UI + backend. Controls list is the
+# allowlist of Forge-safe scripts the safeRunner will execute.
+# No deploy / release / package / backup-restore controls.
+admin_console:
+  enabled: true
+  listen_host: 127.0.0.1
+  listen_port: 8765
+  audit_log: logs/admin/audit.jsonl
+  allowed_scripts:
+    - w3-app-config-validate.sh
+    - w3-app-branch-check.sh
+    - w3-app-git-status.sh
+    - w3-app-status.sh
+    - w3-app-local-model-test.sh
+    - w3-app-inspect.sh
+    - w3-app-test.sh
+    - w3-app-workflow-status.sh
+    - w3-app-diff-summary.sh
+    - w3-app-review-report.sh
+    - w3-app-review-ready.sh

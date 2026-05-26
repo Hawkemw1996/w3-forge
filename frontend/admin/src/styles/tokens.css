@@ -1,0 +1,97 @@
+/*
+ * W3 Core v0.5.10 — Dashboard Visual System tokens.
+ *
+ * Single source of truth for color, spacing, border, radius, and shadow
+ * primitives used by the Admin Operations Console. v0.5.10 introduces a
+ * formal spacing scale + border hierarchy + typography scale so every
+ * dashboard tile renders against the same visual rules.
+ *
+ * The Tailwind theme (tailwind.config.js) mirrors a subset of these tokens
+ * so components can reference them via Tailwind utility classes or via
+ * CSS variables (e.g. var(--w3-space-4)).
+ */
+
+:root {
+  /* --- Color (unchanged from v0.5.1) ----------------------------------- */
+  --w3-navy-950: #071225;
+  --w3-navy-900: #0B1733;
+  --w3-navy-800: #102246;
+  --w3-navy-700: #172F5F;
+  --w3-navy-600: #1F3D7A;
+  --w3-gold-500: #D9A441;
+  --w3-gold-400: #F0C15A;
+  --w3-gold-100: #FFF4D6;
+  --w3-bg: var(--w3-navy-950);
+  --w3-surface: var(--w3-navy-900);
+  --w3-card: #0F1E40;
+  --w3-card-hover: #142A55;
+  --w3-card-elev: #17305F;
+  --w3-text: #E6ECF5;
+  --w3-text-muted: #9AA8C2;
+  --w3-text-dim: #6B7A95;
+  --status-success: #22C55E;
+  --status-info: #3B82F6;
+  --status-warning: #F59E0B;
+  --status-danger: #EF4444;
+  --status-purple: #A78BFA;
+  --status-teal: #2DD4BF;
+  --status-success-bg: rgba(34, 197, 94, 0.12);
+  --status-info-bg: rgba(59, 130, 246, 0.12);
+  --status-warning-bg: rgba(245, 158, 11, 0.14);
+  --status-danger-bg: rgba(239, 68, 68, 0.14);
+  --status-purple-bg: rgba(167, 139, 250, 0.14);
+  --status-teal-bg: rgba(45, 212, 191, 0.14);
+  --w3-gold-bg: rgba(217, 164, 65, 0.14);
+
+  /* --- v0.5.10 border hierarchy ---------------------------------------- *
+   * Three (and only three) levels of visual boundary on the dashboard:
+   *
+   *   --w3-border-tile     - the outer tile shell. Used once per tile.
+   *   --w3-border-section  - inner section frame (root volume panel,
+   *                          log viewer shell, grouped metric block).
+   *   --w3-border-row      - subtle row divider for list rows.
+   *
+   * The plain `--w3-border` / `--w3-border-strong` aliases stay around
+   * so non-dashboard surfaces (Backups, Packages, File Browser) keep
+   * rendering against the v0.5.x palette.
+   */
+  --w3-border:         #1E3566;
+  --w3-border-strong:  #2A4480;
+  --w3-border-tile:    #1E3566;
+  --w3-border-section: #1B2E55;
+  --w3-border-row:     rgba(154, 168, 194, 0.12);
+
+  /* --- v0.5.10 spacing scale ------------------------------------------- *
+   * Allowed dashboard spacing values. Anything inside a dashboard tile
+   * MUST resolve to one of these (or 6px for chip internals only).
+   */
+  --w3-space-1: 6px;   /* chips/badges only */
+  --w3-space-2: 8px;
+  --w3-space-3: 12px;
+  --w3-space-4: 16px;
+  --w3-space-5: 20px;
+  --w3-space-6: 24px;
+
+  /* Tile-internal padding presets (header / body / inner section). */
+  --w3-tile-header-pad-x: 18px;
+  --w3-tile-header-pad-y: 14px;
+  --w3-tile-body-pad-x:   18px;
+  --w3-tile-body-pad-y:   16px;
+  --w3-tile-section-pad:  12px;
+
+  /* Shadows + radii (unchanged). */
+  --w3-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --w3-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --w3-shadow-lg: 0 10px 28px rgba(0, 0, 0, 0.55);
+  --w3-radius-sm: 6px;
+  --w3-radius-md: 10px;
+  --w3-radius-lg: 14px;
+}
+
+html,
+body,
+#root {
+  background-color: var(--w3-bg);
+  color: var(--w3-text);
+  color-scheme: dark;
+}

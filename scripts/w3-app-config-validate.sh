@@ -182,6 +182,105 @@ fi
 echo
 
 # ---------------------------------------------------------------------------
+# v0.4.0: admin_console block validation (optional section).
+# ---------------------------------------------------------------------------
+#
+# If the admin_console section is present, validate its required fields.
+# The block is optional; absence is OK (no admin UI configured).
+
+if grep -qE '^admin_console:[[:space:]]*$' "$CONFIG"; then
+  echo "Admin console"
+  echo "-------------"
+
+  ENABLED="$(section_value admin_console enabled)"
+  HOST="$(section_value admin_console listen_host)"
+  PORT="$(section_value admin_console listen_port)"
+  AUDIT="$(section_value admin_console audit_log)"
+
+  if [[ -z "$ENABLED" ]]; then
+    echo "ERROR: admin_console.enabled is required"
+    ERRORS=$((ERRORS + 1))
+  else
+    echo "OK:    admin_console.enabled = $ENABLED"
+  fi
+
+  if [[ -z "$HOST" ]]; then
+    echo "ERROR: admin_console.listen_host is required"
+    ERRORS=$((ERRORS + 1))
+  else
+    if [[ "$HOST" != "127.0.0.1" && "$HOST" != "localhost" && "$HOST" != "::1" ]]; then
+      echo "WARN:  admin_console.listen_host=$HOST is not loopback; foundation expects 127.0.0.1"
+      WARNINGS=$((WARNINGS + 1))
+    else
+      echo "OK:    admin_console.listen_host = $HOST"
+    fi
+  fi
+
+  if [[ -z "$PORT" ]]; then
+    echo "ERROR: admin_console.listen_port is required"
+    ERRORS=$((ERRORS + 1))
+  elif ! [[ "$PORT" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: admin_console.listen_port must be numeric: $PORT"
+    ERRORS=$((ERRORS + 1))
+  else
+    echo "OK:    admin_console.listen_port = $PORT"
+  fi
+
+  if [[ -z "$AUDIT" ]]; then
+    echo "ERROR: admin_console.audit_log is required"
+    ERRORS=$((ERRORS + 1))
+  else
+    echo "OK:    admin_console.audit_log = $AUDIT"
+  fi
+
+  # allowed_scripts must be a non-empty list. Items live in a YAML list under
+  # the admin_console block. Use awk to walk the section and count list items.
+  ALLOWED_COUNT="$(awk '
+    $0 == "admin_console:" { inside=1; next }
+    inside && /^[^ \t#]/ { inside=0 }
+    inside && /^[ \t]+allowed_scripts:[ \t]*$/ { in_list=1; next }
+    in_list && /^[ \t]+-[ \t]+/ { count++; next }
+    in_list && /^[ \t]+[A-Za-z_]/ { in_list=0 }
+    END { print count+0 }
+  ' "$CONFIG")"
+
+  if [[ "$ALLOWED_COUNT" -lt 1 ]]; then
+    echo "ERROR: admin_console.allowed_scripts must list at least one script"
+    ERRORS=$((ERRORS + 1))
+  else
+    echo "OK:    admin_console.allowed_scripts has $ALLOWED_COUNT entries"
+  fi
+
+  # Forbidden script patterns: anything that suggests deploy/release/package
+  # promotion / restore is rejected here as defense-in-depth even though the
+  # foundation registry would refuse them too.
+  FORBIDDEN_HIT="$(awk '
+    $0 == "admin_console:" { inside=1; next }
+    inside && /^[^ \t#]/ { inside=0 }
+    inside && /^[ \t]+allowed_scripts:[ \t]*$/ { in_list=1; next }
+    in_list && /^[ \t]+-[ \t]+/ {
+      line=$0
+      sub(/^[ \t]+-[ \t]+/, "", line)
+      if (line ~ /(deploy|release|package-(promote|install)|backup-restore|hardreset|patch-apply|prod)/) {
+        print line
+      }
+      next
+    }
+    in_list && /^[ \t]+[A-Za-z_]/ { in_list=0 }
+  ' "$CONFIG")"
+
+  if [[ -n "$FORBIDDEN_HIT" ]]; then
+    echo "ERROR: admin_console.allowed_scripts contains forbidden patterns:"
+    echo "$FORBIDDEN_HIT" | sed 's/^/         /'
+    ERRORS=$((ERRORS + 1))
+  else
+    echo "OK:    admin_console.allowed_scripts contains no forbidden patterns"
+  fi
+
+  echo
+fi
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
