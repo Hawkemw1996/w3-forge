@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.2.1
+
+- Polished v0.2.0 workflow control so W3 Forge can produce READY from
+  its own safe self-tests.
+- Added safe self-test commands to `config/apps/w3forge.yml`:
+  - `bash -n scripts/*.sh` (script syntax validation)
+  - `./scripts/w3-app-config-validate.sh --app w3forge`
+  - `./scripts/w3-app-branch-check.sh --app w3forge`
+  No deploy, release, tag, or package-movement commands were added.
+- Added an opt-in `tests.require_local_model` flag to per-app config.
+  When `false` or absent, `w3-app-workflow-status.sh` reports missing
+  Ollama or missing models as OK (advisory) instead of WARN. When
+  `true`, the prior WARN behavior is preserved. Both apps are set to
+  `false` for now.
+- Improved `w3-app-test.sh` failure visibility: command output is now
+  captured and the last 10 lines are printed on failure with a `| `
+  prefix, so issues such as `bash -n` syntax errors are actionable.
+- `config/apps/w3core.yml` retains an empty `tests.commands: []`. W3
+  Core workflow status may still return WARN until safe commands are
+  added. No W3 Core deploy or release behavior was added.
+- Bumped `VERSION` to `0.2.1`.
+- Updated `docs/APP_ADMIN_STANDARD.md` with a v0.2.1 self-test note.
+- W3 Forge remains the proposal/development layer; W3 Core remains the
+  production deployment authority. No production deploy, no release
+  tags, no package movement, no production data changes.
+
 ## v0.2.0
 
 - Introduced the W3 Forge v0.2.0 workflow control foundation: the first

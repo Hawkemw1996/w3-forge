@@ -33,6 +33,14 @@ authority:
 # v0.2.0 workflow control: optional validation/test commands.
 # Commands run inside paths.workspaces via w3-app-test.sh.
 # Deploy / release / package-movement commands are blocked by guard.
+#
+# v0.2.1: safe self-test commands added for W3 Forge.
+# require_local_model is opt-in; when false or absent the workflow
+# does not WARN if Ollama is missing.
 tests:
   validate_config: true
-  commands: []
+  require_local_model: false
+  commands:
+    - bash -n scripts/*.sh
+    - ./scripts/w3-app-config-validate.sh --app w3forge
+    - ./scripts/w3-app-branch-check.sh --app w3forge

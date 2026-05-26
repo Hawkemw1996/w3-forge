@@ -32,6 +32,12 @@ authority:
 # v0.2.0 workflow control: optional validation/test commands.
 # Commands run inside paths.workspaces via w3-app-test.sh.
 # Deploy / release / package-movement commands are blocked by guard.
+#
+# v0.2.1: no W3 Core self-tests configured yet. Workflow status may
+# remain WARN until safe commands are added. require_local_model is
+# opt-in; when false or absent the workflow does not WARN if Ollama
+# is missing.
 tests:
   validate_config: true
+  require_local_model: false
   commands: []

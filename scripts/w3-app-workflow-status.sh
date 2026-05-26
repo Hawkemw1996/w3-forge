@@ -198,14 +198,25 @@ echo
 
 echo "Step 3: Local model availability"
 echo "--------------------------------"
+# v0.2.1: require_local_model is opt-in. When false or absent, missing
+# Ollama is reported as OK (advisory note) instead of WARN.
+REQUIRE_MODEL="$(section_value tests require_local_model)"
 if ! command -v ollama >/dev/null 2>&1; then
-  echo "WARN:  Ollama not installed or not in PATH"
-  set_state WARN
+  if [[ "$REQUIRE_MODEL" == "true" ]]; then
+    echo "WARN:  Ollama not installed or not in PATH (required by config)"
+    set_state WARN
+  else
+    echo "OK:    Ollama not installed (not required by config)"
+  fi
 else
   MODEL_COUNT="$(ollama list 2>/dev/null | awk 'NR>1 && NF>0' | wc -l | tr -d ' ')"
   if [[ -z "$MODEL_COUNT" || "$MODEL_COUNT" -eq 0 ]]; then
-    echo "WARN:  Ollama installed but no local models available"
-    set_state WARN
+    if [[ "$REQUIRE_MODEL" == "true" ]]; then
+      echo "WARN:  Ollama installed but no local models available (required by config)"
+      set_state WARN
+    else
+      echo "OK:    Ollama installed, no models present (not required by config)"
+    fi
   else
     echo "OK:    Ollama available with $MODEL_COUNT model(s)"
   fi

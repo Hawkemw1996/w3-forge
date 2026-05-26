@@ -222,11 +222,18 @@ else
         continue
       fi
       echo "RUN:   $CMD"
-      if ( cd "$WORKSPACE" && bash -c "$CMD" ) >/dev/null 2>&1; then
+      # v0.2.1: capture output so failure diagnostics are visible.
+      OUT="$( ( cd "$WORKSPACE" && bash -c "$CMD" ) 2>&1 )"
+      RC=$?
+      if [[ $RC -eq 0 ]]; then
         echo "PASS:  $CMD"
         PASSES=$((PASSES + 1))
       else
-        echo "ERROR: Command failed: $CMD"
+        echo "ERROR: Command failed (exit $RC): $CMD"
+        if [[ -n "$OUT" ]]; then
+          # Show the last few lines so the failure is actionable.
+          echo "$OUT" | tail -n 10 | sed 's/^/       | /'
+        fi
         ERRORS=$((ERRORS + 1))
       fi
     done <<< "$COMMANDS"

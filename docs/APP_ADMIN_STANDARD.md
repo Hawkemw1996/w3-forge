@@ -188,3 +188,60 @@ not deploy, does not tag releases, does not push to `main`, does not
 merge into `main`, does not move packages into `/opt/update-packages`,
 and does not modify persistent production data. W3 Core remains the
 production deployment authority.
+
+## v0.2.1 — Workflow Self-Test Polish
+
+This section is appended for W3 Forge v0.2.1. It does not replace the
+v0.2.0 section; it refines the workflow self-test surface so an app can
+reach READY from its own configured tests.
+
+### Safe self-test commands
+
+An app may declare safe self-test commands under `tests.commands` in its
+`config/apps/<app_id>.yml`. Recommended self-test categories:
+
+- script syntax validation (e.g. `bash -n scripts/*.sh`)
+- config inventory validation (e.g. `./scripts/w3-app-config-validate.sh --app <app>`)
+- branch guard (e.g. `./scripts/w3-app-branch-check.sh --app <app>`)
+
+Self-test commands must never deploy, release, tag, move packages, or
+modify persistent data. The `w3-app-test.sh` blocked-command guard
+refuses commands containing `deploy`, `release`, `tag`,
+`/opt/update-packages`, `rm -rf`, `hardreset`, or `hard-reset`.
+
+W3 Forge's own config declares the three commands above. W3 Core
+intentionally ships with an empty `tests.commands` until safe
+W3-Core-specific self-tests are designed.
+
+### `require_local_model` opt-in
+
+The `tests:` block accepts an opt-in flag:
+
+```yaml
+tests:
+  validate_config: true
+  require_local_model: false
+  commands:
+    - ...
+```
+
+When `require_local_model` is `false` or absent, missing Ollama or
+missing local models are reported as OK (advisory) by
+`w3-app-workflow-status.sh`. When `true`, they downgrade the final
+state to WARN. This lets an app reach READY in environments without a
+local model runtime while still allowing apps that depend on Ollama
+to fail closed.
+
+### Test runner output
+
+`w3-app-test.sh` captures stdout and stderr from each configured
+command and, on failure, prints the last 10 lines prefixed with `| `
+so syntax errors and other diagnostics are immediately actionable.
+
+### Authority boundary (unchanged)
+
+v0.2.1 stays inside the W3 Forge proposal/development layer. It does
+not deploy, does not tag releases, does not push to `main`, does not
+merge into `main`, does not move packages into `/opt/update-packages`,
+and does not modify persistent production data. W3 Core remains the
+production deployment authority.
