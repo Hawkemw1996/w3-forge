@@ -325,3 +325,49 @@ not deploy, does not tag releases, does not push to `main`, does not
 merge into `main`, does not move packages into `/opt/update-packages`,
 and does not modify persistent production data. W3 Core remains the
 production deployment authority. The user owns the final release gate.
+
+## v0.3.1 — Review Readiness Polish
+
+This section is appended for W3 Forge v0.3.1. It is a small fix on top
+of the v0.3.0 review layer.
+
+### Expected review artifacts are not workspace dirt
+
+`w3-app-workflow-status.sh` and `w3-app-review-ready.sh` previously
+treated any untracked or modified path as a working-tree warning. That
+included files the review layer itself just generated under
+`docs/reports/` or `logs/reports/` via
+`w3-app-review-report.sh --output ...`, which incorrectly downgraded
+workflow status to `WARN` and propagated to `REVIEW_WITH_WARNINGS`.
+
+v0.3.1 filters these expected review artifacts out before the
+working-tree check. The rule is:
+
+- A `git status --short` entry whose path begins with `docs/reports/`
+  or `logs/reports/` is treated as expected output of the review
+  layer and does not contribute to the dirty signal.
+- Any other untracked or modified path continues to trigger `WARN`
+  for workflow status and `REVIEW_WITH_WARNINGS` for review readiness,
+  as before.
+
+When the raw `git status --short` was non-empty but the filtered set
+is empty, the scripts say so explicitly so reviewers can see that the
+review layer's own artifacts were the only changes present.
+
+### Hardened workflow-status parser
+
+`w3-app-review-ready.sh` now locates the `Final` section in
+`w3-app-workflow-status.sh` output explicitly and reads the next
+non-empty non-separator line, instead of grabbing the last non-empty
+line of the entire output. The previous behavior happened to work for
+v0.3.0 but was fragile against any future trailing text. The
+last-non-empty-line heuristic is retained only as a fallback if the
+`Final` block cannot be located.
+
+### Authority boundary (unchanged)
+
+v0.3.1 stays inside the W3 Forge proposal/development layer. It does
+not deploy, does not tag releases, does not push to `main`, does not
+merge into `main`, does not move packages into `/opt/update-packages`,
+and does not modify persistent production data. W3 Core remains the
+production deployment authority.

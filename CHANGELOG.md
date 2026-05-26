@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.3.1
+
+Review readiness polish. v0.3.0 was structurally correct but flagged
+generated review reports as workspace dirt, which downgraded workflow
+status to WARN and propagated to `REVIEW_WITH_WARNINGS`. Root cause:
+`w3-app-workflow-status.sh` and `w3-app-review-ready.sh` did not
+distinguish expected review artifacts from real working-tree changes.
+
+- Updated `scripts/w3-app-workflow-status.sh` to ignore expected
+  review artifacts under `docs/reports/` and `logs/reports/` when
+  judging git cleanliness. A generated report no longer triggers
+  `WARN: Working tree has uncommitted changes`. Other untracked or
+  modified paths continue to trigger WARN as before.
+- Updated `scripts/w3-app-review-ready.sh` Step 5 to apply the same
+  filter, so generated reports do not trigger
+  `REVIEW_WITH_WARNINGS: working tree has uncommitted changes`.
+- Hardened `w3-app-review-ready.sh` workflow-status parser. It now
+  explicitly locates the `Final` section in workflow-status output and
+  reads the next non-empty non-separator line, falling back to the
+  previous last-non-empty-line heuristic only if the Final block
+  cannot be located. This makes the parser robust against future
+  trailing output.
+- Updated `docs/APP_ADMIN_STANDARD.md` with a v0.3.1 polish note.
+- Bumped `VERSION` to `0.3.1`.
+- No deploy, no release tags, no package movement, no production data
+  changes. W3 Forge remains proposal/development; W3 Core remains the
+  production deployment authority.
+
 ## v0.3.0
 
 - Introduced the W3 Forge v0.3.0 review layer: the first layer that

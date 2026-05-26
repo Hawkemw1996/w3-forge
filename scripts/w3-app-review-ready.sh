@@ -182,7 +182,24 @@ echo
 echo "Step 3: Workflow status"
 echo "-----------------------"
 WF_OUT="$( "$W3_FORGE_ROOT/scripts/w3-app-workflow-status.sh" --app "$APP" 2>&1 || true )"
-WF_FINAL="$(echo "$WF_OUT" | awk 'NF{last=$0} END{print last}')"
+
+# v0.3.1: hardened parser. Find the `Final` section explicitly, then take
+# the first non-empty, non-separator line after it. Falls back to the last
+# non-empty line only if the Final block can't be located. This makes the
+# parser robust against future trailing output from workflow-status.
+WF_FINAL="$(echo "$WF_OUT" | awk '
+  /^Final$/ { capture = 1; next }
+  capture {
+    # Skip the "-----" separator line that follows the "Final" header.
+    if ($0 ~ /^-+$/) next
+    if (NF == 0) next
+    print
+    exit
+  }
+')"
+if [[ -z "$WF_FINAL" ]]; then
+  WF_FINAL="$(echo "$WF_OUT" | awk 'NF{last=$0} END{print last}')"
+fi
 
 case "$WF_FINAL" in
   READY)
@@ -232,13 +249,29 @@ echo "Step 5: Review signals"
 echo "----------------------"
 
 # Working tree cleanliness.
+# v0.3.1: expected review artifacts under docs/reports/ and logs/reports/
+# are filtered out before judging cleanliness, matching the workflow-status
+# behavior. Generated review reports must not block review readiness.
 if [[ -n "${WORKSPACE:-}" && -d "$WORKSPACE/.git" ]]; then
-  DIRTY="$(cd "$WORKSPACE" && git status --short)"
+  DIRTY_RAW="$(cd "$WORKSPACE" && git status --short)"
+  DIRTY="$(echo "$DIRTY_RAW" | awk '
+    {
+      path = $0
+      sub(/^...[ \t]*/, "", path)
+      if (path ~ /^docs\/reports\//) next
+      if (path ~ /^logs\/reports\//) next
+      if (NF > 0) print
+    }
+  ')"
   if [[ -n "$DIRTY" ]]; then
     echo "REVIEW_WITH_WARNINGS: working tree has uncommitted changes"
     promote REVIEW_WITH_WARNINGS
   else
-    echo "OK: working tree clean"
+    if [[ -n "$DIRTY_RAW" ]]; then
+      echo "OK: working tree clean (ignoring expected review artifacts)"
+    else
+      echo "OK: working tree clean"
+    fi
   fi
 fi
 

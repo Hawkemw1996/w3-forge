@@ -181,10 +181,28 @@ else
     set_state ERROR
   fi
 
-  # Git cleanliness
-  DIRTY="$(cd "$WORKSPACE" && git status --short)"
+  # Git cleanliness.
+  # v0.3.1: expected review artifacts under docs/reports/ and logs/reports/
+  # are filtered out before judging cleanliness. They are deliberately
+  # produced by the review layer and must not downgrade workflow status.
+  DIRTY_RAW="$(cd "$WORKSPACE" && git status --short)"
+  DIRTY="$(echo "$DIRTY_RAW" | awk '
+    # Each line looks like: "XY path" (status flags then space then path).
+    # Strip leading status + spaces, then test the path.
+    {
+      path = $0
+      sub(/^...[ \t]*/, "", path)
+      if (path ~ /^docs\/reports\//) next
+      if (path ~ /^logs\/reports\//) next
+      if (NF > 0) print
+    }
+  ')"
   if [[ -z "$DIRTY" ]]; then
-    echo "OK:    Working tree clean"
+    if [[ -n "$DIRTY_RAW" ]]; then
+      echo "OK:    Working tree clean (ignoring expected review artifacts under docs/reports/ and logs/reports/)"
+    else
+      echo "OK:    Working tree clean"
+    fi
   else
     echo "WARN:  Working tree has uncommitted changes"
     set_state WARN
