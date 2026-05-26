@@ -96,3 +96,95 @@ hardcode `/opt/w3forge-deploy`, including:
 
 This makes the admin layer portable across environments and easy to test
 without modifying scripts.
+
+## v0.2.0 — Workflow Control Foundation
+
+This section is appended for W3 Forge v0.2.0. It introduces the first
+workflow orchestration layer over the v0.1.1 modular admin scripts.
+v0.2.0 is inspection and validation only. It does not deploy, does not
+tag releases, and does not move packages.
+
+### Workflow
+
+```text
+inspect repo  -->  validate app  -->  show git state  -->  run safe tests  -->  summarize readiness
+```
+
+### Scripts and responsibilities
+
+`scripts/w3-app-inspect.sh --app <app_id>`
+
+Read-only repository and app inspection. Validates config first, then
+prints app identity, config path, workspace path, current branch and
+commit, remotes, the 5 most recent commits, changed files, the script
+inventory under `$W3_FORGE_ROOT/scripts/`, the config inventory under
+`$W3_FORGE_ROOT/config/apps/`, and workspace health. Never edits files.
+Never deploys.
+
+`scripts/w3-app-test.sh --app <app_id>`
+
+Safe validation and test runner. Runs `w3-app-config-validate.sh` and
+`w3-app-branch-check.sh`, then optionally runs commands declared under
+`tests.commands` in `config/apps/<app_id>.yml`. The future-friendly
+config shape is:
+
+```yaml
+tests:
+  validate_config: true
+  commands:
+    - npm run lint
+    - npm run build
+```
+
+If `tests.commands` is empty or absent, the runner prints
+`No app test commands configured.` and exits 0. Any command containing
+`deploy`, `release`, `tag`, `/opt/update-packages`, `rm -rf`,
+`hardreset`, or `hard-reset` is refused by a blocked-command guard.
+The runner prints a PASS / WARN / ERROR summary and exits nonzero on
+ERROR.
+
+`scripts/w3-app-workflow-status.sh --app <app_id>`
+
+Single-pane workflow readiness summary. Aggregates config validation,
+workspace and branch checks, git cleanliness, optional Ollama model
+availability, and the app test runner. The final line is one of
+`READY`, `WARN`, or `ERROR`.
+
+### READY / WARN / ERROR semantics
+
+READY requires:
+
+- config validation has no errors
+- branch check passes
+- workspace is a git repository
+- the current branch is not a blocked branch
+- tests pass, or no tests are configured
+
+WARN is emitted when:
+
+- the working tree has uncommitted changes
+- the workspace path is missing but the config is otherwise valid
+- no app test commands are configured
+- Ollama is missing, or no local models are available
+
+ERROR is emitted when:
+
+- the app config is missing
+- a required config field is missing
+- the branch check fails
+- a blocked command is detected
+- a configured test command fails
+
+Exit codes from `w3-app-workflow-status.sh` are:
+
+- `0` = READY
+- `1` = WARN
+- `2` = ERROR
+
+### Authority boundary
+
+v0.2.0 stays inside the W3 Forge proposal/development layer. It does
+not deploy, does not tag releases, does not push to `main`, does not
+merge into `main`, does not move packages into `/opt/update-packages`,
+and does not modify persistent production data. W3 Core remains the
+production deployment authority.

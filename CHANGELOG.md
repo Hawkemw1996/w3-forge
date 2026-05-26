@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.2.0
+
+- Introduced the W3 Forge v0.2.0 workflow control foundation: the first
+  workflow orchestration layer over the modular app-admin scripts.
+- Added `scripts/w3-app-inspect.sh` for read-only repository and app
+  inspection (identity, branch, commit, remotes, recent commits, changed
+  files, script inventory, config inventory, workspace health). Never
+  modifies files.
+- Added `scripts/w3-app-test.sh` as a safe validation/test runner. Runs
+  config validation, branch check, and optional `tests.commands` from
+  `config/apps/<app_id>.yml`. Blocks any command containing `deploy`,
+  `release`, `tag`, `/opt/update-packages`, `rm -rf`, `hardreset`, or
+  `hard-reset`. Prints PASS/WARN/ERROR and exits nonzero on ERROR.
+- Added `scripts/w3-app-workflow-status.sh` as a single-pane workflow
+  readiness summary. Aggregates config validation, workspace and branch
+  checks, git cleanliness, optional Ollama model availability, and the
+  app test runner. Emits READY / WARN / ERROR with exit codes 0 / 1 / 2.
+- Extended `config/apps/w3forge.yml` and `config/apps/w3core.yml` with a
+  `tests:` section. `commands:` is empty for both apps; no deploy
+  commands are configured.
+- Updated `docs/APP_ADMIN_STANDARD.md` with a v0.2.0 Workflow Control
+  section describing inspect/test/workflow-status responsibilities and
+  READY/WARN/ERROR semantics.
+- Bumped `VERSION` to `0.2.0`.
+- W3 Forge remains the proposal/development layer; W3 Core remains the
+  production deployment authority. No production deploy, no release
+  tags, no package movement, no production data changes.
+
 ## v0.1.1
 
 - Added `scripts/w3-app-config-validate.sh` to validate per-app YAML configs

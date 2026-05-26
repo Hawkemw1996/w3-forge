@@ -28,3 +28,10 @@ authority:
   may_deploy: false
   may_tag_release: false
   may_modify_production_data: false
+
+# v0.2.0 workflow control: optional validation/test commands.
+# Commands run inside paths.workspaces via w3-app-test.sh.
+# Deploy / release / package-movement commands are blocked by guard.
+tests:
+  validate_config: true
+  commands: []
