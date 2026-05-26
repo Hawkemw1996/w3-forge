@@ -7,6 +7,14 @@ cache/*
 backups/*
 !backups/.gitkeep
 
+# v0.3.2: generated review reports are local artifacts.
+# .gitkeep and README.md are tracked; everything else under docs/reports/
+# is ignored. Promote a report by copying it outside docs/reports/ and
+# committing it explicitly.
+docs/reports/*
+!docs/reports/.gitkeep
+!docs/reports/README.md
+
 .env
 .env.*
 *.log

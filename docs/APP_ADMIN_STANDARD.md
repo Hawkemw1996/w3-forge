@@ -371,3 +371,58 @@ not deploy, does not tag releases, does not push to `main`, does not
 merge into `main`, does not move packages into `/opt/update-packages`,
 and does not modify persistent production data. W3 Core remains the
 production deployment authority.
+
+## v0.3.2 — Review Artifact Cleanup
+
+This section is appended for W3 Forge v0.3.2. It closes the loop on
+v0.3.1 by making git itself ignore generated review reports, in
+addition to the in-script filter that already keeps workflow status
+and review readiness from downgrading.
+
+### .gitignore policy
+
+`docs/reports/` now follows the same whitelisting convention used for
+`logs/`, `cache/`, and `backups/`:
+
+```text
+docs/reports/*
+!docs/reports/.gitkeep
+!docs/reports/README.md
+```
+
+Only `.gitkeep` and `README.md` are tracked. Anything else generated
+into this directory — including reports produced by
+`scripts/w3-app-review-report.sh --output docs/reports/<name>.md` — is
+invisible to `git status` and does not dirty the working tree.
+
+### Promoting a report into source
+
+If a specific report must live in version control (for example, to
+attach to release notes), promote it explicitly:
+
+1. Copy or move the file out of `docs/reports/` to a tracked location
+   such as `docs/releases/<vX.Y.Z>/review.md`.
+2. Add and commit it on a `dev/vX.Y.Z` branch.
+
+Do not force-add reports from `docs/reports/`. The directory is
+deliberately disposable.
+
+### Defense in depth
+
+The v0.3.1 in-script filter is intentionally retained. Two independent
+mechanisms now keep generated reports from causing false positives:
+
+- `.gitignore` keeps them out of `git status` at the source.
+- `w3-app-workflow-status.sh` and `w3-app-review-ready.sh` filter
+  paths under `docs/reports/` and `logs/reports/` from the dirty
+  signal, in case they ever do appear (for example on a host where
+  the gitignore change has not yet propagated, or if a future
+  reviewer turns gitignore rules off).
+
+### Authority boundary (unchanged)
+
+v0.3.2 stays inside the W3 Forge proposal/development layer. It does
+not deploy, does not tag releases, does not push to `main`, does not
+merge into `main`, does not move packages into `/opt/update-packages`,
+and does not modify persistent production data. W3 Core remains the
+production deployment authority.

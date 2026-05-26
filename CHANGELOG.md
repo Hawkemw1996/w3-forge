@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.3.2
+
+Review artifact cleanup. v0.3.1 made the workflow and review-ready
+scripts ignore generated reports as workspace dirt. v0.3.2 closes the
+loop by also making git itself ignore them, so `git status` is clean
+immediately after a report is generated.
+
+- Updated `.gitignore` to ignore everything under `docs/reports/` while
+  keeping `docs/reports/.gitkeep` and `docs/reports/README.md` tracked.
+  Pattern mirrors the existing `logs/*` / `cache/*` / `backups/*`
+  whitelisting convention.
+- Added `docs/reports/README.md` explaining that generated reports are
+  local artifacts and how to explicitly promote a report into version
+  control if needed (copy out of `docs/reports/` and commit on a
+  `dev/vX.Y.Z` branch).
+- `docs/reports/.gitkeep` remains tracked so the directory exists in
+  source.
+- Bumped `VERSION` to `0.3.2`.
+- Updated `docs/APP_ADMIN_STANDARD.md` with a v0.3.2 artifact cleanup
+  note.
+- No script behavior changed in v0.3.2. The v0.3.1 in-script filter
+  remains as a safety net for hosts where the `.gitignore` change has
+  not yet propagated.
+- No deploy, no release tags, no package movement, no production data
+  changes. W3 Forge remains proposal/development; W3 Core remains the
+  production deployment authority.
+
 ## v0.3.1
 
 Review readiness polish. v0.3.0 was structurally correct but flagged
