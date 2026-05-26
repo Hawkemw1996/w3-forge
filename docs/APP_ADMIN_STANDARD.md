@@ -245,3 +245,83 @@ not deploy, does not tag releases, does not push to `main`, does not
 merge into `main`, does not move packages into `/opt/update-packages`,
 and does not modify persistent production data. W3 Core remains the
 production deployment authority.
+
+## v0.3.0 — Review Layer
+
+This section is appended for W3 Forge v0.3.0. It introduces the review
+layer on top of the v0.2.x workflow control foundation. The review
+layer produces a structured, human-readable surface for a human
+approver. It does not deploy and does not modify code.
+
+### Scripts and responsibilities
+
+`scripts/w3-app-diff-summary.sh --app <app_id> [--base <ref>]`
+
+Read-only git diff summary between a base ref and HEAD for the app's
+configured workspace. When `--base` is not provided, the base ref is
+resolved in this order:
+
+1. `origin/dev/v0.2.1`
+2. `HEAD~1`
+
+Prints app identity, workspace, current branch, base ref, changed
+files, `git diff --stat`, the commit list between base and HEAD, and
+the working tree state. Never deploys, tags, pushes, or edits files.
+
+`scripts/w3-app-review-report.sh --app <app_id> [--base <ref>] [--output <file>]`
+
+Composes a markdown review report containing:
+
+- app identity and config path
+- branch and commit
+- workflow readiness result (READY / WARN / ERROR) and full output
+- changed files between base and HEAD
+- recent commits between base and HEAD
+- collected warnings and errors
+- working tree state
+- explicit safety confirmation that the report run did not touch
+  `main`, did not merge, did not tag, did not deploy, did not move
+  packages, and did not modify production data
+
+By default the report is printed to stdout. With `--output <file>` it
+is also written to a file. The file path must resolve inside one of:
+
+- `$W3_FORGE_ROOT/docs/reports/`
+- `$W3_FORGE_ROOT/logs/reports/`
+
+Relative paths are resolved against `$W3_FORGE_ROOT`. The script
+canonicalizes the parent directory with `realpath`-equivalent
+resolution and refuses any path that escapes the allowed report
+roots, including paths constructed with `..`.
+
+`scripts/w3-app-review-ready.sh --app <app_id> [--base <ref>]`
+
+Final-gate readiness summary. Runs config validation, branch check,
+workflow status, and diff summary, then emits exactly one of:
+
+- `READY_FOR_REVIEW` — workflow status `READY`, working tree clean,
+  branch matches `dev/vX.Y.Z`, tests configured
+- `REVIEW_WITH_WARNINGS` — workflow status `WARN`, working tree dirty,
+  or no tests configured
+- `BLOCKED` — config validation failed, branch check failed, or
+  workflow status `ERROR`
+
+Exit codes are `0`, `1`, `2` respectively. The script is the single
+entry point a Forge Admin UI or CI step should call to decide whether
+a dev branch is ready for human review.
+
+### State semantics summary
+
+| State                  | Exit | Meaning                                                  |
+|------------------------|------|----------------------------------------------------------|
+| `READY_FOR_REVIEW`     | 0    | safe to hand to a human reviewer                         |
+| `REVIEW_WITH_WARNINGS` | 1    | safe to review, but flagged concerns                     |
+| `BLOCKED`              | 2    | a precondition failed; do not surface for review yet     |
+
+### Authority boundary (unchanged)
+
+v0.3.0 stays inside the W3 Forge proposal/development layer. It does
+not deploy, does not tag releases, does not push to `main`, does not
+merge into `main`, does not move packages into `/opt/update-packages`,
+and does not modify persistent production data. W3 Core remains the
+production deployment authority. The user owns the final release gate.

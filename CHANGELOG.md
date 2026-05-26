@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.3.0
+
+- Introduced the W3 Forge v0.3.0 review layer: the first layer that
+  produces a structured, human-readable review surface on top of the
+  v0.2.x workflow control foundation.
+- Added `scripts/w3-app-diff-summary.sh` to summarize git changes for
+  a configured app between a base ref and HEAD. Resolves the base ref
+  with the order `origin/dev/v0.2.1` -> `HEAD~1` when `--base` is not
+  provided. Prints changed files, `git diff --stat`, commit list, and
+  working tree state. Read-only.
+- Added `scripts/w3-app-review-report.sh` to compose a markdown review
+  report covering app identity, branch/commit, workflow readiness,
+  diff summary, changed files, recent commits, warnings/errors, and an
+  explicit safety confirmation. Prints to stdout by default; with
+  `--output <file>` also writes the report to a file. Output paths are
+  restricted to `$W3_FORGE_ROOT/docs/reports/` or
+  `$W3_FORGE_ROOT/logs/reports/` with realpath canonicalization to
+  defeat `..` traversal.
+- Added `scripts/w3-app-review-ready.sh` as the final-gate readiness
+  script. Runs config validation, branch check, workflow status, and
+  diff summary, then emits `READY_FOR_REVIEW` (exit 0),
+  `REVIEW_WITH_WARNINGS` (exit 1), or `BLOCKED` (exit 2).
+- Added `docs/reports/.gitkeep` so the default report output directory
+  is committed.
+- Updated `docs/APP_ADMIN_STANDARD.md` with a v0.3.0 Review Layer
+  section describing the three new scripts, their state semantics,
+  and the output-path safety rule.
+- Bumped `VERSION` to `0.3.0`.
+- W3 Forge remains the proposal/development layer; W3 Core remains the
+  production deployment authority. No deploy, no release tags, no
+  package movement, no production data changes.
+
 ## v0.2.1
 
 - Polished v0.2.0 workflow control so W3 Forge can produce READY from
