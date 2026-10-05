@@ -28,7 +28,7 @@ function adminUrl(p: string): string {
   return p.startsWith('/') ? `${ADMIN_BASE}${p}` : `${ADMIN_BASE}/${p}`;
 }
 
-async function parseEnvelope<T>(res: Response): Promise<T> {
+async function parseEnvelope<T>(res: Response, notify = true): Promise<T> {
   let body: ApiEnvelope<T> | undefined;
   try {
     body = (await res.json()) as ApiEnvelope<T>;
@@ -40,6 +40,7 @@ async function parseEnvelope<T>(res: Response): Promise<T> {
     const message =
       (body && !body.success && body.error?.message) ||
       `HTTP ${res.status} ${res.statusText}`;
+    if (notify && ['AUTH_REQUIRED', 'APP_ADMIN_REQUIRED', 'CORE_UNAVAILABLE', 'CORE_NOT_CONFIGURED'].includes(code)) window.dispatchEvent(new Event('w3-auth-problem'));
     throw new AdminApiError(res.status, code, message);
   }
   return body.data as T;
@@ -62,4 +63,12 @@ export async function adminPost<T>(path: string, body?: unknown): Promise<T> {
     body: body === undefined ? undefined : JSON.stringify(body)
   });
   return parseEnvelope<T>(res);
+}
+
+export async function authGet<T>(path: string): Promise<T> {
+  return parseEnvelope<T>(await fetch('/api/auth' + path, { credentials: 'same-origin', headers: { Accept: 'application/json' } }), false);
+}
+export async function authPost<T>(path: string, body: unknown): Promise<T> {
+  return parseEnvelope<T>(await fetch('/api/auth' + path, { method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) }), false);
 }

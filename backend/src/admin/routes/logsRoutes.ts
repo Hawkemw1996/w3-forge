@@ -51,7 +51,7 @@ export function buildAdminLogsRoutes(): Router {
       // Reject anything that looks like path traversal up front.
       const parts = file.split('/');
       for (const p of parts) {
-        if (!SAFE_NAME.test(p)) {
+        if (p === '.' || p === '..' || !SAFE_NAME.test(p)) {
           throw new AdminError(400, 'INVALID_FILE', `Invalid log path segment: ${p}`);
         }
       }

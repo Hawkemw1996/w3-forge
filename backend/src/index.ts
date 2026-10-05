@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { buildAdminRouter } from './admin';
+import { createCoreClient } from './auth/coreClient';
+import { createCoreAuth } from './auth/coreAuth';
 import { FORGE_ROOT, ACTIVE_APP, loadApp } from './admin/forgeConfig';
 
 // =============================================================================
@@ -58,7 +60,28 @@ function main(): void {
   app.disable('x-powered-by');
   app.set('trust proxy', false);
 
-  app.use('/api/admin', buildAdminRouter(startedAt));
+  const core = createCoreClient({
+    baseUrl: process.env.CORE_API_URL ?? '',
+    publicCoreUrl: process.env.CORE_PUBLIC_URL ?? process.env.CORE_API_URL ?? '',
+    publicAppUrl: process.env.FORGE_PUBLIC_URL ?? '',
+    clientSecret: process.env.CORE_APP_CLIENT_SECRET ?? '',
+    instanceId: process.env.CORE_APP_INSTANCE_ID ?? '',
+    appId: 'w3forge', appName: 'W3 Forge', version: readForgeVersion()
+  });
+  const auth = createCoreAuth(core, {
+    publicAppUrl: (process.env.FORGE_PUBLIC_URL ?? '').replace(/\/+$/, ''),
+    publicCoreUrl: (process.env.CORE_PUBLIC_URL ?? process.env.CORE_API_URL ?? '').replace(/\/+$/, ''),
+    cookieSecure: process.env.COOKIE_SECURE !== 'false'
+  });
+  app.use('/api/auth', auth.router);
+  app.use('/api/admin', buildAdminRouter(startedAt, auth));
+  app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
+  const announce = () => {
+    if (core.configured) void core.announce().catch(() => console.warn('[w3-forge-admin] Core connection announcement unavailable.'));
+  };
+  announce();
+  const discoveryTimer = setInterval(announce, 60_000);
+  discoveryTimer.unref();
 
   const adminDist = path.join(FORGE_ROOT, 'frontend', 'admin', 'dist');
   if (fs.existsSync(adminDist)) {

@@ -1,10 +1,10 @@
 app_id: w3forge
 name: W3 Forge
-version: 0.4.0
+version: 0.4.1
 
 repo:
   url: ""
-  default_dev_branch: dev/v0.1.0
+  default_dev_branch: dev/v0.4.1
   allowed_branch_pattern: '^dev/v[0-9]+\.[0-9]+\.[0-9]+$'
   blocked_branches:
     - main

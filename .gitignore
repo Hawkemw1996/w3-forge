@@ -25,3 +25,7 @@ backend/dist/
 frontend/admin/node_modules/
 frontend/admin/dist/
 node_modules/
+
+# Non-secret configuration example and disposable UI test output.
+!.env.example
+frontend/admin/.test-harness/

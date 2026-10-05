@@ -9,6 +9,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { makeForgeTree } from './setup';
+import { createCoreFixture } from './coreFixture';
+let agent: any;
 
 const FORGE_ROOT = makeForgeTree();
 process.env.W3_FORGE_ROOT = FORGE_ROOT;
@@ -28,11 +30,15 @@ beforeAll(async () => {
   planControlInvocation = sr.planControlInvocation;
   runControl = sr.runControl;
   app = expressMod.default();
-  app.use('/api/admin', buildAdminRouter(new Date().toISOString()));
+  const fixture = createCoreFixture();
+  app.use('/api/auth', fixture.auth.router);
+  app.use('/api/admin', buildAdminRouter(new Date().toISOString(), fixture.auth));
+  agent = (request as any).agent(app);
+  await fixture.login(agent);
 });
 
 async function post(body: unknown, id = 'config-validate') {
-  return request(app)
+  return agent
     .post(`/api/admin/controls/${id}/run`)
     .set('Content-Type', 'application/json')
     .send(body as object);
@@ -176,7 +182,7 @@ describe('Source-code invariants — defense-in-depth audit', () => {
     // Strip comments so we only audit real code.
     const code = src
       .replace(/\/\*[\s\S]*?\*\//g, '')
-      .split('\n')
+      .split(/\r?\n/)
       .map((l) => l.replace(/\/\/.*$/, ''))
       .join('\n');
     // We expect only `spawn` from child_process to be imported.

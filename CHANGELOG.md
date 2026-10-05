@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.1 (unreleased)
+
+- Add automatic Core discovery and owner-approved app-bound sign-in with S256 PKCE.
+- Require a current Forge admin assignment on every admin request, alongside the existing network guard; add same-origin JSON enforcement and actor audit metadata.
+- Bring in Core v0.12.16's shared sidebar/styles, sticky console layout, account footer and environment badges.
+- Add GitHub Validation using existing workspace status and registered Controls checks.
+- Reject dot-segment log paths before filesystem lookups; retain safe-runner and production authority restrictions.
+- Add authentication/UI coverage; no dependencies, database, deployment or production-data changes.
+
+
 ## v0.4.0
 
 Admin Interface Foundation. v0.4.0 introduces a read-only admin

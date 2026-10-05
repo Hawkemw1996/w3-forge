@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { CoreAuthGate } from './components/CoreAuthGate';
+import { GitHubValidationPage } from './pages/GitHubValidationPage';
 import { AdminLayout } from './components/AdminLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { SystemStatusPage } from './pages/SystemStatusPage';
@@ -12,16 +14,17 @@ import { SettingsPage } from './pages/SettingsPage';
 // Forge-safe scripts via safeRunner. No deploy/release/package routes.
 export default function App() {
   return (
-    <AdminLayout>
+    <CoreAuthGate><AdminLayout>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/system" element={<SystemStatusPage />} />
         <Route path="/logs" element={<LogsPage />} />
         <Route path="/files" element={<FileBrowserPage />} />
+        <Route path="/github" element={<GitHubValidationPage />} />
         <Route path="/controls" element={<ControlsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </AdminLayout>
+    </AdminLayout></CoreAuthGate>
   );
 }

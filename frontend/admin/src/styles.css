@@ -1,4 +1,9 @@
-@import './styles/tokens.css';
+@import './shared/styles/tokens.css';
+/* v0.10.7 — consume the shared W3 UI System primitives (.card*, .badge*,
+   .btn*, .input, .stat-*, .console, .table-dark). Promoted verbatim from this
+   file, so the import resolves to identical output; the Admin Console keeps
+   its own @layer components definitions below as the visual authority. */
+@import './shared/styles/primitives.css';
 
 @tailwind base;
 @tailwind components;

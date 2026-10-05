@@ -57,6 +57,7 @@ export function SettingsPage() {
         actions={<Badge tone="success">Read Only</Badge>}
       />
 
+      <div className="card"><div className="card-body"><h2 className="font-semibold">W3 Core access</h2><p className="text-sm text-[var(--w3-text-muted)]">Manage this app's connection, sign-in permission and user assignments in W3 Core. The Forge admin role is required for all console pages and controls. Every request is verified with Core.</p></div></div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         <PolicyCard
           icon={<ShieldCheck size={14} />}

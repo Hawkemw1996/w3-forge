@@ -60,7 +60,8 @@ export function adminAudit(req: Request, res: Response, next: NextFunction): voi
     const entry = {
       ts: new Date().toISOString(),
       method: req.method,
-      path: req.originalUrl,
+      path: req.originalUrl.split('?')[0],
+      actor: res.locals.coreUser ?? null,
       remote: req.ip ?? null,
       status: res.statusCode,
       error_code: capture.get().errorCode ?? null,

@@ -1,4 +1,5 @@
 import { Router, json } from 'express';
+import type { CoreAuth } from '../auth/coreAuth';
 import { adminGuard } from './adminGuard';
 import { adminAudit } from './adminAudit';
 import { envelopeErrorHandler, envelopeNotFound } from './envelope';
@@ -17,18 +18,20 @@ import { buildAdminControlsRoutes } from './routes/controlsRoutes';
 //   1. JSON body parser (small limit; admin payloads are tiny).
 //   2. adminGuard       — IP allowlist; returns envelope failure on deny.
 //   3. adminAudit       — JSONL log capturing status + error.code.
-//   4. Feature routers  — overview, system, logs, files, git, controls.
+//   4. Core app admin assignment + same-origin JSON mutations.
+//   5. Feature routers  — overview, system, logs, files, git, controls.
 //   5. envelopeNotFound — any unmatched /api/admin/* path → envelope 404.
 //   6. envelopeErrorHandler — last; normalizes any thrown error to envelope.
 //
 // W3 Forge does not mount: packages, backups, setup, releases, deploy.
 
-export function buildAdminRouter(startedAt: string): Router {
+export function buildAdminRouter(startedAt: string, auth: CoreAuth): Router {
   const router = Router();
 
   router.use(json({ limit: '64kb' }));
   router.use(adminGuard);
   router.use(adminAudit);
+  router.use(auth.requireAdmin, auth.sameOrigin);
 
   router.use('/', buildAdminOverviewRoutes());
   router.use('/', buildAdminSystemRoutes(startedAt));

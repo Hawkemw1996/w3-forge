@@ -5,6 +5,8 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { makeForgeTree } from './setup';
+import { createCoreFixture } from './coreFixture';
+let agent: any;
 
 let app: import('express').Express;
 let request: typeof import('supertest');
@@ -19,7 +21,11 @@ beforeAll(async () => {
   request = (await import('supertest')).default as unknown as typeof import('supertest');
   const { buildAdminRouter } = await import('../src/admin');
   app = expressMod.default();
-  app.use('/api/admin', buildAdminRouter(new Date().toISOString()));
+  const fixture = createCoreFixture();
+  app.use('/api/auth', fixture.auth.router);
+  app.use('/api/admin', buildAdminRouter(new Date().toISOString(), fixture.auth));
+  agent = (request as any).agent(app);
+  await fixture.login(agent);
 });
 
 function assertEnvelope(body: unknown): asserts body is { success: boolean } {
@@ -40,38 +46,38 @@ function assertEnvelope(body: unknown): asserts body is { success: boolean } {
 
 describe('Envelope contract — happy paths', () => {
   it('GET /version is envelope success', async () => {
-    const r = await request(app).get('/api/admin/version');
+    const r = await agent.get('/api/admin/version');
     expect(r.status).toBe(200);
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
   });
 
   it('GET /overview is envelope success', async () => {
-    const r = await request(app).get('/api/admin/overview');
+    const r = await agent.get('/api/admin/overview');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
   });
 
   it('GET /system is envelope success', async () => {
-    const r = await request(app).get('/api/admin/system');
+    const r = await agent.get('/api/admin/system');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
   });
 
   it('GET /logs is envelope success', async () => {
-    const r = await request(app).get('/api/admin/logs');
+    const r = await agent.get('/api/admin/logs');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
   });
 
   it('GET /files is envelope success', async () => {
-    const r = await request(app).get('/api/admin/files');
+    const r = await agent.get('/api/admin/files');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
   });
 
   it('GET /controls is envelope success and lists only LOW/safe-direct controls', async () => {
-    const r = await request(app).get('/api/admin/controls');
+    const r = await agent.get('/api/admin/controls');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(true);
     const ctrls = (r.body as { data: { controls: { riskLevel: string; runStrategy: string; readOnly: boolean }[] } })
@@ -87,14 +93,14 @@ describe('Envelope contract — happy paths', () => {
 
 describe('Envelope contract — failure paths', () => {
   it('unknown route → envelope failure 404 NOT_FOUND', async () => {
-    const r = await request(app).get('/api/admin/nope');
+    const r = await agent.get('/api/admin/nope');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(false);
     expect(r.status).toBe(404);
   });
 
   it('POST /controls/deploy-prod/run → envelope failure (control not registered)', async () => {
-    const r = await request(app)
+    const r = await agent
       .post('/api/admin/controls/deploy-prod/run')
       .set('Content-Type', 'application/json')
       .send({ controlId: 'deploy-prod', appId: 'w3forge' });
@@ -105,7 +111,7 @@ describe('Envelope contract — failure paths', () => {
   });
 
   it('POST /controls with unknown appId → envelope failure', async () => {
-    const r = await request(app)
+    const r = await agent
       .post('/api/admin/controls/config-validate/run')
       .set('Content-Type', 'application/json')
       .send({ controlId: 'config-validate', appId: 'nonexistent' });
@@ -115,7 +121,7 @@ describe('Envelope contract — failure paths', () => {
   });
 
   it('invalid log file (path traversal) → envelope failure', async () => {
-    const r = await request(app).get('/api/admin/logs/tail?file=../../../etc/passwd');
+    const r = await agent.get('/api/admin/logs/tail?file=../../../etc/passwd');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(false);
     // Either pre-flight (400 INVALID_FILE on the `..` segment) or post-flight
@@ -124,7 +130,7 @@ describe('Envelope contract — failure paths', () => {
   });
 
   it('invalid file browse (..) → envelope failure', async () => {
-    const r = await request(app).get('/api/admin/files?path=..');
+    const r = await agent.get('/api/admin/files?path=..');
     assertEnvelope(r.body);
     expect(r.body.success).toBe(false);
   });
