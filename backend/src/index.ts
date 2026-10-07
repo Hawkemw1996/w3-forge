@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { buildAdminRouter } from './admin';
+import { loadPricingConfig } from './materialPricing/config';
+import { buildMaterialPricingRouter } from './materialPricing/routes';
 import { createCoreClient } from './auth/coreClient';
 import { createCoreAuth } from './auth/coreAuth';
 import { FORGE_ROOT, ACTIVE_APP, loadApp } from './admin/forgeConfig';
@@ -73,6 +75,7 @@ function main(): void {
     publicCoreUrl: (process.env.CORE_PUBLIC_URL ?? process.env.CORE_API_URL ?? '').replace(/\/+$/, ''),
     cookieSecure: process.env.COOKIE_SECURE !== 'false'
   });
+  app.use('/api/material-pricing', buildMaterialPricingRouter(loadPricingConfig()));
   app.use('/api/auth', auth.router);
   app.use('/api/admin', buildAdminRouter(startedAt, auth));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));

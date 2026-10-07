@@ -14,3 +14,5 @@ v0.4.1 — Core app access and current admin console (unreleased, `dev/v0.4.1`)
 See [Core connection and console parity](docs/CORE_CONNECTION_v0.4.1.md) for required configuration and owner pairing. Sign-in now requires Core v0.12.16 and a Forge app admin assignment.
 
 Development checks: `npm ci --prefix backend`, `npm ci --prefix frontend/admin`, `npm run build --prefix backend`, `npm test --prefix backend`, `npm run typecheck --prefix frontend/admin`, `npm run build --prefix frontend/admin`, and `npm test --prefix frontend/admin`. Backend script execution checks require Linux/Bash. The existing launcher remains `scripts/w3-admin-console.sh`.
+
+Optional, default-disabled manual supplier research: [Material pricing service](docs/MATERIAL_PRICING.md). Forge collects bounded observations and local-model recommendations; BuildCost owns confirmed mappings and accepted cost history. This explicitly scoped paid HTTP workflow is separate from read-only admin controls.

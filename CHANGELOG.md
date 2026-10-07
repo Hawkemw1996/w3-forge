@@ -2,12 +2,16 @@
 
 ## v0.4.1 (unreleased)
 
+- Add a default-disabled material pricing service for BuildCost: fixed Lowe's actor, ZIP 49221/store 0088, separate service credential, bounded spend/runtime, durable idempotency and safe pending states.
+- Add advisory Qwen candidate matching with an explicitly configured installed tag and strict supplied-ID output validation; no database writes, scheduling, model tools or safeRunner changes.
+- Add provider-fixture coverage and configuration/recovery documentation. New restricted work is limited to approved service-token handling and a durable pricing request ledger; no new dependencies or deployment actions.
+
 - Add automatic Core discovery and owner-approved app-bound sign-in with S256 PKCE.
 - Require a current Forge admin assignment on every admin request, alongside the existing network guard; add same-origin JSON enforcement and actor audit metadata.
 - Bring in Core v0.12.16's shared sidebar/styles, sticky console layout, account footer and environment badges.
 - Add GitHub Validation using existing workspace status and registered Controls checks.
 - Reject dot-segment log paths before filesystem lookups; retain safe-runner and production authority restrictions.
-- Add authentication/UI coverage; no dependencies, database, deployment or production-data changes.
+- Add authentication/UI coverage; no dependency or deployment changes. Material pricing adds only its explicitly configured request ledger; business database writes remain in BuildCost.
 
 
 ## v0.4.0
