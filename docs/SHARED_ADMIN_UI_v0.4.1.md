@@ -1,5 +1,7 @@
 # Forge v0.4.1 shared admin console UI
 
+Historical pass: the [per-app UI follow-up](PER_APP_ADMIN_UI_v0.4.1.md) supersedes the disabled inventory and missing resource telemetry descriptions below.
+
 Date: 2026-10-06. Active branch: `dev/v0.4.1`. Base commit: `e2ae597e74a322258379966035bfc456b3ec1d80`. The commit containing this report is the UI review unit.
 
 ## Shared rule

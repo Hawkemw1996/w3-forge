@@ -10,6 +10,7 @@ import { clearTerminalScreen } from '../lib/terminalScreen';
 
 export function TerminalPage() {
   const status = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
+  const statusData = status.isError ? undefined : status.data;
   const host = useRef<HTMLDivElement>(null);
   const terminal = useRef<Terminal>();
   const fit = useRef<FitAddon>();
@@ -90,7 +91,7 @@ export function TerminalPage() {
   }
 
   function connect() {
-    if (!terminal.current || !status.data?.available || state !== 'disconnected') return;
+    if (!terminal.current || !statusData?.available || status.isFetching || state !== 'disconnected') return;
     const term = terminal.current;
     setState('connecting'); setHasError(false); setHasOutput(false); setMessage('Connecting to the Forge host…');
     const client = new TerminalConnection({
@@ -127,12 +128,12 @@ export function TerminalPage() {
   }
 
   const unavailable = status.error ? (status.error instanceof Error ? status.error.message : 'Could not check terminal availability.')
-    : status.data && !status.data.available ? status.data.message : undefined;
+    : statusData && !statusData.available ? statusData.message : undefined;
   const connected = state === 'connected';
   return (
     <section className={expanded ? 'fixed inset-0 z-50 flex flex-col gap-4 p-4 sm:p-6' : 'flex flex-col gap-4'}
       style={expanded ? { background: 'var(--w3-bg)' } : undefined} aria-label="Forge Host Terminal">
-      <SectionHeader title="Terminal" subtitle={status.data ? `${status.data.hostname} · Host Root Access` : 'Host Root Access'}
+      <SectionHeader title="Terminal" subtitle={statusData ? `${statusData.hostname} · Host Root Access` : 'Host Root Access'}
         actions={<div className="flex flex-wrap items-center gap-2">
           <button type="button" className="btn" onClick={clearScreen} disabled={!connected || !hasOutput} title="Clear visible terminal output" aria-label="Clear Screen">
             <Eraser size={14} /><span className="hidden sm:inline">Clear Screen</span>
@@ -140,19 +141,19 @@ export function TerminalPage() {
           <button type="button" className="btn" onClick={() => setExpanded(value => !value)} aria-label={expanded ? 'Collapse Terminal' : 'Expand Terminal'} aria-pressed={expanded}>
             {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
-          {state === 'disconnected' ? <button type="button" className="btn btn-primary" disabled={!status.data?.available} onClick={connect}>
+          {state === 'disconnected' ? <button type="button" className="btn btn-primary" disabled={!statusData?.available || status.isFetching} onClick={connect}>
             <Plug size={14} />Connect
           </button> : <button type="button" className="btn" onClick={() => connection.current?.stop()}>
             <Unplug size={14} />{state === 'connecting' ? 'Cancel' : 'Disconnect'}
           </button>}
         </div>} />
       {unavailable && <div role="alert" className="rounded-md border px-3 py-2 text-sm" style={{ borderColor: 'var(--w3-border)', color: 'var(--w3-text-muted)' }}>
-        {unavailable}<button type="button" className="btn ml-3" onClick={() => void status.refetch()}>Check Again</button>
+        {unavailable}<button type="button" className="btn ml-3" disabled={status.isFetching} onClick={() => void status.refetch()}>{status.isFetching ? 'Checking…' : status.isError ? 'Retry availability check' : 'Check Again'}</button>
       </div>}
       <div className={`card flex min-h-0 flex-col overflow-hidden ${expanded ? 'flex-1' : ''}`}>
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-4 py-3" style={{ borderColor: 'var(--w3-border)' }}>
           <div className="flex items-center gap-2 text-sm font-medium"><TerminalSquare size={16} style={{ color: 'var(--w3-gold-400)' }} />
-            {status.data?.access === 'root-login' ? 'Root Login' : 'Root Shell'}
+            {statusData?.access === 'root-login' ? 'Root Login' : statusData?.access === 'root-shell' ? 'Root Shell' : 'Host Terminal'}
           </div>
           <span className={`badge ${connected ? 'badge-success' : state === 'connecting' ? 'badge-warning' : 'badge-slate'}`}>
             {connected ? 'Connected' : state === 'connecting' ? 'Connecting' : 'Disconnected'}
@@ -166,8 +167,9 @@ export function TerminalPage() {
             {state === 'connecting' ? <TerminalSquare size={34} style={{ color: 'var(--w3-gold-400)', opacity: 0.8 }} />
               : <Unplug size={34} style={{ color: 'var(--w3-gold-400)', opacity: 0.8 }} />}
             <p className="text-sm">{state === 'connecting' ? 'Opening Terminal…' : 'Terminal Disconnected'}</p>
-            <p className="max-w-sm text-xs">{status.isLoading ? 'Checking connection availability…'
-              : state === 'connecting' ? 'Waiting for the Forge host’s shell…' : 'Press Connect to access the W3 Forge Terminal'}</p>
+            <p className="max-w-sm text-xs">{state === 'connecting' ? 'Waiting for the Forge host’s shell…'
+              : status.isPending || status.isFetching ? 'Checking connection availability…'
+              : statusData?.available ? 'Press Connect to access the W3 Forge Terminal' : 'Terminal access is unavailable. Check the status message above.'}</p>
           </div>}
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-xs" style={{ borderColor: 'var(--w3-border)', color: 'var(--w3-text-muted)' }}>

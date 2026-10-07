@@ -37,8 +37,8 @@ const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/system', label: 'System Status', icon: Activity },
   { to: '/logs', label: 'Logs', icon: FileText },
-  { to: '/packages', label: 'Packages', icon: Package, enabled: false, badge: 'W3 Core' },
-  { to: '/backups', label: 'Backups', icon: Archive, enabled: false, badge: 'W3 Core' },
+  { to: '/packages', label: 'Packages', icon: Package },
+  { to: '/backups', label: 'Backups', icon: Archive },
   { to: '/files', label: 'File Browser', icon: FolderTree },
   { to: '/github', label: 'GitHub / Releases', icon: Github },
   { to: '/terminal', label: 'Terminal', icon: TerminalSquare },
@@ -62,6 +62,8 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerRef = useRef<HTMLElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   // Auto-close drawer on route change.
@@ -69,18 +71,36 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     setDrawerOpen(false);
   }, [location.pathname]);
 
-  // Escape key + body scroll lock while drawer is open.
+  // Keep keyboard focus inside the visible mobile dialog and return it on close.
   useEffect(() => {
     if (!drawerOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDrawerOpen(false);
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const main = mainRef.current;
+    main?.setAttribute('inert', '');
+    const focusable = () => Array.from(drawerRef.current?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), [tabindex="0"]'
+    ) ?? []).filter(element => element.getClientRects().length > 0);
+    focusable()[0]?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); setDrawerOpen(false); }
+      if (event.key !== 'Tab') return;
+      const elements = focusable(), first = elements[0], last = elements.at(-1);
+      if (!first || !last) { event.preventDefault(); return; }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
+    const desktop = window.matchMedia('(min-width: 768px)');
+    const onResize = () => { if (desktop.matches) setDrawerOpen(false); };
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
+    desktop.addEventListener('change', onResize);
     return () => {
       window.removeEventListener('keydown', onKey);
+      desktop.removeEventListener('change', onResize);
       document.body.style.overflow = prevOverflow;
+      main?.removeAttribute('inert');
+      previousFocus?.focus();
     };
   }, [drawerOpen]);
 
@@ -110,6 +130,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         <button
           type="button"
           aria-label="Close Navigation"
+          tabIndex={-1}
           className="md:hidden fixed inset-0 z-30"
           style={{ background: 'rgba(0,0,0,0.55)' }}
           onClick={closeDrawer}
@@ -117,7 +138,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
       ) : null}
 
       {/* ----- Mobile drawer (<768px) ----- */}
-      <aside
+      {drawerOpen ? <aside
+        ref={drawerRef}
+        id="admin-mobile-navigation"
         className={cn(
           'w3-sidebar md:hidden fixed inset-y-0 left-0 z-40 flex w-72 max-w-[85vw] flex-col overflow-y-auto transition-transform duration-200 ease-out',
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
@@ -127,8 +150,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           borderRight: '1px solid var(--w3-border)',
           boxShadow: '8px 0 24px rgba(0,0,0,0.45)'
         }}
-        aria-hidden={!drawerOpen}
-        role="navigation"
+        aria-modal="true"
+        aria-label="Navigation"
+        role="dialog"
       >
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--w3-border)' }}>
           <SidebarBrand version={version?.version} nodeEnv={version?.nodeEnv} compact />
@@ -143,9 +167,9 @@ export function AdminLayout({ children }: { children: ReactNode }) {
         </div>
         <SidebarNav onNavigate={closeDrawer} />
         <SidebarFooter version={version?.version} nodeEnv={version?.nodeEnv} />
-      </aside>
+      </aside> : null}
 
-      <main className="flex-1 min-w-0" style={{ background: 'var(--w3-bg)' }}>
+      <main ref={mainRef} className="flex-1 min-w-0" style={{ background: 'var(--w3-bg)' }}>
         {/* v0.12.1: header is sticky again. The sidebar is pinned full-height
             and this top bar stays at top:0 while only the main content scrolls
             beneath it. The mobile drawer overlay continues to use fixed
@@ -163,6 +187,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             className="md:hidden btn !px-2 !py-1"
             aria-label="Open Navigation"
             aria-expanded={drawerOpen}
+            aria-controls="admin-mobile-navigation"
             onClick={() => setDrawerOpen(true)}
           >
             <Menu size={18} />

@@ -10,6 +10,9 @@ import { LogsPage } from './pages/LogsPage';
 import { FileBrowserPage } from './pages/FileBrowserPage';
 import { ControlsPage } from './pages/ControlsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PackagesPage } from './pages/PackagesPage';
+import { BackupsPage } from './pages/BackupsPage';
+import { RouteErrorBoundary } from './components/RouteErrorBoundary';
 import { LoadingState } from './components/ui/States';
 
 const TerminalPage = lazy(() => import('./pages/TerminalPage').then(module => ({ default: module.TerminalPage })));
@@ -18,10 +21,12 @@ const TerminalPage = lazy(() => import('./pages/TerminalPage').then(module => ({
 export default function App() {
   return (
     <CoreAuthGate><AdminLayout>
-      <Routes>
+      <RouteErrorBoundary><Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/system" element={<SystemStatusPage />} />
         <Route path="/logs" element={<LogsPage />} />
+        <Route path="/packages" element={<PackagesPage />} />
+        <Route path="/backups" element={<BackupsPage />} />
         <Route path="/files" element={<FileBrowserPage />} />
         <Route path="/github" element={<GitHubValidationPage />} />
         <Route path="/controls" element={<ControlsPage />} />
@@ -29,7 +34,7 @@ export default function App() {
         <Route path="/production-readiness" element={<ProductionReadinessPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></RouteErrorBoundary>
     </AdminLayout></CoreAuthGate>
   );
 }

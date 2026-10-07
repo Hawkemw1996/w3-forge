@@ -7,24 +7,27 @@ import { MetricTile } from '../components/ui/MetricTile';
 import { Badge } from '../components/ui/Badge';
 import { DashboardTile } from '../components/operations/DashboardTile';
 import { adminGet } from '../lib/api';
-import { formatDuration, formatTimestamp } from '../lib/format';
+import { formatBytes, formatDuration, formatTimestamp } from '../lib/format';
+import type { RuntimeSystem } from '../lib/runtime';
+import { availableInventory, inventoryStatus, usePackageInventory, useBackupInventory, type ArtifactInventory } from '../lib/inventory';
+import { LoadingState, EmptyState, ErrorState } from '../components/ui/States';
 
-interface SystemResp {
-  app: string; name: string; version: string; forgeRoot: string; startedAt: string;
-  uptimeSeconds: number; host: string; platform: string; nodeVersion: string;
-  authority: { mayDeploy: boolean; mayTagRelease: boolean; mayModifyProductionData: boolean };
-  readOnlyFoundation: boolean;
-}
+
 interface VersionResp { app: string; version: string; nodeEnv: string }
 interface GitStatus { workspace: string; branch: string; dirty: boolean; head: string; upstream: string | null; branchAllowed: boolean }
 
 // Standard Core / BuildCost System Status tile order and shells. Forge adapters
 // provide only reported facts; absent telemetry is explicitly unavailable.
 export function SystemStatusPage() {
-  const q = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system'), refetchInterval: 30_000 });
+  const q = useQuery({ queryKey: ['system'], queryFn: () => adminGet<RuntimeSystem>('/system'), refetchInterval: 30_000 });
   const version = useQuery({ queryKey: ['version'], queryFn: () => adminGet<VersionResp>('/version') });
   const git = useQuery({ queryKey: ['git', 'status'], queryFn: () => adminGet<GitStatus>('/git/status'), refetchInterval: 60_000 });
+  const staged = usePackageInventory('staged');
+  const installed = usePackageInventory('installed');
+  const backups = useBackupInventory();
   const data = q.isError ? undefined : q.data;
+  const hasMemory = data?.memory && Object.values(data.memory).some(value => value != null);
+  const hasCpu = !!data?.cpu && (data.cpu.cores > 0 || !!data.cpu.loadAverage?.length);
   const repository = git.isError ? undefined : git.data;
   return (
     <div className="space-y-4">
@@ -44,9 +47,15 @@ export function SystemStatusPage() {
         <UnavailableTile icon={<Activity size={14} />} title="API Status" subtitle="Request activity and response times." note="Request metrics are not exposed by this Forge installation." />
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <UnavailableTile icon={<MemoryStick size={14} />} title="Memory Status" subtitle="Container and process footprint." note="Memory telemetry is not exposed by this Forge installation." />
-        <UnavailableTile icon={<Cpu size={14} />} title="CPU Status" subtitle="Processor load and capacity." note="CPU telemetry is not exposed by this Forge installation." />
-        <UnavailableTile icon={<HardDrive size={14} />} title="Root Volume" subtitle="Container root filesystem." note="Filesystem capacity is not exposed by this Forge installation." />
+        <DashboardTile icon={<MemoryStick size={14} />} title="Memory Status" subtitle="Host and Forge process footprint." loading={q.isPending} error={q.error} status={{ tone: hasMemory ? 'info' : 'slate', label: hasMemory ? 'Reported' : 'Unavailable' }}>
+          {data?.memory ? <div className="sys-stat-grid"><MetricTile label="Process RSS" value={formatBytes(data.memory.processRssBytes)} /><MetricTile label="Process Heap Used" value={formatBytes(data.memory.processHeapUsedBytes)} /><MetricTile label="Process Heap Total" value={formatBytes(data.memory.processHeapTotalBytes)} /><MetricTile label="Host Total" value={formatBytes(data.memory.hostTotalBytes)} /><MetricTile label="Host Free" value={formatBytes(data.memory.hostFreeBytes)} /></div> : <EmptyState>Memory telemetry is unavailable.</EmptyState>}
+        </DashboardTile>
+        <DashboardTile icon={<Cpu size={14} />} title="CPU Status" subtitle="Host processor count and load average." loading={q.isPending} error={q.error} status={{ tone: hasCpu ? 'info' : 'slate', label: hasCpu ? 'Reported' : 'Unavailable' }}>
+          {data?.cpu ? <><div className="sys-stat-grid"><MetricTile label="Host CPUs" value={data.cpu.cores > 0 ? data.cpu.cores : 'Unavailable'} /><MetricTile label="1 Minute Load" value={data.cpu.loadAverage?.[0]?.toFixed(2) ?? 'Unavailable'} /><MetricTile label="5 Minute Load" value={data.cpu.loadAverage?.[1]?.toFixed(2) ?? 'Unavailable'} /><MetricTile label="15 Minute Load" value={data.cpu.loadAverage?.[2]?.toFixed(2) ?? 'Unavailable'} /></div><p className="sys-section__helper">Load average is host-wide and is not CPU utilization. It is unavailable on unsupported platforms.</p></> : <EmptyState>CPU telemetry is unavailable.</EmptyState>}
+        </DashboardTile>
+        <DashboardTile icon={<HardDrive size={14} />} title="Root Volume" subtitle="Filesystem containing the Forge workspace." loading={q.isPending} error={q.error} status={{ tone: data?.disk ? 'info' : 'slate', label: data?.disk ? 'Reported' : 'Unavailable' }}>
+          {data?.disk ? <><p className="mb-3 break-all text-xs font-mono text-[var(--w3-text-muted)]">{data.disk.root}</p><div className="sys-stat-grid"><MetricTile label="Total" value={formatBytes(data.disk.sizeBytes)} /><MetricTile label="Used" value={formatBytes(data.disk.usedBytes)} /><MetricTile label="Available" value={formatBytes(data.disk.availableBytes)} /></div></> : <EmptyState>Filesystem capacity is unavailable.</EmptyState>}
+        </DashboardTile>
       </div>
       <DashboardTile icon={<FolderTree size={14} />} title="Folder Usage" subtitle="Actual on-disk size of monitored W3 Forge folders."
         status={{ tone: 'slate', label: 'Unavailable' }} loading={q.isLoading} error={q.error} noBodyPadding>
@@ -56,8 +65,12 @@ export function SystemStatusPage() {
         </table></div> : null}
       </DashboardTile>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <UnavailableTile icon={<Package size={14} />} title="Package System" subtitle="Update tarball inventory." note="Package inventory is unavailable in Forge. Release packaging remains with W3 Core." />
-        <UnavailableTile icon={<Archive size={14} />} title="Backup System" subtitle="App and database archive pairs." note="Backup inventory is unavailable in Forge. Backup management remains with W3 Core." />
+        <DashboardTile icon={<Package size={14} />} title="Package System" subtitle="This app's staged and installed-directory inventories.">
+          <div className="space-y-4"><InventoryDetail query={staged} label="Staged Packages" /><InventoryDetail query={installed} label="Installed Packages" /><Link className="btn" to="/packages">Open Packages</Link></div>
+        </DashboardTile>
+        <DashboardTile icon={<Archive size={14} />} title="Backup System" subtitle="This app's archive and database file metadata.">
+          <div className="space-y-4"><InventoryDetail query={backups} label="Backup Files" /><Link className="btn" to="/backups">Open Backups</Link></div>
+        </DashboardTile>
         <DashboardTile icon={<GitBranch size={14} />} title="Git / Release" subtitle="Engineering workspace repository state."
           status={repository ? { tone: repository.dirty ? 'warning' : 'success', label: repository.dirty ? 'Dirty' : 'Clean' } : undefined}
           loading={git.isLoading} error={git.error}>
@@ -79,7 +92,7 @@ export function SystemStatusPage() {
             <div className="flex flex-wrap gap-1.5">{[
               ['Deploy', data.authority.mayDeploy], ['Tag Releases', data.authority.mayTagRelease], ['Modify Production Data', data.authority.mayModifyProductionData]
             ].map(([label, allowed]) => <Badge key={String(label)} tone={allowed ? 'warning' : 'slate'}>{label}: {allowed ? 'Allowed' : 'Not Allowed'}</Badge>)}</div>
-            <p className="sys-section__helper">W3 Core remains deployment and release authority.</p>
+            <p className="sys-section__helper">Each app owns its repository and artifacts. Production release approval remains with the owner.</p>
           </div> : null}
         </DashboardTile>
         <DashboardTile icon={<Terminal size={14} />} title="Recent Errors" subtitle="Tail of error-level log entries."
@@ -99,4 +112,11 @@ function UnavailableTile({ icon, title, subtitle, note }: { icon: ReactNode; tit
   return <DashboardTile icon={icon} title={title} subtitle={subtitle} status={{ tone: 'slate', label: 'Unavailable' }}>
     <div className="sys-section"><p className="sys-section__note">{note}</p></div>
   </DashboardTile>;
+}
+
+function InventoryDetail({ query, label }: { query: ReturnType<typeof usePackageInventory> | ReturnType<typeof useBackupInventory>; label: string }) {
+  const status = inventoryStatus(query);
+  const data = availableInventory<ArtifactInventory>(query);
+  const entries = data && ('packages' in data ? data.packages : data.backups);
+  return <div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2 text-xs"><span>{label}</span><Badge tone={status.tone}>{status.label}</Badge></div>{query.isPending ? <LoadingState /> : query.isError ? <ErrorState error={query.error} /> : data && entries ? <div className="space-y-1 text-xs text-[var(--w3-text-muted)]"><p>{entries.length} listed file{entries.length === 1 ? '' : 's'} · {data.app.name}</p><p className="break-all"><code>{data.root}</code></p>{'totalSizeBytes' in data ? <p>Listed size: {formatBytes(data.totalSizeBytes)}</p> : null}<p>{status.message}</p></div> : <EmptyState>{status.message}</EmptyState>}</div>;
 }

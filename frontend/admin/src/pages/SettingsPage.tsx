@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { ReactNode } from 'react';
-import { Cpu, GitBranch, Lock, Network, RefreshCw, ShieldCheck, TerminalSquare } from 'lucide-react';
+import { Archive, Cpu, GitBranch, Lock, Network, Package, RefreshCw, ShieldCheck, TerminalSquare } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Badge, type BadgeTone } from '../components/ui/Badge';
 import { SectionHeader } from '../components/ui/SectionHeader';
@@ -9,6 +9,7 @@ import { LoadingState, ErrorState } from '../components/ui/States';
 import { adminGet } from '../lib/api';
 import type { Connections } from '../lib/connections';
 import { terminalRequest, type TerminalStatus } from '../lib/terminal';
+import { availableInventory, inventoryData, inventoryStatus, usePackageInventory, useBackupInventory, type ArtifactInventory } from '../lib/inventory';
 
 interface SystemResp {
   app: string; name: string; version: string; forgeRoot: string; host: string;
@@ -20,17 +21,23 @@ export function SettingsPage() {
   const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system') });
   const connections = useQuery({ queryKey: ['connections'], queryFn: () => adminGet<Connections>('/connections') });
   const terminal = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
+  const staged = usePackageInventory('staged');
+  const installed = usePackageInventory('installed');
+  const backups = useBackupInventory();
+  const queries = [system, connections, terminal, staged, installed, backups];
+  const refresh = () => queries.forEach(query => { void query.refetch(); });
   const terminalData = terminal.isError ? undefined : terminal.data;
   if (system.isPending || connections.isPending) return <LoadingState label="Loading settings…" />;
-  if (system.isError) return <ErrorState title="Failed to load settings" error={system.error} />;
-  if (connections.isError) return <ErrorState title="Failed to load connections" error={connections.error} />;
+  if (system.isError) return <div className="space-y-3"><ErrorState title="Failed to load settings" error={system.error} /><button className="btn" type="button" onClick={refresh}>Retry</button></div>;
+  if (connections.isError) return <div className="space-y-3"><ErrorState title="Failed to load connections" error={connections.error} /><button className="btn" type="button" onClick={refresh}>Retry</button></div>;
   const s = system.data!;
   const c = connections.data!;
   return <div className="space-y-4">
     <SectionHeader title="Settings" subtitle="Configured services and operating boundaries for this Forge installation."
-      actions={<button type="button" className="btn" disabled={system.isFetching || connections.isFetching || terminal.isFetching} onClick={() => { void system.refetch(); void connections.refetch(); void terminal.refetch(); }}><RefreshCw size={14} /> Refresh</button>} />
-    <Card><CardBody className="text-sm text-[var(--w3-text-muted)]">These settings are read-only. Connection configuration is managed on the Forge host; app approval and user assignments are managed in W3 Core. Configured means settings are present, not that a service is reachable.</CardBody></Card>
+      actions={<button type="button" className="btn" disabled={queries.some(query => query.isFetching)} onClick={refresh}><RefreshCw size={14} /> Refresh</button>} />
+    <Card><CardBody className="text-sm text-[var(--w3-text-muted)]">These settings are read-only. This app owns its repository, package directories and backups. Connection configuration is managed on its host; sign-in approval and user assignments are managed in W3 Core. Configured means settings are present, not that a service is reachable.</CardBody></Card>
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <SettingCard title="App identity" icon={<Package size={14} />} state="This app" tone="info"><p>{c.app?.name || s.name}</p><p>App ID: <code>{c.app?.id || s.app}</code></p><p>Version: <code>{c.app?.version || s.version}</code></p></SettingCard>
       <SettingCard title="W3 Core access" icon={<ShieldCheck size={14} />} state={c.core.configured ? 'Configured' : 'Needs setup'} tone={c.core.configured ? 'info' : 'warning'}>
         <p>Core-owned sign-in and the Forge admin role protect this console.</p>
         {c.core.publicUrl ? <ExternalConnection href={c.core.publicUrl} label="Open W3 Core" /> : null}
@@ -40,6 +47,9 @@ export function SettingsPage() {
         <p className="break-all">Workspace: <code>{c.github.workspace}</code></p><p>Development branch: <code>{c.github.defaultDevBranch}</code></p>
         <Link className="text-[var(--w3-gold-400)] underline" to="/github">Check repository connection</Link>
       </SettingCard>
+      <InventorySettingCard title="Staged packages" query={staged} to="/packages" />
+      <InventorySettingCard title="Installed package directory" query={installed} to="/packages" />
+      <InventorySettingCard title="Backup directory" query={backups} to="/backups" />
       <SettingCard title="Terminal access" icon={<TerminalSquare size={14} />} state={terminal.isPending ? 'Checking' : terminalData?.available ? 'Available' : 'Unavailable'} tone={terminalData?.available ? 'success' : 'warning'}>
         <p>{terminalData?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking host terminal availability.')}</p>
         <p>Host setting: {c.terminal.enabled ? 'enabled' : 'disabled'}. Terminal commands affect the Forge host.</p>
@@ -73,4 +83,15 @@ function ExternalConnection({ href, label }: { href: string; label: string }) {
 }
 function SettingCard({ title, icon, state, tone, children }: { title: string; icon: ReactNode; state: string; tone: BadgeTone; children: ReactNode }) {
   return <Card><CardHeader title={<span className="flex items-center gap-2">{icon}{title}</span>} right={<Badge tone={tone}>{state}</Badge>} /><CardBody className="space-y-2 text-xs text-[var(--w3-text-muted)]">{children}</CardBody></Card>;
+}
+
+function InventorySettingCard({ title, query, to }: { title: string; query: ReturnType<typeof usePackageInventory> | ReturnType<typeof useBackupInventory>; to: string }) {
+  const status = inventoryStatus(query);
+  const metadata = inventoryData<ArtifactInventory>(query);
+  const available = availableInventory<ArtifactInventory>(query);
+  return <SettingCard title={title} icon={to === '/backups' ? <Archive size={14} /> : <Package size={14} />} state={status.label} tone={status.tone}>
+    {metadata ? <><p>App: {metadata.app.name}</p><p className="break-all">Directory: <code>{metadata.root || 'Not configured'}</code></p></> : null}<p>{status.message}</p>
+    {available ? <p>{'packages' in available ? available.packages.length : available.backups.length} listed files. Contents have not been verified.</p> : null}
+    <Link className="text-[var(--w3-gold-400)] underline" to={to}>{to === '/backups' ? 'Open Backups' : 'Open Packages'}</Link>
+  </SettingCard>;
 }

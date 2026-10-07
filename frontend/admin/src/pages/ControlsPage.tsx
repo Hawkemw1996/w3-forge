@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Info, Play, ShieldCheck, Sliders } from 'lucide-react';
+import { Info, Play, RefreshCw, ShieldCheck, Sliders } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { LoadingState, ErrorState, EmptyState } from '../components/ui/States';
@@ -36,14 +36,19 @@ const SECTIONS = [
 // The action payload and safeRunner execution path remain unchanged.
 export function ControlsPage() {
   const list = useQuery({ queryKey: ['controls'], queryFn: () => adminGet<ListResp>('/controls') });
-  const data = list.data;
+  const data = list.isError ? undefined : list.data;
   const sections = SECTIONS.map((section) => ({ ...section, controls: data?.controls.filter((control) => control.category === section.id) ?? [] }));
   return (
     <div className="space-y-4">
       <SectionHeader title="Controls" subtitle="Operator actions for W3 Forge. Registry-driven and gated by safe wrappers."
-        actions={<Badge tone="success"><ShieldCheck size={11} />Read Only</Badge>} />
-      {list.isLoading ? <LoadingState label="Loading control registry…" /> : null}
-      {list.isError ? <ErrorState error={list.error} title="Failed to load controls" /> : null}
+        actions={<div className="flex max-w-[calc(100vw-5rem)] flex-wrap items-center gap-2">
+          <Badge tone="success"><ShieldCheck size={11} />Read Only</Badge>
+          <button type="button" className="btn" disabled={list.isFetching} onClick={() => void list.refetch()}>
+            <RefreshCw size={13} />{list.isFetching ? 'Refreshing…' : list.isError ? 'Retry' : 'Refresh'}
+          </button>
+        </div>} />
+      {list.isPending ? <LoadingState label="Loading control registry…" /> : null}
+      {list.isError ? <div role="alert"><ErrorState error={list.error} title="Failed to load controls" /></div> : null}
       {data ? <>
         <div className="rounded-md border p-3 text-xs" style={{ background: 'var(--w3-card)', borderColor: 'var(--w3-border-tile)', color: 'var(--w3-text-muted)' }}>
           <div className="flex flex-wrap items-center gap-2">

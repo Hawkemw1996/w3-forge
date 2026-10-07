@@ -31,10 +31,11 @@ export function FileBrowserPage() {
     queryKey: ['files', cwd],
     queryFn: () => adminGet<FilesResp>(`/files?path=${encodeURIComponent(cwd)}`)
   });
-  const entries = q.data?.entries;
+  const data = q.isError ? undefined : q.data;
+  const entries = data?.entries;
   const selected = entries?.find((entry) => entry.type === 'file' && entry.name === selectedName);
   const relativePath = cwd === '.' ? '' : cwd;
-  const fullPath = q.data ? [q.data.forgeRoot, relativePath].filter(Boolean).join('/') : relativePath || 'Forge root';
+  const fullPath = data ? [data.forgeRoot, relativePath].filter(Boolean).join('/') : relativePath || 'Forge root';
   const breadcrumbs = useMemo(() => {
     const parts = relativePath.split('/').filter(Boolean);
     return [{ label: 'root', target: '.' }, ...parts.map((label, index) => ({ label, target: parts.slice(0, index + 1).join('/') }))];
@@ -93,9 +94,9 @@ export function FileBrowserPage() {
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
             <button type="button" onClick={() => navigate('.')}
               className="flex flex-col gap-1 rounded-md border border-[var(--w3-gold-500)] px-3 py-2 text-left text-xs transition"
-              style={{ background: 'rgba(217,164,65,0.10)', color: 'var(--w3-text)' }} title={q.data?.forgeRoot}>
+              style={{ background: 'rgba(217,164,65,0.10)', color: 'var(--w3-text)' }} title={data?.forgeRoot}>
               <div className="flex items-center justify-between"><span className="font-semibold">Forge Workspace</span><Badge tone="slate">Read Only</Badge></div>
-              <div className="truncate font-mono text-[10px] text-[var(--w3-text-muted)]">{q.data?.forgeRoot ?? 'Configured Forge root'}</div>
+              <div className="truncate font-mono text-[10px] text-[var(--w3-text-muted)]">{data?.forgeRoot ?? 'Configured Forge root'}</div>
               <div className="text-[11px] text-[var(--w3-text-muted)]">Registered workspace directories and file metadata.</div>
             </button>
           </div>
@@ -163,13 +164,13 @@ export function FileBrowserPage() {
         </Card>
         <div className="space-y-4">
           <Card>
-            <CardHeader title="File Details" subtitle={selected?.name ?? 'Choose a file on the left.'} />
+            <CardHeader title="File Details" subtitle={q.isError ? 'Directory information is unavailable.' : selected?.name ?? 'Choose a file on the left.'} />
             <CardBody>
               {selected ? <dl className="space-y-2 text-xs">
                 {[['Name', selected.name], ['Path', `${fullPath}/${selected.name}`], ['Size', formatBytes(selected.size)], ['Modified', formatTimestamp(timestamp(selected.modifiedMs))], ['Access', 'Read Only · Metadata Only']].map(([label, value]) => (
                   <div key={label} className="grid grid-cols-[90px_minmax(0,1fr)] gap-3"><dt className="text-[var(--w3-text-muted)]">{label}</dt><dd className="break-all font-mono text-[var(--w3-text)]">{value}</dd></div>
                 ))}
-              </dl> : <EmptyState>Select A File To View Its Details.</EmptyState>}
+              </dl> : <EmptyState>{q.isError ? 'Refresh the directory to load current file details.' : 'Select A File To View Its Details.'}</EmptyState>}
             </CardBody>
           </Card>
           <Card>

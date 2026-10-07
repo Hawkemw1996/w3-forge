@@ -14,6 +14,9 @@ const { GitHubValidationPage } = await server.ssrLoadModule('/src/pages/GitHubVa
 const { DashboardPage } = await server.ssrLoadModule('/src/pages/DashboardPage.tsx');
 const { ProductionReadinessPage } = await server.ssrLoadModule('/src/pages/ProductionReadinessPage.tsx');
 const { SettingsPage } = await server.ssrLoadModule('/src/pages/SettingsPage.tsx');
+const { PackagesPage } = await server.ssrLoadModule('/src/pages/PackagesPage.tsx');
+const { BackupsPage } = await server.ssrLoadModule('/src/pages/BackupsPage.tsx');
+const { inventoryData, availableInventory, inventoryStatus } = await server.ssrLoadModule('/src/lib/inventory.ts');
 test.after(() => server.close());
 globalThis.window = { location: { search: '' } };
 const status = { configured: true, authenticated: true, coreUrl: 'https://core.test',
@@ -34,7 +37,10 @@ test('the console uses current shared navigation, environment badges and account
   const indexes = labels.map(label => html.indexOf('>' + label + '</span>'));
   assert.ok(indexes.every((value, index) => value >= 0 && (!index || value > indexes[index - 1])), 'canonical navigation order');
   assert.doesNotMatch(html, /Engineering console/);
-  assert.doesNotMatch(html, /href="\/packages|href="\/backups|href="\/command-center/);
+  assert.match(html, /href="\/packages"/);
+  assert.match(html, /href="\/backups"/);
+  assert.doesNotMatch(html, /href="\/command-center/);
+  assert.doesNotMatch(html, /role="dialog"/, 'closed mobile drawer must not leave hidden focusable links');
 });
 test('unapproved installation shows fingerprint and browser sign-in without password fields', () => {
   const html = render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT'), { ...status, authenticated: false, user: null, connection: { ...status.connection, status: 'pending' } });
@@ -63,7 +69,9 @@ test('existing Controls and File Browser remain routed behind the Core gate', ()
 });
 
 
+const gitIdentity = { appId: 'w3forge', appName: 'W3 Forge', configuredRepositoryUrl: 'https://github.com/example/forge', remoteRepositoryUrl: 'https://github.com/example/forge', repositoryBinding: 'matched', repositoryMessage: 'Workspace origin matches this app.' };
 const connections = {
+  app: { id: 'w3forge', name: 'W3 Forge', version: '0.4.1' },
   core: { configured: true, publicUrl: 'https://core.test' },
   github: { repositoryUrl: 'https://github.com/example/forge', workspace: '/review/forge', defaultDevBranch: 'dev/v0.4.1' },
   terminal: { enabled: true },
@@ -100,7 +108,7 @@ test('settings show configuration and pricing limits without claiming untested s
 
 test('GitHub shows repository and local tracking metadata without implying a remote connection was checked', () => {
   const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], {
-    branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: true, statusShort: ' M README.md', devBranches: ['dev/v0.4.1'],
+    ...gitIdentity, branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: true, statusShort: ' M README.md', devBranches: ['dev/v0.4.1'],
     repositoryUrl: 'https://github.com/example/forge', remoteConfigured: true, head: '0123456789abcdef', upstream: 'origin/dev/v0.4.1', ahead: 2, behind: 1, defaultDevBranch: 'dev/v0.4.1'
   }]]);
   for (const text of ['Not checked', 'Check Remote', '0123456789ab', 'origin/dev/v0.4.1', '2 ahead', '1 behind', 'Changes present', 'last fetched', 'href="https://github.com/example/forge"']) assert.ok(html.includes(text), text);
@@ -126,4 +134,57 @@ test('missing session encryption setup is explained without offering sign-in or 
   assert.match(html, /FORGE_SESSION_SECRET/);
   assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"/);
   assert.match(html, /disabled=""/);
+});
+
+const inventory = { app: { id: 'w3forge', name: 'W3 Forge' }, root: '/review/forge/packages',
+  connection: { configured: true, available: true, state: 'ready', message: null }, truncated: false };
+const packageInventory = { ...inventory, packages: [{ name: 'w3forge.tar.gz', path: '/review/forge/packages/v0.4.1/w3forge.tar.gz',
+  sizeBytes: 1024, mtime: '2026-10-07T01:00:00.000Z', validName: true, parsedVersion: '0.4.1', layout: 'canonical' }] };
+const backupInventory = { ...inventory, root: '/review/forge/backups', backups: [{ name: 'w3forge-v0.4.1-fixture.sql.gz',
+  sizeBytes: 512, mtime: '2026-10-07T01:00:00.000Z', parsedVersion: '0.4.1', kind: 'database' }], totalSizeBytes: 512 };
+
+test('package and backup pages display app-specific metadata without execution actions', () => {
+  const packages = render(React.createElement(PackagesPage), status, [
+    [['admin', 'packages', 'staged'], packageInventory], [['admin', 'packages', 'installed'], { ...inventory, packages: [] }]
+  ]);
+  for (const text of ['W3 Forge', '/review/forge/packages', 'w3forge.tar.gz', 'Staged Packages', 'Installed Packages', 'mobile-cards', 'table-dark']) assert.ok(packages.includes(text), text);
+  const backups = render(React.createElement(BackupsPage), status, [[['admin', 'backups'], backupInventory]]);
+  for (const text of ['w3forge-v0.4.1-fixture.sql.gz', 'Database file', 'Not verified', 'Latest Backup File', 'Backup History']) assert.ok(backups.includes(text), text);
+  assert.doesNotMatch(packages + backups, /<button[^>]*>[^<]*(Install|Restore|Delete|Deploy)/);
+});
+test('inventory pages distinguish disconnected storage from an empty connected directory', () => {
+  for (const [state, label] of [['not_configured', 'Not configured'], ['missing', 'Directory missing'], ['unavailable', 'Unavailable']]) {
+    const data = { ...packageInventory, connection: { configured: state !== 'not_configured', available: false, state, message: null } };
+    const html = render(React.createElement(PackagesPage), status, [
+      [['admin', 'packages', 'staged'], data], [['admin', 'packages', 'installed'], data]
+    ]);
+    assert.ok(html.includes(label), label); assert.match(html, /Retry/);
+    assert.doesNotMatch(html, /w3forge\.tar\.gz<\/div>|No staged packages found/);
+  }
+  const html = render(React.createElement(PackagesPage), status, [
+    [['admin', 'packages', 'staged'], { ...inventory, packages: [] }], [['admin', 'packages', 'installed'], { ...inventory, packages: [] }]
+  ]);
+  assert.match(html, /No staged packages found/); assert.match(html, /Available/);
+});
+test('inventory adapters hide cached data on failure and label truncated listings', () => {
+  const ready = { isPending: false, isError: false, error: null, data: packageInventory };
+  assert.equal(availableInventory(ready), packageInventory);
+  for (const state of [{ isError: true, error: new Error('Storage failed') }, { isPending: true }]) {
+    const query = { ...ready, ...state };
+    assert.equal(inventoryData(query), undefined); assert.equal(availableInventory(query), undefined);
+    assert.notEqual(inventoryStatus(query).label, 'Available');
+  }
+  assert.equal(inventoryStatus({ ...ready, data: { ...packageInventory, truncated: true } }).label, 'Partial listing');
+});
+test('a mismatched workspace cannot replace the app repository link or enable connection check', () => {
+  const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], {
+    ...gitIdentity, workspace: '/review/forge', branch: 'dev/v0.4.1', branchAllowed: true, dirty: false,
+    repositoryUrl: gitIdentity.configuredRepositoryUrl, remoteConfigured: true,
+    remoteRepositoryUrl: 'https://github.com/example/buildcost', repositoryBinding: 'mismatch',
+    repositoryMessage: 'Workspace origin points to a different repository.'
+  }]]);
+  assert.match(html, /href="https:\/\/github.com\/example\/forge"/);
+  assert.doesNotMatch(html, /href="https:\/\/github.com\/example\/buildcost"/);
+  assert.match(html, /Workspace origin: /); assert.match(html, /Needs attention/);
+  assert.match(html, /class="btn btn-primary" disabled=""/);
 });

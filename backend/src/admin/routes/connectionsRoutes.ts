@@ -22,6 +22,7 @@ export function connectionStatus(env: NodeJS.ProcessEnv = process.env) {
   const coreUrl = publicServiceUrl(env.CORE_PUBLIC_URL ?? env.CORE_API_URL);
   const n8nUrl = publicServiceUrl(env.W3_FORGE_N8N_URL);
   return {
+    app: { id: cfg.app_id, name: cfg.name, version: cfg.version },
     core: { configured: createCoreClient({ baseUrl: env.CORE_API_URL ?? '', publicCoreUrl: env.CORE_PUBLIC_URL ?? env.CORE_API_URL,
       publicAppUrl: env.FORGE_PUBLIC_URL, clientSecret: env.CORE_APP_CLIENT_SECRET, instanceId: env.CORE_APP_INSTANCE_ID }).configured && !sessionSecretIssue({sessionSecret:env.FORGE_SESSION_SECRET, pairingSecret:env.CORE_APP_CLIENT_SECRET, serviceToken:env.CORE_SERVICE_TOKEN}), publicUrl: coreUrl },
     github: { repositoryUrl: githubRepositoryUrl(cfg.repo.url), workspace: cfg.paths.workspaces,

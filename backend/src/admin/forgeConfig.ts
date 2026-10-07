@@ -40,6 +40,8 @@ export interface ForgeAppConfig {
     scripts: string;
     logs: string;
     backups: string;
+    packages_staged?: string;
+    packages_installed?: string;
   };
   authority: {
     may_deploy: boolean;

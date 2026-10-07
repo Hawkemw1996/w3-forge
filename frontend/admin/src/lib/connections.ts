@@ -1,4 +1,5 @@
 export interface Connections {
+  app: { id: string; name: string; version: string };
   core: { configured: boolean; publicUrl: string | null };
   github: { repositoryUrl: string | null; workspace: string; defaultDevBranch: string };
   terminal: { enabled: boolean };

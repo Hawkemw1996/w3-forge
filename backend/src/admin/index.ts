@@ -10,6 +10,7 @@ import { buildAdminFilesRoutes } from './routes/filesRoutes';
 import { buildForgeGitRoutes } from './routes/forgeGitRoutes';
 import { buildAdminControlsRoutes } from './routes/controlsRoutes';
 import { buildAdminTerminalRoutes } from './routes/terminalRoutes';
+import { buildInventoryRoutes } from './routes/inventoryRoutes';
 import { buildConnectionsRoutes } from './routes/connectionsRoutes';
 import { createTerminalRuntime, type TerminalRuntime } from './terminal/runtime';
 
@@ -26,7 +27,7 @@ import { createTerminalRuntime, type TerminalRuntime } from './terminal/runtime'
 //   5. envelopeNotFound — any unmatched /api/admin/* path → envelope 404.
 //   6. envelopeErrorHandler — last; normalizes any thrown error to envelope.
 //
-// W3 Forge does not mount: packages, backups, setup, releases, deploy.
+// Inventory is read-only. Setup, release/deploy and backup execution are not mounted.
 
 export function buildAdminRouter(startedAt: string, auth: CoreAuth, terminal: TerminalRuntime = createTerminalRuntime(auth)): Router {
   const router = Router();
@@ -44,6 +45,7 @@ export function buildAdminRouter(startedAt: string, auth: CoreAuth, terminal: Te
   router.use('/', buildAdminControlsRoutes());
   router.use('/', buildAdminTerminalRoutes(terminal));
   router.use('/', buildConnectionsRoutes());
+  router.use('/', buildInventoryRoutes());
 
   router.use(envelopeNotFound);
   router.use(envelopeErrorHandler);

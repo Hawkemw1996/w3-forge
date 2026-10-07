@@ -17,6 +17,9 @@ paths:
   scripts: /opt/scripts
   logs: /opt/logs/w3forge
   backups: /opt/backups/w3forge
+  # Optional app-owned read-only package inventories; set host paths when connected.
+  # packages_staged: /absolute/path/to/this/apps/staged/packages
+  # packages_installed: /absolute/path/to/this/apps/installed/packages
 
 service:
   name: ""

@@ -1,10 +1,17 @@
+## v0.4.1 — Per-app console readiness
+
+- Keep each app’s own GitHub repository and reject mismatched workspace origins or stale connection results.
+- Enable Packages/Backups with read-only app-scoped inventories, connection states and retry; add real host/process resource telemetry.
+- Finish stale-error recovery, mobile keyboard navigation and lazy-page recovery while preserving shared BuildCost/Core styling.
+- Verify desktop/mobile UI and inventory/access regressions. See `docs/PER_APP_ADMIN_UI_v0.4.1.md`.
+
 ## v0.4.1 — Shared W3 authentication standard
 
 ## v0.4.1 — Shared admin console UI
 
 - Match the canonical BuildCost sidebar labels/order, shared components, footer and responsive console shell; retain app-specific identity and capability states.
 - Restore the standard operations dashboard and align system, logs, files, controls and GitHub page composition; add a read-only readiness checklist.
-- Keep Packages/Backups visible as Core-managed capabilities and keep product chat/automation plans outside the admin dashboard.
+- Use the standard Packages/Backups navigation (enabled with per-app inventories in the follow-up) and keep product chat/automation plans outside the admin dashboard.
 - Pin shared UI source provenance and check desktop/mobile shell geometry against BuildCost. See `docs/SHARED_ADMIN_UI_v0.4.1.md`.
 
 - Encrypt stored Core app-session tokens with a separate Forge session key; reject missing or reused pairing/session/service secrets before sign-in.
