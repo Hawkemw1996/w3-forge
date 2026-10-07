@@ -74,6 +74,9 @@ function main(): void {
   const auth = createCoreAuth(core, {
     publicAppUrl: (process.env.FORGE_PUBLIC_URL ?? '').replace(/\/+$/, ''),
     publicCoreUrl: (process.env.CORE_PUBLIC_URL ?? process.env.CORE_API_URL ?? '').replace(/\/+$/, ''),
+    sessionSecret: process.env.FORGE_SESSION_SECRET ?? '',
+    pairingSecret: process.env.CORE_APP_CLIENT_SECRET ?? '',
+    serviceToken: process.env.CORE_SERVICE_TOKEN ?? '',
     cookieSecure: process.env.COOKIE_SECURE !== 'false'
   });
   app.use('/api/material-pricing', buildMaterialPricingRouter(loadPricingConfig()));

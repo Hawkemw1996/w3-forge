@@ -1,18 +1,19 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { createCoreFixture } from './coreFixture';
 import { makeForgeTree } from './setup';
 import { safeReturnPath, createCoreAuth } from '../src/auth/coreAuth';
 import { createCoreClient } from '../src/auth/coreClient';
+import * as sessionCrypto from '../src/auth/sessionCrypto';
 
 process.env.W3_FORGE_ROOT = makeForgeTree();
 process.env.W3_FORGE_ACTIVE_APP = 'w3forge';
 process.env.ADMIN_ALLOWED_IPS = '*';
 let buildAdminRouter: typeof import('../src/admin').buildAdminRouter;
 beforeAll(async () => { buildAdminRouter = (await import('../src/admin')).buildAdminRouter; });
-function setup() {
-  const fixture = createCoreFixture(), app = express();
+function setup(sessionOptions: Parameters<typeof createCoreFixture>[0] = {}) {
+  const fixture = createCoreFixture(sessionOptions), app = express();
   app.use('/api/auth', fixture.auth.router);
   app.use('/api/admin', buildAdminRouter(new Date().toISOString(), fixture.auth));
   return { ...fixture, app, agent: request.agent(app) };
@@ -96,5 +97,55 @@ describe('Core connection and browser sign-in', () => {
     const app = express(); app.use('/api/auth', auth.router);
     expect((await request(app).get('/api/auth/status')).body.data.configured).toBe(false);
     expect((await request(app).post('/api/auth/login').send({})).status).toBe(503);
+  });
+});
+
+
+describe('shared W3 session encryption standard', () => {
+  it('blocks sign-in before contacting Core when the session key is missing or reused', async () => {
+    for(const options of [{sessionSecret:''},{sessionSecret:'A'.repeat(43)},{serviceToken:'A'.repeat(43)}]){
+      const f=setup(options);
+      const status=await f.agent.get('/api/auth/status');
+      expect(status.body.data.configured).toBe(false);
+      expect(status.body.data.setupError).toBeTypeOf('string');
+      expect((await f.agent.post('/api/auth/login').send({})).status).toBe(503);
+      expect(f.state.calls).toEqual([]);
+      expect(f.state.tokens.size).toBe(0);
+    }
+  });
+  it('seals Core tokens on login and decrypts them only for session validation and logout', async () => {
+    const seal=vi.spyOn(sessionCrypto,'encryptCoreSession');
+    const open=vi.spyOn(sessionCrypto,'decryptCoreSession');
+    try {
+      const f=setup(); await f.login(f.agent);
+      expect(seal).toHaveBeenCalledWith('T'.repeat(43),f.authOptions.sessionSecret);
+      const sealed=seal.mock.results.at(-1)!.value;
+      expect(sealed).not.toContain('T'.repeat(43));
+      expect((await f.agent.get('/api/admin/version')).status).toBe(200);
+      expect(open).toHaveBeenCalledWith(sealed,f.authOptions.sessionSecret);
+      const status=await f.agent.get('/api/auth/status');
+      expect(JSON.stringify(status.body)).not.toContain(sealed);
+      expect(JSON.stringify(status.body)).not.toContain(f.authOptions.sessionSecret);
+      expect((await f.agent.post('/api/auth/logout').send({})).status).toBe(200);
+      expect(f.state.tokens.size).toBe(0);
+    } finally {seal.mockRestore();open.mockRestore();}
+  });
+  it('drops local sessions after session-key rotation and never revives them with the old key', async () => {
+    const f=setup();await f.login(f.agent);
+    const before=f.authOptions.sessionSecret;
+    f.authOptions.sessionSecret='rotated-session-secret-01234567890123456789';
+    const calls=f.state.calls.length;
+    expect((await f.agent.get('/api/admin/version')).status).toBe(401);
+    expect(f.state.calls).toHaveLength(calls);
+    f.authOptions.sessionSecret=before;
+    expect((await f.agent.get('/api/admin/version')).status).toBe(401);
+    expect((await f.agent.post('/api/auth/logout').send({})).status).toBe(200);
+  });
+  it('refuses a callback if encryption configuration becomes invalid before exchange', async () => {
+    const f=setup();const callback=await f.begin(f.agent);
+    f.authOptions.sessionSecret='';
+    expect((await f.agent.get(callback)).headers.location).toContain('sign_in=unavailable');
+    expect(f.state.calls).not.toContain('/api/app-sign-in/exchange');
+    expect(f.state.tokens.size).toBe(0);
   });
 });

@@ -41,3 +41,11 @@ describe('installed Qwen model compatibility', () => {
     expect(connectionStatus({W3_FORGE_MATERIAL_PRICING_OLLAMA_MODEL:'qwen2.5-coder:14b'}).ollama).toEqual({configured:true,model:'qwen2.5-coder:14b'});
   });
 });
+
+it('reports Core sign-in ready only with a distinct Forge session encryption key', () => {
+  const env={CORE_API_URL:'https://core.test',CORE_PUBLIC_URL:'https://core.test',FORGE_PUBLIC_URL:'https://forge.test',
+    CORE_APP_CLIENT_SECRET:'P'.repeat(43),CORE_APP_INSTANCE_ID:'01234567-89ab-4cde-8fab-0123456789ab'};
+  expect(connectionStatus(env).core.configured).toBe(false);
+  expect(connectionStatus({...env,FORGE_SESSION_SECRET:env.CORE_APP_CLIENT_SECRET}).core.configured).toBe(false);
+  expect(connectionStatus({...env,FORGE_SESSION_SECRET:'local-session-secret-0123456789012345'}).core.configured).toBe(true);
+});

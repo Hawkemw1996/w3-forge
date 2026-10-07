@@ -119,3 +119,11 @@ it('does not authorize a stale successful Core check that completes after local 
   release(verified);
   expect(await pendingAuthorization).toBe(false);
 });
+
+
+it('closes an idle terminal when the Forge session-encryption key is rotated', async () => {
+  const f = setup(); await f.login(f.agent); await f.post('/sessions', { cols: 80, rows: 24 });
+  f.authOptions.sessionSecret='rotated-terminal-session-secret-0123456789';
+  await f.manager.reap();
+  expect(f.processes[0].kill).toHaveBeenCalledTimes(1);
+});

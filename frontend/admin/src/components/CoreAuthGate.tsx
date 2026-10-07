@@ -4,6 +4,7 @@ import { authGet, authPost } from '../lib/api';
 
 export interface CoreStatus {
   configured: boolean;
+  setupError?: string | null;
   authenticated: boolean;
   coreUrl: string | null;
   connection: { fingerprint: string | null; status: string };
@@ -49,7 +50,7 @@ export function CoreAuthGate({ children }: { children: ReactNode }) {
       <div className="text-lg font-semibold text-[var(--w3-gold-400)]">W3 Forge</div>
       <h1 className="text-base font-semibold">{denied ? 'Forge admin access required' : status.isError ? 'Core access unavailable' : 'Sign in with W3 Core'}</h1>
       <p className="text-sm text-[var(--w3-text-muted)]">The Core owner must approve this app, enable W3 sign-in and assign your account the Forge admin role.</p>
-      {!status.data?.configured && !status.isError ? <p role="alert">This installation needs its Core connection configured.</p> : null}
+      {!status.data?.configured && !status.isError ? <p role="alert">{status.data?.setupError || 'This installation needs its Core connection configured.'}</p> : null}
       {status.data?.connection.fingerprint && status.data.connection.status !== 'approved' ? <div className="text-xs"><p>For the Core owner: match this installation fingerprint before approving it.</p><code>{status.data.connection.fingerprint}</code></div> : null}
       {error || status.isError || callbackError ? <p role="alert" className="text-sm text-[var(--status-danger)]">{error || (status.error instanceof Error ? status.error.message : callbackError === 'denied' ? 'Core has not allowed this sign-in.' : 'Sign-in could not finish. Check app access in Core and try again.')}</p> : null}
       <button type="button" className="btn btn-primary" disabled={busy || status.data?.configured === false} onClick={() => void start()}>Sign in with W3 Core</button>

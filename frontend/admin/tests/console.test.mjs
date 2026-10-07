@@ -104,3 +104,14 @@ test('GitHub leaves the remote check disabled when the workspace has no remote',
   assert.match(html, /class="btn btn-primary" disabled=""/);
   assert.match(html, /No upstream configured/);
 });
+
+
+test('missing session encryption setup is explained without offering sign-in or exposing protected content', () => {
+  const html = render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT'), {
+    ...status, configured: false, authenticated: false, user: null,
+    setupError: 'Configure a separate FORGE_SESSION_SECRET with at least 32 characters before signing in.'
+  });
+  assert.match(html, /FORGE_SESSION_SECRET/);
+  assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"/);
+  assert.match(html, /disabled=""/);
+});

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createCoreClient } from '../../auth/coreClient';
+import { sessionSecretIssue } from '../../auth/sessionCrypto';
 import { respond } from '../envelope';
 import { ACTIVE_APP, loadApp } from '../forgeConfig';
 import { loadPricingConfig, isSupportedModelTag } from '../../materialPricing/config';
@@ -22,7 +23,7 @@ export function connectionStatus(env: NodeJS.ProcessEnv = process.env) {
   const n8nUrl = publicServiceUrl(env.W3_FORGE_N8N_URL);
   return {
     core: { configured: createCoreClient({ baseUrl: env.CORE_API_URL ?? '', publicCoreUrl: env.CORE_PUBLIC_URL ?? env.CORE_API_URL,
-      publicAppUrl: env.FORGE_PUBLIC_URL, clientSecret: env.CORE_APP_CLIENT_SECRET, instanceId: env.CORE_APP_INSTANCE_ID }).configured, publicUrl: coreUrl },
+      publicAppUrl: env.FORGE_PUBLIC_URL, clientSecret: env.CORE_APP_CLIENT_SECRET, instanceId: env.CORE_APP_INSTANCE_ID }).configured && !sessionSecretIssue({sessionSecret:env.FORGE_SESSION_SECRET, pairingSecret:env.CORE_APP_CLIENT_SECRET, serviceToken:env.CORE_SERVICE_TOKEN}), publicUrl: coreUrl },
     github: { repositoryUrl: githubRepositoryUrl(cfg.repo.url), workspace: cfg.paths.workspaces,
       defaultDevBranch: cfg.repo.default_dev_branch ?? '' },
     terminal: { enabled: env.ADMIN_TERMINAL_ENABLED === 'true' },

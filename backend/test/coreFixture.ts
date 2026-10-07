@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { createCoreClient } from '../src/auth/coreClient';
 import { createCoreAuth } from '../src/auth/coreAuth';
 
-export function createCoreFixture() {
+export function createCoreFixture(sessionOptions: { sessionSecret?: string; pairingSecret?: string; serviceToken?: string } = {}) {
   const secret = 'A'.repeat(43);
   const state = { role: 'admin', revoked: false, down: false, foreignApp: false, expired: false, calls: [] as string[], tokens: new Set<string>(), codes: new Map<string, string>() };
   const core = createCoreClient({ baseUrl: 'https://core.test', publicCoreUrl: 'https://core.test', publicAppUrl: 'https://forge.test',
@@ -34,7 +34,9 @@ export function createCoreFixture() {
       throw new Error('Unexpected identity endpoint');
     }
   });
-  const auth = createCoreAuth(core, { publicAppUrl: 'https://forge.test', publicCoreUrl: 'https://core.test', cookieSecure: false });
+  const authOptions = { publicAppUrl: 'https://forge.test', publicCoreUrl: 'https://core.test', cookieSecure: false,
+    sessionSecret: 'forge-session-test-secret-unique-0123456789', pairingSecret: secret, ...sessionOptions };
+  const auth = createCoreAuth(core, authOptions);
   async function begin(agent: any, next = '/admin/') {
     const start = await agent.post('/api/auth/login').send({ next });
     if (start.status !== 200) throw new Error('Could not start login: ' + start.status);
@@ -43,5 +45,5 @@ export function createCoreFixture() {
     return '/api/auth/callback?' + new URLSearchParams({ code, state: target.searchParams.get('state')! }).toString();
   }
   async function login(agent: any, next?: string) { return agent.get(await begin(agent, next)); }
-  return { auth, core, state, begin, login };
+  return { auth, core, state, begin, login, authOptions };
 }

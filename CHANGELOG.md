@@ -1,3 +1,8 @@
+## v0.4.1 — Shared W3 authentication standard
+
+- Encrypt stored Core app-session tokens with a separate Forge session key; reject missing or reused pairing/session/service secrets before sign-in.
+- Preserve Core-owned discovery, pairing, PKCE sign-in, app assignments and per-request validation; verify key rotation also revokes terminal access.
+
 ## v0.4.1 — Application foundation
 
 - Add the BuildCost-style interactive terminal with Core login ownership, revocation, session limits and secret-free process environment.

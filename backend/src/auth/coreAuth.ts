@@ -1,6 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { Router, json, type Request, type RequestHandler } from 'express';
 import { adminGuard } from '../admin/adminGuard';
+import { encryptCoreSession, decryptCoreSession, sessionSecretIssue, type SessionSecrets } from './sessionCrypto';
 import { AdminError, respond, envelopeErrorHandler, envelopeNotFound } from '../admin/envelope';
 import { type CoreClient, type CoreUser, CoreUnavailableError, CoreNotConfiguredError } from './coreClient';
 
@@ -28,10 +29,14 @@ export function safeReturnPath(raw: unknown): string {
   } catch { return '/admin/'; }
 }
 
-export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string; publicCoreUrl: string; cookieSecure: boolean }) {
+export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string; publicCoreUrl: string; cookieSecure: boolean } & SessionSecrets) {
   const pending = new Map<string, { state: string; verifier: string; next: string; expires: number }>();
-  const sessions = new Map<string, { token: string; userId: string; expires: number }>();
+  const sessions = new Map<string, { sealedCoreToken: string; userId: string; expires: number }>();
   const cookieOptions = { httpOnly: true, secure: options.cookieSecure, sameSite: 'lax' as const, path: '/' };
+  function requireSessionSecret() {
+    const issue = sessionSecretIssue(options);
+    if (issue) throw new AdminError(503, issue.code, issue.message);
+  }
   function prune() {
     const now = Date.now();
     for (const [key, value] of pending) if (value.expires <= now) pending.delete(key);
@@ -63,7 +68,10 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     prune();
     const session = sessions.get(key);
     if (!session) return null;
-    const result = await core.me(session.token);
+    let coreToken: string;
+    try { requireSessionSecret(); coreToken = decryptCoreSession(session.sealedCoreToken, options.sessionSecret ?? ''); }
+    catch { sessions.delete(key); return null; }
+    const result = await core.me(coreToken);
     if (!result.ok || result.user.id !== session.userId) { sessions.delete(key); return null; }
     // A concurrent logout must not permit the request after its Core check.
     if (sessions.get(key) !== session || session.expires <= Date.now()) return null;
@@ -86,7 +94,10 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     if (!browserToken) return;
     const key = hash(browserToken), session = sessions.get(key);
     sessions.delete(key);
-    if (session) await core.logout(session.token);
+    if (session) {
+      try { await core.logout(decryptCoreSession(session.sealedCoreToken, options.sessionSecret ?? '')); }
+      catch { /* Local logout remains final after key rotation or a corrupted seal. */ }
+    }
   }
   const requireAdmin: RequestHandler = async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -110,7 +121,8 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     try {
       const user = await identity(req);
       respond.ok(res, {
-        configured: core.configured, connection: core.connection,
+        configured: core.configured && !sessionSecretIssue(options), connection: core.connection,
+        setupError: core.configured ? sessionSecretIssue(options)?.message ?? null : null,
         coreUrl: core.configured ? options.publicCoreUrl : null,
         authenticated: !!user,
         user: user ? { id: user.id, username: user.username, appRole: user.appRole } : null
@@ -122,6 +134,7 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       if (req.body?.password !== undefined || req.body?.identifier !== undefined) {
         throw new AdminError(400, 'CORE_SIGN_IN_REQUIRED', 'Enter credentials only on W3 Core.');
       }
+      requireSessionSecret();
       prune();
       if (pending.size >= 2000) throw new AdminError(429, 'LOGIN_BUSY', 'Try signing in again shortly.');
       const state = token(), verifier = token();
@@ -145,6 +158,7 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       if (!login || !/^[A-Za-z0-9_-]{43}$/.test(code) || !timingSafeEqual(Buffer.from(hash(state), 'hex'), Buffer.from(hash(login.state), 'hex'))) {
         throw new AdminError(401, 'INVALID_LOGIN', 'Start sign-in again.');
       }
+      requireSessionSecret();
       const result = await core.exchange(code, login.verifier);
       if (!result.ok) throw new AdminError(result.status, result.code, result.message);
       if (sessions.size >= 2000) {
@@ -153,7 +167,7 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       }
       await logout(req);
       const browserToken = token(), expires = Math.min(Date.now() + SESSION_TTL, Date.parse(result.expiresAt));
-      sessions.set(hash(browserToken), { token: result.sessionToken, userId: result.user.id, expires });
+      sessions.set(hash(browserToken), { sealedCoreToken: encryptCoreSession(result.sessionToken, options.sessionSecret ?? ''), userId: result.user.id, expires });
       res.cookie(COOKIE, browserToken, { ...cookieOptions, maxAge: Math.max(0, expires - Date.now()) });
       res.redirect(303, login.next);
     } catch (error) {
