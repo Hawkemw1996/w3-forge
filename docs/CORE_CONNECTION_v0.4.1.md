@@ -27,7 +27,7 @@ Source reference: Core `dev/v0.12.16`, commit `b4770a51dc2a25e78f5b6e6ec3d577cbd
 - Forge GitHub Validation view displays its existing configured workspace/branch status and links to the existing registered Controls checks. This is local workspace validation, not a new remote GitHub checks API.
 - Existing Controls, File Browser, logs, system and settings remain Forge-specific. Safe-runner allowlists, argument validation, `shell:false` and authority limits are retained.
 
-Core's production package/deploy/backup/setup/Command Center features and terminal are not added to Forge: these need separate backend capabilities/authority, and the terminal would add dependencies. This update brings the applicable current admin interface while preserving Forge's engineering scope.
+The later [application foundation update](APP_FOUNDATION_v0.4.1.md) adds the requested operator terminal, real GitHub connection diagnostics, and configuration readiness. Core's production package/deploy/backup pipeline remains outside Forge's registered authority. The terminal is a separate human-operated host capability with explicit enablement; registered automated controls retain their safety rules.
 
 ## Rollout, risks and rollback
 

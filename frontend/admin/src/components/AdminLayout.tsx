@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   FlaskConical,
   Sliders,
+  TerminalSquare,
   Menu,
   X
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const NAV: NavItem[] = [
   { to: '/files', label: 'File Browser', icon: FolderTree },
   { to: '/github', label: 'GitHub Validation', icon: Github },
   { to: '/controls', label: 'Controls', icon: Sliders },
+  { to: '/terminal', label: 'Terminal', icon: TerminalSquare },
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 

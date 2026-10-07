@@ -10,6 +10,7 @@ const LOGIN_TTL = 5 * 60 * 1000;
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const token = () => randomBytes(32).toString('base64url');
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+export interface CoreAdminSession { userId: string; sessionHash: string }
 
 function cookie(req: Request, name: string): string | undefined {
   const values = (req.get('cookie') ?? '').split(';').map(v => v.trim()).filter(v => v.startsWith(name + '='));
@@ -51,17 +52,34 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     if (!req.is('application/json')) return next(new AdminError(415, 'JSON_REQUIRED', 'A JSON request is required.'));
     next();
   };
-  async function identity(req: Request): Promise<CoreUser | null> {
+  function adminSession(req: Request): CoreAdminSession | null {
     prune();
     const browserToken = cookie(req, COOKIE);
     if (!browserToken) return null;
-    const key = hash(browserToken), session = sessions.get(key);
+    const sessionHash = hash(browserToken), session = sessions.get(sessionHash);
+    return session ? { userId: session.userId, sessionHash } : null;
+  }
+  async function identityByHash(key: string): Promise<CoreUser | null> {
+    prune();
+    const session = sessions.get(key);
     if (!session) return null;
     const result = await core.me(session.token);
     if (!result.ok || result.user.id !== session.userId) { sessions.delete(key); return null; }
     // A concurrent logout must not permit the request after its Core check.
-    if (sessions.get(key) !== session) return null;
+    if (sessions.get(key) !== session || session.expires <= Date.now()) return null;
     return result.user;
+  }
+  async function identity(req: Request): Promise<CoreUser | null> {
+    const browserToken = cookie(req, COOKIE);
+    return browserToken ? identityByHash(hash(browserToken)) : null;
+  }
+  // Long-lived human terminals retain only the browser-session hash. Core credentials
+  // stay in this module, and permissions are checked again even without HTTP input.
+  async function authorizeAdminSession(session: CoreAdminSession): Promise<boolean> {
+    try {
+      const user = await identityByHash(session.sessionHash);
+      return !!user && user.id === session.userId && user.appRole === 'admin';
+    } catch { return false; }
   }
   async function logout(req: Request) {
     const browserToken = cookie(req, COOKIE);
@@ -155,6 +173,6 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     } catch (error) { next(authError(error)); }
   });
   router.use(envelopeNotFound, envelopeErrorHandler);
-  return { router, requireAdmin, sameOrigin };
+  return { router, requireAdmin, sameOrigin, adminSession, authorizeAdminSession, publicAppUrl: options.publicAppUrl };
 }
 export type CoreAuth = ReturnType<typeof createCoreAuth>;

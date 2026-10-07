@@ -1,5 +1,5 @@
 // =============================================================================
-// safeRunner — the ONLY path from an HTTP request to a child process.
+// safeRunner — the execution path for registered automated controls.
 // =============================================================================
 //
 // Invariants (all enforced + tested):

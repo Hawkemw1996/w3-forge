@@ -43,7 +43,7 @@ export function buildAdminSystemRoutes(startedAt: string): Router {
         mayTagRelease: cfg.authority.may_tag_release === true,
         mayModifyProductionData: cfg.authority.may_modify_production_data === true
       },
-      readOnlyFoundation: true
+      readOnlyFoundation: false
     });
   });
 

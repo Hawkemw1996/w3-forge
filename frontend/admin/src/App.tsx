@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { CoreAuthGate } from './components/CoreAuthGate';
 import { GitHubValidationPage } from './pages/GitHubValidationPage';
@@ -8,10 +9,11 @@ import { LogsPage } from './pages/LogsPage';
 import { FileBrowserPage } from './pages/FileBrowserPage';
 import { ControlsPage } from './pages/ControlsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LoadingState } from './components/ui/States';
 
-// W3 Forge Admin Console — v0.4.0 foundation.
-// READ-ONLY shell + a narrow controls-execution surface that only runs
-// Forge-safe scripts via safeRunner. No deploy/release/package routes.
+const TerminalPage = lazy(() => import('./pages/TerminalPage').then(module => ({ default: module.TerminalPage })));
+
+// Forge's engineering console uses Core-owned sign-in and app-admin access.
 export default function App() {
   return (
     <CoreAuthGate><AdminLayout>
@@ -22,6 +24,7 @@ export default function App() {
         <Route path="/files" element={<FileBrowserPage />} />
         <Route path="/github" element={<GitHubValidationPage />} />
         <Route path="/controls" element={<ControlsPage />} />
+        <Route path="/terminal" element={<Suspense fallback={<LoadingState label="Loading terminal…" />}><TerminalPage /></Suspense>} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -65,7 +65,7 @@ export function SystemStatusPage() {
         <div className="p-4 space-y-1 text-xs" style={{ color: 'var(--w3-text-muted)' }}>
           <div>Node: {s.nodeVersion}</div>
           <div>Started at: {s.startedAt}</div>
-          <div>Read-only foundation: {String(s.readOnlyFoundation)}</div>
+          <div>Console access: Core-verified Forge administrators</div>
         </div>
       </Card>
     </div>

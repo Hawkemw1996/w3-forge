@@ -1,208 +1,75 @@
 import { useQuery } from '@tanstack/react-query';
-import {
-  Lock,
-  ShieldAlert,
-  ShieldCheck,
-  GitBranch,
-  PackageX,
-  FileCheck,
-  Network,
-  Cpu
-} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ReactNode } from 'react';
-import { Card, CardBody } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
+import { Cpu, GitBranch, Lock, Network, RefreshCw, ShieldCheck, TerminalSquare } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '../components/ui/Card';
+import { Badge, type BadgeTone } from '../components/ui/Badge';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { LoadingState, ErrorState } from '../components/ui/States';
 import { adminGet } from '../lib/api';
+import type { Connections } from '../lib/connections';
+import { terminalRequest, type TerminalStatus } from '../lib/terminal';
 
 interface SystemResp {
-  app: string;
-  name: string;
-  version: string;
-  forgeRoot: string;
-  startedAt: string;
-  uptimeSeconds: number;
-  host: string;
-  platform: string;
-  nodeVersion: string;
-  authority: {
-    mayDeploy: boolean;
-    mayTagRelease: boolean;
-    mayModifyProductionData: boolean;
-  };
-  readOnlyFoundation: boolean;
+  app: string; name: string; version: string; forgeRoot: string; host: string;
+  platform: string; nodeVersion: string;
+  authority: { mayDeploy: boolean; mayTagRelease: boolean; mayModifyProductionData: boolean };
 }
 
-// v0.4.0 Settings: read-only view of W3 Forge operating policies and
-// authority boundaries. No edit affordance anywhere — every card surfaces
-// the current state. W3 Core remains the deployment & release authority.
 export function SettingsPage() {
-  const sysQ = useQuery({
-    queryKey: ['system'],
-    queryFn: () => adminGet<SystemResp>('/system')
-  });
-
-  if (sysQ.isLoading) return <LoadingState label="Loading settings…" />;
-  if (sysQ.isError)
-    return <ErrorState title="Failed to load settings" error={sysQ.error as Error} />;
-
-  const sys = sysQ.data;
-
-  return (
-    <div className="space-y-4">
-      <SectionHeader
-        title="Settings"
-        subtitle="W3 Forge operating policies and authority boundaries."
-        actions={<Badge tone="success">Read Only</Badge>}
-      />
-
-      <div className="card"><div className="card-body"><h2 className="font-semibold">W3 Core access</h2><p className="text-sm text-[var(--w3-text-muted)]">Manage this app's connection, sign-in permission and user assignments in W3 Core. The Forge admin role is required for all console pages and controls. Every request is verified with Core.</p></div></div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <PolicyCard
-          icon={<ShieldCheck size={14} />}
-          title="W3 Forge Authority"
-          state={<Badge tone="info">Foundation</Badge>}
-        >
-          W3 Forge proposes and validates changes only. It does not deploy, tag releases,
-          or modify production data. <strong>W3 Core remains the deployment authority.</strong>
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<PackageX size={14} />}
-          title="Deploy Disabled"
-          state={
-            <Badge tone={sys?.authority.mayDeploy ? 'danger' : 'success'}>
-              {sys?.authority.mayDeploy ? 'Enabled' : 'Disabled'}
-            </Badge>
-          }
-        >
-          No deploy endpoint or control is exposed. The Forge backend ships zero deploy,
-          publish, or apply actions.
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<FileCheck size={14} />}
-          title="Release Tags Disabled"
-          state={
-            <Badge tone={sys?.authority.mayTagRelease ? 'danger' : 'success'}>
-              {sys?.authority.mayTagRelease ? 'Enabled' : 'Disabled'}
-            </Badge>
-          }
-        >
-          The Admin Console cannot create release tags. All production release tagging is
-          performed by W3 Core out-of-band.
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<ShieldAlert size={14} />}
-          title="Production Data"
-          state={
-            <Badge tone={sys?.authority.mayModifyProductionData ? 'danger' : 'success'}>
-              {sys?.authority.mayModifyProductionData ? 'Mutable' : 'Untouched'}
-            </Badge>
-          }
-        >
-          The Forge admin layer has no write path to persistent production data. Every
-          admin control runs read-only (<code className="font-mono">readOnly: true</code>,{' '}
-          <code className="font-mono">riskLevel: LOW</code>).
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<GitBranch size={14} />}
-          title="Branch Policy"
-          state={<Badge tone="gold">dev/v*</Badge>}
-        >
-          All Forge work occurs on <code className="font-mono">dev/vX.Y.Z</code> branches.
-          The launcher refuses to start on <code className="font-mono">main</code> or{' '}
-          <code className="font-mono">master</code>, and Git routes return{' '}
-          <Badge tone="danger">PROTECTED_BRANCH</Badge> for protected refs.
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<Lock size={14} />}
-          title="Loopback Only"
-          state={<Badge tone="warning">127.0.0.1</Badge>}
-        >
-          The Admin API binds to <code className="font-mono">127.0.0.1</code> by default.
-          A guard rejects non-loopback / non-LAN / non-Tailscale clients with{' '}
-          <Badge tone="danger">FORBIDDEN_REMOTE</Badge>.
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<Network size={14} />}
-          title="No Public Exposure"
-          state={<Badge tone="danger">Do Not Publish</Badge>}
-        >
-          Caddy / Cloudflare must not proxy <code className="font-mono">/admin</code> or{' '}
-          <code className="font-mono">/api/admin/*</code> to the open internet. Reverse-proxy
-          rules are validated out-of-band.
-        </PolicyCard>
-
-        <PolicyCard
-          icon={<Cpu size={14} />}
-          title="Safe Runner"
-          state={<Badge tone="teal">shell: false</Badge>}
-        >
-          Controls run via array-form <code className="font-mono">spawn</code> with a fixed
-          env allowlist (PATH, HOME, LANG, W3_FORGE_ROOT). No{' '}
-          <code className="font-mono">exec</code>, no shell, no body-driven args.
-        </PolicyCard>
-      </div>
-
-      {sys ? (
-        <Card>
-          <CardBody className="space-y-1 text-xs text-[var(--w3-text-muted)]">
-            <div>
-              <span className="text-[var(--w3-text)]">App:</span>{' '}
-              <code className="font-mono">{sys.app}</code> · v
-              <code className="font-mono">{sys.version}</code>
-            </div>
-            <div>
-              <span className="text-[var(--w3-text)]">Forge root:</span>{' '}
-              <code className="font-mono">{sys.forgeRoot}</code>
-            </div>
-            <div>
-              <span className="text-[var(--w3-text)]">Host:</span>{' '}
-              <code className="font-mono">{sys.host}</code> ·{' '}
-              <code className="font-mono">{sys.platform}</code> · Node{' '}
-              <code className="font-mono">{sys.nodeVersion}</code>
-            </div>
-            <div className="pt-1">
-              Settings are sourced from <code className="font-mono">config/apps/&lt;app_id&gt;.yml</code>{' '}
-              and surfaced read-only here. To change a policy, edit the YAML on a{' '}
-              <code className="font-mono">dev/v*</code> branch and re-run config validation.
-            </div>
-          </CardBody>
-        </Card>
-      ) : null}
+  const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system') });
+  const connections = useQuery({ queryKey: ['connections'], queryFn: () => adminGet<Connections>('/connections') });
+  const terminal = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
+  if (system.isPending || connections.isPending) return <LoadingState label="Loading settings…" />;
+  if (system.isError) return <ErrorState title="Failed to load settings" error={system.error} />;
+  if (connections.isError) return <ErrorState title="Failed to load connections" error={connections.error} />;
+  const s = system.data!;
+  const c = connections.data!;
+  return <div className="space-y-4">
+    <SectionHeader title="Settings & Connections" subtitle="Configured services and operating boundaries for this Forge installation."
+      actions={<button type="button" className="btn" disabled={system.isFetching || connections.isFetching || terminal.isFetching} onClick={() => { void system.refetch(); void connections.refetch(); void terminal.refetch(); }}><RefreshCw size={14} /> Refresh</button>} />
+    <Card><CardBody className="text-sm text-[var(--w3-text-muted)]">These settings are read-only. Connection configuration is managed on the Forge host; app approval and user assignments are managed in W3 Core. Configured means settings are present, not that a service is reachable.</CardBody></Card>
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <SettingCard title="W3 Core access" icon={<ShieldCheck size={14} />} state={c.core.configured ? 'Configured' : 'Needs setup'} tone={c.core.configured ? 'info' : 'warning'}>
+        <p>Core-owned sign-in and the Forge admin role protect this console.</p>
+        {c.core.publicUrl ? <ExternalConnection href={c.core.publicUrl} label="Open W3 Core" /> : null}
+      </SettingCard>
+      <SettingCard title="GitHub repository" icon={<GitBranch size={14} />} state={c.github.repositoryUrl ? 'Configured' : 'Needs setup'} tone={c.github.repositoryUrl ? 'info' : 'warning'}>
+        {c.github.repositoryUrl ? <ExternalConnection href={c.github.repositoryUrl} label={c.github.repositoryUrl} /> : <p>No repository URL configured.</p>}
+        <p className="break-all">Workspace: <code>{c.github.workspace}</code></p><p>Development branch: <code>{c.github.defaultDevBranch}</code></p>
+        <Link className="text-[var(--w3-gold-400)] underline" to="/github">Check repository connection</Link>
+      </SettingCard>
+      <SettingCard title="Terminal access" icon={<TerminalSquare size={14} />} state={terminal.isPending ? 'Checking' : terminal.data?.available ? 'Available' : 'Unavailable'} tone={terminal.data?.available ? 'success' : 'warning'}>
+        <p>{terminal.data?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking host terminal availability.')}</p>
+        <p>Host setting: {c.terminal.enabled ? 'enabled' : 'disabled'}. Terminal commands affect the Forge host.</p>
+        <Link className="text-[var(--w3-gold-400)] underline" to="/terminal">Open Terminal</Link>
+      </SettingCard>
+      <SettingCard title="Lowe's material pricing" icon={<Network size={14} />} state={!c.materialPricing.enabled ? 'Disabled' : c.materialPricing.configured ? 'Configured' : 'Needs setup'} tone={c.materialPricing.enabled && c.materialPricing.configured ? 'info' : 'slate'}>
+        <p>Existing pricing service for future Forge item-cost workflows.</p>
+        <p>Up to {c.materialPricing.maxProducts} products per request.</p>
+        <p>Charge limits: {money(c.materialPricing.maxRequestChargeCents)} per request / {money(c.materialPricing.maxDailyChargeCents)} per day.</p>
+      </SettingCard>
+      <SettingCard title="Material matcher / Ollama" icon={<Cpu size={14} />} state={c.ollama.configured ? 'Configured' : 'Needs setup'} tone={c.ollama.configured ? 'info' : 'slate'}>
+        <p>Model: <code>{c.ollama.model || 'Not configured'}</code></p><p>Configured model for matching material-pricing results. Forge Chat is planned separately.</p>
+      </SettingCard>
+      <SettingCard title="n8n" icon={<Network size={14} />} state={c.n8n.configured ? 'Link configured' : 'Needs setup'} tone={c.n8n.configured ? 'info' : 'slate'}>
+        {c.n8n.url ? <ExternalConnection href={c.n8n.url} label="Open n8n" /> : <p>No n8n instance link configured.</p>}
+        <p>The Forge automation interface is planned. An instance link does not establish API access.</p>
+      </SettingCard>
     </div>
-  );
+    <Card><CardHeader title="Operating boundaries" /><CardBody className="grid grid-cols-1 gap-4 text-xs text-[var(--w3-text-muted)] md:grid-cols-2">
+      <div className="space-y-2"><h3 className="flex items-center gap-2 text-sm font-medium text-[var(--w3-text)]"><Lock size={14} /> Registered controls</h3><p>Registered controls use Forge's safe runner and their declared permissions. Terminal sessions provide separate interactive host access and can change host files.</p></div>
+      <div className="space-y-2"><h3 className="flex items-center gap-2 text-sm font-medium text-[var(--w3-text)]"><ShieldCheck size={14} /> Release authority</h3><p>Production release approval remains with the owner. Forge's registered app authority: deploy {s.authority.mayDeploy ? 'enabled' : 'disabled'}, release tagging {s.authority.mayTagRelease ? 'enabled' : 'disabled'}, production data writes {s.authority.mayModifyProductionData ? 'enabled' : 'disabled'}.</p></div>
+    </CardBody></Card>
+    <Card><CardBody className="space-y-1 text-xs text-[var(--w3-text-muted)]">
+      <p>App: <code>{s.app}</code> · v{s.version}</p><p className="break-all">Forge root: <code>{s.forgeRoot}</code></p><p>Host: <code>{s.host}</code> · {s.platform} · Node {s.nodeVersion}</p>
+    </CardBody></Card>
+  </div>;
 }
-
-function PolicyCard({
-  icon,
-  title,
-  state,
-  children
-}: {
-  icon: ReactNode;
-  title: string;
-  state: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <Card>
-      <CardBody className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--w3-text)]">
-            <span style={{ color: 'var(--w3-gold-400)' }}>{icon}</span>
-            <span>{title}</span>
-          </div>
-          {state}
-        </div>
-        <div className="text-xs text-[var(--w3-text-muted)]">{children}</div>
-      </CardBody>
-    </Card>
-  );
+function money(cents: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100); }
+function ExternalConnection({ href, label }: { href: string; label: string }) {
+  return <a className="block break-all text-[var(--w3-gold-400)] underline" href={href} target="_blank" rel="noreferrer">{label}</a>;
+}
+function SettingCard({ title, icon, state, tone, children }: { title: string; icon: ReactNode; state: string; tone: BadgeTone; children: ReactNode }) {
+  return <Card><CardHeader title={<span className="flex items-center gap-2">{icon}{title}</span>} right={<Badge tone={tone}>{state}</Badge>} /><CardBody className="space-y-2 text-xs text-[var(--w3-text-muted)]">{children}</CardBody></Card>;
 }

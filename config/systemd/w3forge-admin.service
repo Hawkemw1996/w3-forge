@@ -1,0 +1,25 @@
+[Unit]
+Description=W3 Forge application and admin console
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Matches the existing Forge host checkout owner. Review these paths/user before installation.
+User=forgeadmin
+Group=forgeadmin
+WorkingDirectory=/opt/w3forge-deploy
+Environment=W3_FORGE_ROOT=/opt/w3forge-deploy
+Environment=W3_FORGE_ACTIVE_APP=w3forge
+Environment=NODE_ENV=production
+# Required, root-owned 0600 file; systemd reads it before dropping to forgeadmin.
+EnvironmentFile=/etc/w3forge/admin.env
+ExecStart=/usr/bin/bash /opt/w3forge-deploy/scripts/w3-admin-console.sh --app w3forge --foreground
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+KillMode=control-group
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

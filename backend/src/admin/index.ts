@@ -9,6 +9,9 @@ import { buildAdminLogsRoutes } from './routes/logsRoutes';
 import { buildAdminFilesRoutes } from './routes/filesRoutes';
 import { buildForgeGitRoutes } from './routes/forgeGitRoutes';
 import { buildAdminControlsRoutes } from './routes/controlsRoutes';
+import { buildAdminTerminalRoutes } from './routes/terminalRoutes';
+import { buildConnectionsRoutes } from './routes/connectionsRoutes';
+import { createTerminalRuntime, type TerminalRuntime } from './terminal/runtime';
 
 // =============================================================================
 // /api/admin/* router — v0.4.0 Forge Admin Interface foundation.
@@ -19,13 +22,13 @@ import { buildAdminControlsRoutes } from './routes/controlsRoutes';
 //   2. adminGuard       — IP allowlist; returns envelope failure on deny.
 //   3. adminAudit       — JSONL log capturing status + error.code.
 //   4. Core app admin assignment + same-origin JSON mutations.
-//   5. Feature routers  — overview, system, logs, files, git, controls.
+//   5. Feature routers  — overview, system, logs, files, git, controls, terminal, connections.
 //   5. envelopeNotFound — any unmatched /api/admin/* path → envelope 404.
 //   6. envelopeErrorHandler — last; normalizes any thrown error to envelope.
 //
 // W3 Forge does not mount: packages, backups, setup, releases, deploy.
 
-export function buildAdminRouter(startedAt: string, auth: CoreAuth): Router {
+export function buildAdminRouter(startedAt: string, auth: CoreAuth, terminal: TerminalRuntime = createTerminalRuntime(auth)): Router {
   const router = Router();
 
   router.use(json({ limit: '64kb' }));
@@ -39,6 +42,8 @@ export function buildAdminRouter(startedAt: string, auth: CoreAuth): Router {
   router.use('/', buildAdminFilesRoutes());
   router.use('/', buildForgeGitRoutes());
   router.use('/', buildAdminControlsRoutes());
+  router.use('/', buildAdminTerminalRoutes(terminal));
+  router.use('/', buildConnectionsRoutes());
 
   router.use(envelopeNotFound);
   router.use(envelopeErrorHandler);

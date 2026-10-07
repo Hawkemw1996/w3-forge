@@ -76,3 +76,12 @@ export function adminAudit(req: Request, res: Response, next: NextFunction): voi
 
   next();
 }
+
+/** Lifecycle only: never record terminal input, output, cookies or session hashes. */
+export function appendTerminalAudit(entry: { sessionId: string; userId: string; phase: 'opened' | 'closed'; reason?: string }): void {
+  const auditPath = defaultAuditPath();
+  ensureDir(auditPath);
+  try {
+    fs.appendFileSync(auditPath, JSON.stringify({ ts: new Date().toISOString(), kind: 'terminal-session', ...entry }) + '\n', 'utf8');
+  } catch { /* Audit logging must never prevent terminal cleanup. */ }
+}

@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { buildAdminRouter } from './admin';
+import { createTerminalRuntime } from './admin/terminal/runtime';
 import { loadPricingConfig } from './materialPricing/config';
 import { buildMaterialPricingRouter } from './materialPricing/routes';
 import { createCoreClient } from './auth/coreClient';
@@ -77,7 +78,8 @@ function main(): void {
   });
   app.use('/api/material-pricing', buildMaterialPricingRouter(loadPricingConfig()));
   app.use('/api/auth', auth.router);
-  app.use('/api/admin', buildAdminRouter(startedAt, auth));
+  const terminal = createTerminalRuntime(auth);
+  app.use('/api/admin', buildAdminRouter(startedAt, auth, terminal));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
   const announce = () => {
     if (core.configured) void core.announce().catch(() => console.warn('[w3-forge-admin] Core connection announcement unavailable.'));
@@ -95,23 +97,22 @@ function main(): void {
     });
   }
 
-  app.get('/', (_req, res) => {
-    res.json({
-      success: true,
-      data: {
-        app: 'w3-forge',
-        version: readForgeVersion(),
-        admin: '/admin',
-        api: '/api/admin',
-        startedAt
-      }
-    });
-  });
+  app.get('/', (_req, res) => res.redirect(302, '/admin/'));
 
-  app.listen(port, host, () => {
+  const server = app.listen(port, host, () => {
     console.log(`[w3-forge-admin] listening on http://${host}:${port}`);
     console.log(`[w3-forge-admin] forgeRoot=${FORGE_ROOT} activeApp=${ACTIVE_APP}`);
   });
+  const shutdown = () => {
+    terminal.manager.shutdown();
+    clearInterval(discoveryTimer);
+    server.close(() => process.exit(0));
+    const deadline = setTimeout(() => process.exit(0), 5_000);
+    deadline.unref();
+  };
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
+  process.once('exit', () => terminal.manager.shutdown());
 }
 
 main();

@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+export const isSupportedModelTag = (value: string) => /^qwen2\.5(?:-coder)?:[A-Za-z0-9._-]{1,64}$/.test(value) && value.trim() === value;
+
 export interface PricingConfig {
   enabled: boolean;
   sharedToken: string;
@@ -39,7 +41,7 @@ export function loadPricingConfig(env: NodeJS.ProcessEnv = process.env): Pricing
           url.username || url.password || url.pathname !== '/' || url.search || url.hash) fail();
       ollamaUrl = url.origin;
     } catch { fail(); }
-    if (ollamaModel && !/^qwen2\.5:[A-Za-z0-9._-]{1,64}$/.test(ollamaModel)) fail();
+    if (ollamaModel && !isSupportedModelTag(ollamaModel)) fail();
   }
   const cfg: PricingConfig = {
     enabled, sharedToken, apifyToken, dataDir, ollamaUrl, ollamaModel,

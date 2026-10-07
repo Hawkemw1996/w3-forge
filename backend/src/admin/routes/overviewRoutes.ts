@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { respond } from '../envelope';
 
 // GET /api/admin/overview — Attention Required banner.
-// Foundation-only static payload (parity with W3 Core v0.5.0 placeholder).
+// Stable operating guidance; connection health is shown by the relevant feature.
 export function buildAdminOverviewRoutes(): Router {
   const router = Router();
   router.get('/overview', (_req, res) => {
@@ -10,11 +10,11 @@ export function buildAdminOverviewRoutes(): Router {
       attention: {
         acknowledged: false,
         message:
-          'W3 Forge v0.4.0 Admin Console is a read-only foundation. Real alerts land in a later release.',
+          'Review Settings for service configuration and GitHub Validation for repository access.',
         items: [
           {
             severity: 'info',
-            label: 'Internal-only — bound to 127.0.0.1.'
+            label: 'Interactive terminal access requires a Forge admin assignment and explicit host enablement.'
           },
           {
             severity: 'info',

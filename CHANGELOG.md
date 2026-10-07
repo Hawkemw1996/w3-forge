@@ -1,3 +1,11 @@
+## v0.4.1 — Application foundation
+
+- Add the BuildCost-style interactive terminal with Core login ownership, revocation, session limits and secret-free process environment.
+- Add bounded GitHub remote connection checks, repository/commit/tracking details, and safe configuration readiness for Core, pricing, Ollama and n8n.
+- Open the Forge workspace at the root URL; retain the shared admin layout and mark future chat/automation modules as planned.
+- Add an optional forgeadmin systemd service template and owner activation guide, preserving existing network/access and release authority.
+- Accept the host's installed qwen2.5-coder model family for explicit advisory matching configuration.
+
 # Changelog
 
 ## v0.4.1 (unreleased)
