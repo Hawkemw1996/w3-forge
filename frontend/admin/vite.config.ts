@@ -12,7 +12,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      '@shared': path.resolve(__dirname, '../shared')
     }
   },
   build: {
@@ -24,9 +25,9 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': 'http://localhost:3000',
-      '/health': 'http://localhost:3000',
-      '/version': 'http://localhost:3000'
+      '/api': 'http://localhost:8765',
+      '/health': 'http://localhost:8765',
+      '/version': 'http://localhost:8765'
     }
   }
 });

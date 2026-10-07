@@ -1,15 +1,20 @@
 /*
  * W3 Core v0.5.10 — Dashboard Visual System tokens.
  *
- * Single source of truth for color, spacing, border, radius, and shadow
- * primitives used by the Admin Operations Console. v0.5.10 introduces a
- * formal spacing scale + border hierarchy + typography scale so every
- * dashboard tile renders against the same visual rules.
+ * v0.10.7: the canonical W3 UI token source now lives in
+ * frontend/shared/styles/tokens.css (promoted verbatim from this file — the
+ * Admin Operations Console remains the visual authority). We import it here so
+ * the Admin Console consumes the shared layer. The :root block below is the
+ * unchanged original and resolves to identical values; it is retained so the
+ * Admin Console keeps rendering identically even if the shared import path
+ * ever changes (--w3-navy-950 etc. stay defined locally too).
  *
  * The Tailwind theme (tailwind.config.js) mirrors a subset of these tokens
  * so components can reference them via Tailwind utility classes or via
  * CSS variables (e.g. var(--w3-space-4)).
  */
+
+@import '../../../shared/styles/tokens.css';
 
 :root {
   /* --- Color (unchanged from v0.5.1) ----------------------------------- */

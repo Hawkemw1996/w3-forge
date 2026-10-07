@@ -1,8 +1,9 @@
-import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { consoleText } from "../../../../shared/consoleApp";
+import { APP_BASE, appPath } from '../../../../shared/navigation';
+import { ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Radar,
   Activity,
   FileText,
   Package,
@@ -17,20 +18,17 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { W3SidebarBrand, W3SidebarNav, W3SidebarFooter, runtimeSidebarStatus } from '../shared/components/W3Sidebar';
-import { useCoreStatus, signOut } from './CoreAuthGate';
-import { useQuery } from '@tanstack/react-query';
+import { W3SidebarBrand, W3SidebarNav, W3SidebarFooter, runtimeSidebarStatus } from '@shared/components';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminGet } from '../lib/api';
 import { cn } from '../lib/utils';
 
-// Canonical W3 Core / BuildCost admin shell; Forge supplies its identity and Core-owned access.
+// W3 Core sidebar styling shared with the BuildCost app; admin routes stay unchanged.
 
 interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
-  enabled?: boolean;
-  badge?: string;
 }
 
 const NAV: NavItem[] = [
@@ -84,7 +82,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); setDrawerOpen(false); }
       if (event.key !== 'Tab') return;
-      const elements = focusable(), first = elements[0], last = elements.at(-1);
+      const elements = focusable(), first = elements[0], last = elements[elements.length - 1];
       if (!first || !last) { event.preventDefault(); return; }
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
@@ -225,17 +223,25 @@ export function AdminLayout({ children }: { children: ReactNode }) {
 
 
 function SidebarBrand({ version, nodeEnv, compact }: { version?: string; nodeEnv?: string; compact?: boolean }) {
-  return <W3SidebarBrand title="W3 Forge" subtitle="Admin Console"
+  return <W3SidebarBrand title={consoleText("W3 BuildCost")} subtitle="Admin Console"
     version={version ? 'v' + version : undefined} status={runtimeSidebarStatus(nodeEnv)} compact={compact} />;
 }
 
 function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
   return <W3SidebarNav items={NAV.map(item => ({ ...item, end: item.to === '/' }))}
-    sectionLabel="W3 Forge" onNavigate={onNavigate} />;
+    sectionLabel={consoleText("W3 BuildCost")} onNavigate={onNavigate} />;
 }
 
 function SidebarFooter({ version, nodeEnv }: { version?: string; nodeEnv?: string }) {
-  const status = useCoreStatus();
+  // Presentation reads the status already maintained by AdminAuthGate.
+  const queryClient = useQueryClient();
+  const snapshot = useCallback(() => queryClient.getQueryData<{
+    authenticated: boolean; user?: { displayName?: string; username?: string } | null
+  }>(['auth', 'status']), [queryClient]);
+  const auth = useSyncExternalStore(
+    useCallback(notify => queryClient.getQueryCache().subscribe(notify), [queryClient]),
+    snapshot, snapshot
+  );
   const inFlight = useRef(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState('');
@@ -244,14 +250,28 @@ function SidebarFooter({ version, nodeEnv }: { version?: string; nodeEnv?: strin
     inFlight.current = true;
     setSigningOut(true);
     setError('');
-    try { await signOut(); } catch { setError('Could not sign out. Please try again.'); }
-    finally { inFlight.current = false; setSigningOut(false); }
+    try {
+      const res = await fetch('/api/auth/logout', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
+      });
+      const body = await res.json();
+      if (!res.ok || body?.success !== true) throw new Error('Sign out failed');
+      window.location.replace(appPath('/login'));
+    } catch {
+      setError('Could not sign out. Please try again.');
+    } finally {
+      inFlight.current = false;
+      setSigningOut(false);
+    }
   };
-  return <div>
-    <W3SidebarFooter version={version ? 'v' + version : undefined} status={runtimeSidebarStatus(nodeEnv)}
-      signedInAs={status.data?.user?.username} footerHref={status.data?.coreUrl ?? '/admin/'}
-      footerLabel="W3 Core" footerIcon={Radar} onLogout={logout}
-      logoutPending={signingOut} logoutTestId="admin-sign-out" />
-    {error ? <p role="alert" className="px-5 pb-3 text-xs text-[var(--status-danger)]">{error}</p> : null}
-  </div>;
+  return (
+    <div data-testid={consoleText("admin-footer-buildcost-link")}>
+      <W3SidebarFooter version={version ? 'v' + version : undefined} status={runtimeSidebarStatus(nodeEnv)}
+        signedInAs={auth?.authenticated ? auth.user?.displayName || auth.user?.username : undefined}
+        footerHref={APP_BASE} footerLabel={consoleText("Back to W3 BuildCost")} footerIcon={LayoutDashboard}
+        onLogout={logout} logoutPending={signingOut} logoutTestId="admin-sign-out" />
+      {error ? <p role="alert" className="px-5 pb-3 text-xs text-[var(--status-danger)]">{error}</p> : null}
+    </div>
+  );
 }

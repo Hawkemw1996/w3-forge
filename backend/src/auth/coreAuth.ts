@@ -12,6 +12,20 @@ const SESSION_TTL = 8 * 60 * 60 * 1000;
 const token = () => randomBytes(32).toString('base64url');
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 export interface CoreAdminSession { userId: string; sessionHash: string }
+export interface ConsoleUser {
+  coreUserId: string; username: string; displayName: string; coreRole: string; appRole: string;
+  permissions: string[]; coreStatus: 'verified'; lastVerifiedAt: string; expiresAt: string;
+}
+declare global { namespace Express { interface Request { forgeUser?: ConsoleUser } } }
+export interface CoreAuthOptions extends SessionSecrets {
+  publicAppUrl: string; publicCoreUrl: string; cookieSecure: boolean;
+  audit?: (action: string, actor: { coreUserId: string; name: string } | null, details: Record<string, unknown>) => Promise<void>;
+}
+const APP_BASE = '/forge';
+function permissionsForAppRole(role: string): string[] {
+  return role === 'admin' ? ['forge:read', 'forge:write', 'forge:admin']
+    : role === 'editor' ? ['forge:read', 'forge:write'] : role === 'viewer' ? ['forge:read'] : [];
+}
 
 function cookie(req: Request, name: string): string | undefined {
   const values = (req.get('cookie') ?? '').split(';').map(v => v.trim()).filter(v => v.startsWith(name + '='));
@@ -21,17 +35,22 @@ function cookie(req: Request, name: string): string | undefined {
 }
 
 export function safeReturnPath(raw: unknown): string {
-  if (typeof raw !== 'string' || /[\\\u0000-\u0020]/.test(raw)) return '/admin/';
+  if (typeof raw !== 'string' || !raw.startsWith('/') || raw.startsWith('//') || /[\\\u0000-\u0020]/.test(raw)) return APP_BASE;
   try {
     const url = new URL(raw, 'https://local.invalid');
-    return url.origin === 'https://local.invalid' && (url.pathname === '/admin' || url.pathname.startsWith('/admin/'))
-      ? url.pathname + url.search + url.hash : '/admin/';
-  } catch { return '/admin/'; }
+    if (url.origin !== 'https://local.invalid') return APP_BASE;
+    const route = url.pathname === APP_BASE ? '/' : url.pathname.startsWith(APP_BASE + '/') ? url.pathname.slice(APP_BASE.length) : url.pathname;
+    const decoded = decodeURIComponent(route);
+    if (decoded.startsWith('//') || /[\\\u0000-\u0020]/.test(decoded) || /^\/(api|login|access-denied|core-unavailable)/i.test(decoded)) return APP_BASE;
+    const target = url.pathname + url.search + url.hash;
+    if (/^\/admin(?:\/|$)/.test(url.pathname) || url.pathname === APP_BASE || url.pathname.startsWith(APP_BASE + '/')) return target;
+    return APP_BASE + (target === '/' ? '' : target);
+  } catch { return APP_BASE; }
 }
 
-export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string; publicCoreUrl: string; cookieSecure: boolean } & SessionSecrets) {
+export function createCoreAuth(core: CoreClient, options: CoreAuthOptions) {
   const pending = new Map<string, { state: string; verifier: string; next: string; expires: number }>();
-  const sessions = new Map<string, { sealedCoreToken: string; userId: string; expires: number }>();
+  const sessions = new Map<string, { sealedCoreToken: string; userId: string; expires: number; lastVerifiedAt: string }>();
   const cookieOptions = { httpOnly: true, secure: options.cookieSecure, sameSite: 'lax' as const, path: '/' };
   function requireSessionSecret() {
     const issue = sessionSecretIssue(options);
@@ -75,11 +94,22 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
     if (!result.ok || result.user.id !== session.userId) { sessions.delete(key); return null; }
     // A concurrent logout must not permit the request after its Core check.
     if (sessions.get(key) !== session || session.expires <= Date.now()) return null;
+    session.lastVerifiedAt = new Date().toISOString();
+    session.expires = Math.min(session.expires, Date.parse(result.expiresAt));
     return result.user;
   }
   async function identity(req: Request): Promise<CoreUser | null> {
     const browserToken = cookie(req, COOKIE);
     return browserToken ? identityByHash(hash(browserToken)) : null;
+  }
+  function publicUser(req: Request, user: CoreUser): ConsoleUser {
+    const browserToken = cookie(req, COOKIE);
+    const session = browserToken ? sessions.get(hash(browserToken)) : undefined;
+    if (!session) throw new AdminError(401, 'AUTH_REQUIRED', 'Not signed in.');
+    return { coreUserId: user.id, username: user.username, displayName: user.username,
+      // Compatibility name only: this is the explicit app assignment, never a Core platform role.
+      coreRole: user.appRole, appRole: user.appRole, permissions: permissionsForAppRole(user.appRole),
+      coreStatus: 'verified', lastVerifiedAt: session.lastVerifiedAt, expiresAt: new Date(session.expires).toISOString() };
   }
   // Long-lived human terminals retain only the browser-session hash. Core credentials
   // stay in this module, and permissions are checked again even without HTTP input.
@@ -105,6 +135,7 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       const user = await identity(req);
       if (!user) throw new AdminError(401, 'AUTH_REQUIRED', 'Sign in with W3 Core.');
       if (user.appRole !== 'admin') throw new AdminError(403, 'APP_ADMIN_REQUIRED', 'The Core owner must assign you the Forge admin role.');
+      req.forgeUser = publicUser(req, user);
       res.locals.coreUser = { id: user.id, username: user.username, appRole: user.appRole };
       next();
     } catch (error) { next(authError(error)); }
@@ -119,14 +150,34 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
   router.use(adminGuard, sameOrigin, json({ limit: '8kb' }));
   router.get('/status', async (req, res, next) => {
     try {
-      const user = await identity(req);
+      const issue = sessionSecretIssue(options);
+      const unavailable = !core.configured
+        ? { code: 'CORE_NOT_CONFIGURED', message: 'Sign-in is unavailable: W3 Core is not configured for this installation.' }
+        : issue;
+      let user: CoreUser | null = null;
+      let sessionError: { code: string; message: string } | null = null;
+      try { user = await identity(req); }
+      catch (error) {
+        const failure = authError(error);
+        if (!(failure instanceof AdminError)) throw failure;
+        sessionError = { code: failure.code, message: failure.message };
+      }
       respond.ok(res, {
+        identityProvider: 'w3core', coreConfigured: core.configured,
+        loginAvailable: !unavailable, loginUnavailableReason: unavailable, sessionError,
         configured: core.configured && !sessionSecretIssue(options), connection: core.connection,
         setupError: core.configured ? sessionSecretIssue(options)?.message ?? null : null,
         coreUrl: core.configured ? options.publicCoreUrl : null,
         authenticated: !!user,
-        user: user ? { id: user.id, username: user.username, appRole: user.appRole } : null
+        user: user ? publicUser(req, user) : null
       });
+    } catch (error) { next(authError(error)); }
+  });
+  router.get('/me', async (req, res, next) => {
+    try {
+      const user = await identity(req);
+      if (!user) throw new AdminError(401, 'AUTH_REQUIRED', 'Not signed in.');
+      respond.ok(res, publicUser(req, user));
     } catch (error) { next(authError(error)); }
   });
   router.post('/login', async (req, res, next) => {
@@ -144,7 +195,14 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       pending.set(hash(id), { state, verifier, next: safeReturnPath(req.body?.next), expires: Date.now() + LOGIN_TTL });
       res.cookie(PENDING_COOKIE, id, { ...cookieOptions, maxAge: LOGIN_TTL });
       respond.ok(res, { redirectTo });
-    } catch (error) { next(authError(error)); }
+    } catch (error) {
+      const failure = authError(error);
+      if (failure instanceof AdminError) await options.audit?.('auth.login_failed', null, { code: failure.code }).catch(() => undefined);
+      next(failure);
+    }
+  });
+  router.post('/login/verify-2fa', (_req, res) => {
+    respond.err(res, 410, 'CORE_SIGN_IN_REQUIRED', 'Complete sign-in on W3 Core.');
   });
   router.get('/callback', async (req, res) => {
     res.clearCookie(PENDING_COOKIE, { path: '/' });
@@ -167,13 +225,14 @@ export function createCoreAuth(core: CoreClient, options: { publicAppUrl: string
       }
       await logout(req);
       const browserToken = token(), expires = Math.min(Date.now() + SESSION_TTL, Date.parse(result.expiresAt));
-      sessions.set(hash(browserToken), { sealedCoreToken: encryptCoreSession(result.sessionToken, options.sessionSecret ?? ''), userId: result.user.id, expires });
+      sessions.set(hash(browserToken), { sealedCoreToken: encryptCoreSession(result.sessionToken, options.sessionSecret ?? ''), userId: result.user.id, expires, lastVerifiedAt: new Date().toISOString() });
       res.cookie(COOKIE, browserToken, { ...cookieOptions, maxAge: Math.max(0, expires - Date.now()) });
+      await options.audit?.('auth.login', { coreUserId: result.user.id, name: result.user.username }, { appRole: result.user.appRole }).catch(() => undefined);
       res.redirect(303, login.next);
     } catch (error) {
       const failure = authError(error);
       const status = failure instanceof AdminError ? failure.status : 500;
-      res.redirect(303, '/admin/?sign_in=' + (status === 503 ? 'unavailable' : status === 403 ? 'denied' : 'failed'));
+      res.redirect(303, APP_BASE + (status === 503 ? '/core-unavailable' : status === 403 ? '/access-denied' : '/login?error=sign_in_failed'));
     }
   });
   router.post('/logout', async (req, res, next) => {

@@ -1,25 +1,46 @@
+import { consoleText } from "../../../../shared/consoleApp";
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PauseCircle, PlayCircle, RefreshCw, Search } from 'lucide-react';
+import { Download, PauseCircle, PlayCircle, RefreshCw, Search } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Badge, BadgeTone } from '../components/ui/Badge';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States';
-import { LogViewerPanel } from '../components/operations/LogViewerPanel';
+import { LogViewerPanel } from '../components/widgets/LogViewerPanel';
 import { adminGet } from '../lib/api';
 import { cn } from '../lib/utils';
 import { formatTimestamp } from '../lib/format';
-import { parseLogBuffer, ParsedLogLine } from '../components/operations/logParser';
+import { parseLogBuffer, ParsedLogLine } from '../lib/logParser';
 
-interface LogsListResp { root: string; files: string[] }
-interface LogTail { file: string; size: number; bytesReturned: number; content: string }
+interface LogCategory {
+  name: string;
+  path: string;
+  fileCount: number;
+  latestFile: string | null;
+  latestMtime: string | null;
+}
 
-// Canonical Core / BuildCost log presentation with Forge's explicit file-tail adapter.
-// Files are alphabetical; no newest-file or category metadata is inferred.
+interface LogTail {
+  category: string;
+  file: string | null;
+  truncated: boolean;
+  entries: Array<{ line: string }>;
+}
+
 // Max rendered lines — keeps DOM size bounded without virtualization.
 const MAX_RENDERED = 1000;
+const DOWNLOAD_AVAILABLE = false;
 
-// Shared polling cadence: 2 seconds while following, 8 seconds while paused.
+// v0.5.9 — Follow Live polling intervals (ms).
+//   FOLLOW_LIVE_INTERVAL_MS  How often we re-fetch /logs/{category} while
+//                            Follow Live is engaged. 2 s is fast enough to
+//                            feel real-time on a quiet log file without
+//                            hammering the backend (and the request is
+//                            already a cheap tail-read, not a full scan).
+//   IDLE_REFETCH_INTERVAL_MS Standard refetch interval when Follow Live is
+//                            OFF. Matches the v0.5.6 8 s cadence so the
+//                            background polling cost is unchanged when the
+//                            feature isn't engaged.
 const FOLLOW_LIVE_INTERVAL_MS = 2_000;
 const IDLE_REFETCH_INTERVAL_MS = 8_000;
 
@@ -114,8 +135,8 @@ function toSeverity(level: string): Severity {
 
 export function LogsPage() {
   const categoriesQ = useQuery({
-    queryKey: ['logs'],
-    queryFn: () => adminGet<LogsListResp>('/logs'),
+    queryKey: ['admin', 'logs', 'categories'],
+    queryFn: () => adminGet<{ categories: LogCategory[] }>('/logs/categories'),
     refetchInterval: 60_000
   });
 
@@ -124,24 +145,37 @@ export function LogsPage() {
   const [searchRaw, setSearchRaw] = useState('');
   const search = useDebounced(searchRaw, 200);
 
-  // Live follow refreshes the existing bounded-tail endpoint and scrolls new output.
+  // v0.5.9 — Follow Live toggle. When ON, the tail query refetches every
+  // FOLLOW_LIVE_INTERVAL_MS and the viewer auto-scrolls to the bottom on
+  // each new render so the user can watch lines stream in. When OFF, the
+  // refetch interval drops back to IDLE_REFETCH_INTERVAL_MS and the scroll
+  // position is left alone.
+  //
+  // Implementation note: this is polling-based, not SSE / WebSocket. The
+  // backend already exposes /logs/{category}?limit=N which returns the tail
+  // of the newest log file for the category, so we get "live enough" updates
+  // without adding a streaming endpoint, a long-lived connection, or any
+  // new dependencies. If a future release adds an SSE/WS tail endpoint, the
+  // Follow Live toggle is the obvious place to switch over.
   const [followLive, setFollowLive] = useState(false);
   const viewerRef = useRef<HTMLDivElement | null>(null);
 
-  const files = categoriesQ.data?.files;
-  const effectiveCategory = active && files?.includes(active) ? active : files?.[0] ?? null;
+  const effectiveCategory = active ?? categoriesQ.data?.categories[0]?.name ?? null;
 
-  // Changing files pauses live follow until the operator enables it again.
+  // v0.5.9 — Follow Live disables itself when the user switches categories so
+  // the user has an explicit moment to confirm the new category is the one
+  // they want to tail (and so we don't accidentally start hammering a giant
+  // log file the user opened just to glance at).
   useEffect(() => {
     setFollowLive(false);
   }, [effectiveCategory]);
 
   const tailQ = useQuery({
     enabled: Boolean(effectiveCategory),
-    queryKey: ['logs', 'tail', effectiveCategory],
+    queryKey: ['admin', 'logs', 'tail', effectiveCategory],
     queryFn: () =>
       adminGet<LogTail>(
-        `/logs/tail?file=${encodeURIComponent(effectiveCategory!)}`
+        `/logs/${encodeURIComponent(effectiveCategory!)}?limit=${MAX_RENDERED}`
       ),
     refetchInterval: followLive ? FOLLOW_LIVE_INTERVAL_MS : IDLE_REFETCH_INTERVAL_MS
   });
@@ -149,8 +183,8 @@ export function LogsPage() {
   const parsed = useMemo<ParsedLogLine[]>(() => {
     if (!tailQ.data || !effectiveCategory) return [];
     return parseLogBuffer(
-      tailQ.data.content.split(/\r?\n/).filter((line) => line.length > 0),
-      { selectedCategory: 'SYSTEM' }
+      tailQ.data.entries.map((e) => e.line),
+      { selectedCategory: effectiveCategory }
     );
   }, [tailQ.data, effectiveCategory]);
 
@@ -197,9 +231,9 @@ export function LogsPage() {
     <div className="space-y-4">
       <SectionHeader
         title="Logs"
-        subtitle={`${categoriesQ.data?.root ?? 'Forge logs'} · last 256 KB of the selected log file.`}
+        subtitle={consoleText("/opt/logs/w3buildcost · newest log file per category.")}
         actions={
-          <div className="flex max-w-[calc(100vw-5rem)] flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search
                 size={12}
@@ -210,7 +244,6 @@ export function LogsPage() {
                 value={searchRaw}
                 onChange={(e) => setSearchRaw(e.target.value)}
                 placeholder="Search…"
-                aria-label="Search log lines"
                 className="input pl-7"
                 style={{ minWidth: 180 }}
               />
@@ -218,12 +251,9 @@ export function LogsPage() {
             <button
               type="button"
               className="btn"
-              onClick={() => {
-                void categoriesQ.refetch();
-                if (effectiveCategory) void tailQ.refetch();
-              }}
+              onClick={() => tailQ.refetch()}
               title="Refresh"
-              disabled={categoriesQ.isFetching || tailQ.isFetching}
+              disabled={!effectiveCategory}
             >
               <RefreshCw size={13} />
               Refresh
@@ -238,45 +268,54 @@ export function LogsPage() {
                   ? `Following Live (Refetch Every ${Math.round(
                       FOLLOW_LIVE_INTERVAL_MS / 1000
                     )}s) — Click To Pause`
-                  : 'Follow Live — Tail The Selected File Every 2s And Auto-Scroll To The Bottom'
+                  : 'Follow Live — Tail The Current Category Every 2s And Auto-Scroll To The Bottom'
               }
               aria-pressed={followLive}
             >
               {followLive ? <PauseCircle size={13} /> : <PlayCircle size={13} />}
               {followLive ? 'Following Live' : 'Follow Live'}
             </button>
+            <span
+              title={
+                DOWNLOAD_AVAILABLE
+                  ? 'Download Raw Log File'
+                  : 'Coming Soon — Raw Log Download Lands In A Later Release.'
+              }
+            >
+              <button type="button" className="btn" disabled={!DOWNLOAD_AVAILABLE}>
+                <Download size={13} />
+                Download
+              </button>
+            </span>
           </div>
         }
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
         <Card>
-          <CardHeader title="Log Files" subtitle={categoriesQ.data?.root ?? 'Forge logs'}
-            right={files ? <Badge tone="slate">{files.length}</Badge> : undefined} />
+          <CardHeader title="Categories" subtitle={consoleText("/opt/logs/w3buildcost")} />
           <CardBody className="!p-2">
             {categoriesQ.isLoading ? (
               <LoadingState />
             ) : categoriesQ.error ? (
               <ErrorState error={categoriesQ.error} />
-            ) : !categoriesQ.data || categoriesQ.data.files.length === 0 ? (
-              <EmptyState>No Log Files.</EmptyState>
+            ) : !categoriesQ.data || categoriesQ.data.categories.length === 0 ? (
+              <EmptyState>No Log Directories.</EmptyState>
             ) : (
               <ul className="space-y-0.5">
-                {categoriesQ.data.files.map((file) => (
-                  <li key={file}>
+                {categoriesQ.data.categories.map((c) => (
+                  <li key={c.name}>
                     <button
                       type="button"
-                      onClick={() => setActive(file)}
-                      aria-pressed={effectiveCategory === file}
-                      title={file}
+                      onClick={() => setActive(c.name)}
                       className={cn(
                         'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition border-l-[3px]',
-                        effectiveCategory === file
+                        effectiveCategory === c.name
                           ? 'text-[var(--w3-text)]'
                           : 'text-[var(--w3-text-muted)] hover:bg-white/[0.04] hover:text-white border-transparent'
                       )}
                       style={
-                        effectiveCategory === file
+                        effectiveCategory === c.name
                           ? {
                               background: 'rgba(217,164,65,0.10)',
                               borderLeftColor: 'var(--w3-gold-500)'
@@ -284,7 +323,8 @@ export function LogsPage() {
                           : { borderLeftColor: 'transparent' }
                       }
                     >
-                      <span className="truncate font-mono text-xs">{file}</span>
+                      <span className="font-mono text-xs">{c.name}</span>
+                      <Badge tone="slate">{c.fileCount}</Badge>
                     </button>
                   </li>
                 ))}
@@ -298,8 +338,8 @@ export function LogsPage() {
             title={effectiveCategory ? `Tail · ${effectiveCategory}` : 'Tail'}
             subtitle={
               tailQ.data?.file
-                ? `Reading ${tailQ.data.file}${(tailQ.data.bytesReturned < tailQ.data.size) ? ' · Truncated By Server' : ''}`
-                : 'Select A Log File.'
+                ? `Reading ${tailQ.data.file}${tailQ.data.truncated ? ' · Truncated By Server' : ''}`
+                : 'Select A Category To Load Its Newest Log File.'
             }
             right={
               filtered.length > 0 ? (
@@ -319,7 +359,6 @@ export function LogsPage() {
                     key={k}
                     type="button"
                     onClick={() => toggleChip(k)}
-                    aria-pressed={on}
                     className={cn(
                       'badge cursor-pointer transition',
                       on ? `badge-${CATEGORY_TONE[k]}` : 'badge-slate opacity-70 hover:opacity-100'
@@ -342,7 +381,7 @@ export function LogsPage() {
             </div>
 
             {!effectiveCategory ? (
-              <EmptyState>Choose A Log File.</EmptyState>
+              <EmptyState>Choose A Category.</EmptyState>
             ) : tailQ.isLoading ? (
               <LoadingState />
             ) : tailQ.error ? (
@@ -357,7 +396,7 @@ export function LogsPage() {
                   {filtered.map((p, i) => (
                     <LogLine key={i} entry={p} />
                   ))}
-                  {tailQ.data && tailQ.data.bytesReturned < tailQ.data.size ? (
+                  {tailQ.data?.truncated ? (
                     <div className="mt-1 text-[11px] text-[var(--w3-text-dim)]">
                       Output Truncated By Server For Safety
                     </div>
@@ -373,7 +412,7 @@ export function LogsPage() {
 }
 
 function LogLine({ entry }: { entry: ParsedLogLine }) {
-  const tsLabel = typeof entry.timestamp === 'string' ? formatTimestamp(entry.timestamp) : '—';
+  const tsLabel = entry.timestamp ? formatTimestamp(entry.timestamp) : '—';
   const categoryKind = toCategoryKind(entry.category);
   const severity = toSeverity(entry.level);
   return (

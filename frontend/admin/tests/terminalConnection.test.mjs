@@ -8,7 +8,8 @@ function moduleUrl(source) {
   return 'data:text/javascript;base64,' + Buffer.from(outputText).toString('base64');
 }
 const api = moduleUrl(readFileSync(new URL('../src/lib/api.ts', import.meta.url), 'utf8'));
-const source = readFileSync(new URL('../src/lib/terminal.ts', import.meta.url), 'utf8').replace("from './api'", `from '${api}'`);
+const config = moduleUrl(readFileSync(new URL('../../../shared/consoleApp.ts', import.meta.url), 'utf8'));
+const source = readFileSync(new URL('../src/lib/terminal.ts', import.meta.url), 'utf8').replace("from './api'", `from '${api}'`).replace("from '../../../../shared/consoleApp'", `from '${config}'`);
 const { TerminalConnection, terminalRequest } = await import(moduleUrl(source));
 const tick = () => new Promise(resolve => setTimeout(resolve, 20));
 const defer = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };

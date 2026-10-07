@@ -1,8 +1,11 @@
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
-import { buildAdminRouter } from './admin';
-import { createTerminalRuntime } from './admin/terminal/runtime';
+import { buildConsoleRouter } from './console';
+import { pool } from './db/pool';
+import { pgDatabase } from './db/database';
+import { audit } from './db/audit';
+import { createTerminalRuntime } from './console/terminal/runtime';
 import { loadPricingConfig } from './materialPricing/config';
 import { buildMaterialPricingRouter } from './materialPricing/routes';
 import { createCoreClient } from './auth/coreClient';
@@ -71,19 +74,22 @@ function main(): void {
     instanceId: process.env.CORE_APP_INSTANCE_ID ?? '',
     appId: 'w3forge', appName: 'W3 Forge', version: readForgeVersion()
   });
+  const db = pgDatabase(pool);
   const auth = createCoreAuth(core, {
     publicAppUrl: (process.env.FORGE_PUBLIC_URL ?? '').replace(/\/+$/, ''),
     publicCoreUrl: (process.env.CORE_PUBLIC_URL ?? process.env.CORE_API_URL ?? '').replace(/\/+$/, ''),
     sessionSecret: process.env.FORGE_SESSION_SECRET ?? '',
     pairingSecret: process.env.CORE_APP_CLIENT_SECRET ?? '',
     serviceToken: process.env.CORE_SERVICE_TOKEN ?? '',
-    cookieSecure: process.env.COOKIE_SECURE !== 'false'
+    cookieSecure: process.env.COOKIE_SECURE !== 'false',
+    audit: (action, actor, details) => audit(db, actor, action, 'session', null, null, null, details)
   });
   app.use('/api/material-pricing', buildMaterialPricingRouter(loadPricingConfig()));
   app.use('/api/auth', auth.router);
   const terminal = createTerminalRuntime(auth);
-  app.use('/api/admin', buildAdminRouter(startedAt, auth, terminal));
+  app.use('/api/admin', buildConsoleRouter(startedAt, { auth, core, terminal, db }));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
+  app.get('/version', (_req, res) => res.json({ success: true, data: { version: readForgeVersion() } }));
   const announce = () => {
     if (core.configured) void core.announce().catch(() => console.warn('[w3-forge-admin] Core connection announcement unavailable.'));
   };
@@ -95,7 +101,7 @@ function main(): void {
   if (fs.existsSync(adminDist)) {
     app.use('/admin', express.static(adminDist));
     // SPA fallback — any /admin/* not matching a file returns index.html.
-    app.get(/^\/admin(\/.*)?$/, (_req, res) => {
+    app.get(/^\/(?:admin|forge)(\/.*)?$/, (_req, res) => {
       res.sendFile(path.join(adminDist, 'index.html'));
     });
   }
@@ -109,7 +115,7 @@ function main(): void {
   const shutdown = () => {
     terminal.manager.shutdown();
     clearInterval(discoveryTimer);
-    server.close(() => process.exit(0));
+    server.close(() => { void pool.end().finally(() => process.exit(0)); });
     const deadline = setTimeout(() => process.exit(0), 5_000);
     deadline.unref();
   };

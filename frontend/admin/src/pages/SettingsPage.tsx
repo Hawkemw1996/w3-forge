@@ -1,97 +1,171 @@
+import { consoleText } from "../../../../shared/consoleApp";
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import {
+  Archive,
+  FileText,
+  FolderTree,
+  Lock,
+  PackageX,
+  ShieldAlert,
+  Upload
+} from 'lucide-react';
 import { ReactNode } from 'react';
-import { Archive, Cpu, GitBranch, Lock, Network, Package, RefreshCw, ShieldCheck, TerminalSquare } from 'lucide-react';
-import { Card, CardBody, CardHeader } from '../components/ui/Card';
-import { Badge, type BadgeTone } from '../components/ui/Badge';
+import { Card, CardBody } from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
 import { SectionHeader } from '../components/ui/SectionHeader';
-import { LoadingState, ErrorState } from '../components/ui/States';
 import { adminGet } from '../lib/api';
-import type { Connections } from '../lib/connections';
-import { terminalRequest, type TerminalStatus } from '../lib/terminal';
-import { availableInventory, inventoryData, inventoryStatus, usePackageInventory, useBackupInventory, type ArtifactInventory } from '../lib/inventory';
+import { DASHBOARD_LAYOUT_STORAGE_KEY } from '../hooks/useDashboardLayout';
 
-interface SystemResp {
-  app: string; name: string; version: string; forgeRoot: string; host: string;
-  platform: string; nodeVersion: string;
-  authority: { mayDeploy: boolean; mayTagRelease: boolean; mayModifyProductionData: boolean };
+interface RootInfo {
+  id: string;
+  path: string;
+  label: string;
+  exists: boolean;
+}
+interface RootsResponse {
+  roots: RootInfo[];
+  forbidden: string[];
 }
 
+// v0.5.1 Settings: read-only policy cards. No edit affordance anywhere on
+// this page — every card surfaces the current state without controls.
 export function SettingsPage() {
-  const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system') });
-  const connections = useQuery({ queryKey: ['connections'], queryFn: () => adminGet<Connections>('/connections') });
-  const terminal = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
-  const staged = usePackageInventory('staged');
-  const installed = usePackageInventory('installed');
-  const backups = useBackupInventory();
-  const queries = [system, connections, terminal, staged, installed, backups];
-  const refresh = () => queries.forEach(query => { void query.refetch(); });
-  const terminalData = terminal.isError ? undefined : terminal.data;
-  if (system.isPending || connections.isPending) return <LoadingState label="Loading settings…" />;
-  if (system.isError) return <div className="space-y-3"><ErrorState title="Failed to load settings" error={system.error} /><button className="btn" type="button" onClick={refresh}>Retry</button></div>;
-  if (connections.isError) return <div className="space-y-3"><ErrorState title="Failed to load connections" error={connections.error} /><button className="btn" type="button" onClick={refresh}>Retry</button></div>;
-  const s = system.data!;
-  const c = connections.data!;
-  return <div className="space-y-4">
-    <SectionHeader title="Settings" subtitle="Configured services and operating boundaries for this Forge installation."
-      actions={<button type="button" className="btn" disabled={queries.some(query => query.isFetching)} onClick={refresh}><RefreshCw size={14} /> Refresh</button>} />
-    <Card><CardBody className="text-sm text-[var(--w3-text-muted)]">These settings are read-only. This app owns its repository, package directories and backups. Connection configuration is managed on its host; sign-in approval and user assignments are managed in W3 Core. Configured means settings are present, not that a service is reachable.</CardBody></Card>
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-      <SettingCard title="App identity" icon={<Package size={14} />} state="This app" tone="info"><p>{c.app?.name || s.name}</p><p>App ID: <code>{c.app?.id || s.app}</code></p><p>Version: <code>{c.app?.version || s.version}</code></p></SettingCard>
-      <SettingCard title="W3 Core access" icon={<ShieldCheck size={14} />} state={c.core.configured ? 'Configured' : 'Needs setup'} tone={c.core.configured ? 'info' : 'warning'}>
-        <p>Core-owned sign-in and the Forge admin role protect this console.</p>
-        {c.core.publicUrl ? <ExternalConnection href={c.core.publicUrl} label="Open W3 Core" /> : null}
-      </SettingCard>
-      <SettingCard title="GitHub repository" icon={<GitBranch size={14} />} state={c.github.repositoryUrl ? 'Configured' : 'Needs setup'} tone={c.github.repositoryUrl ? 'info' : 'warning'}>
-        {c.github.repositoryUrl ? <ExternalConnection href={c.github.repositoryUrl} label={c.github.repositoryUrl} /> : <p>No repository URL configured.</p>}
-        <p className="break-all">Workspace: <code>{c.github.workspace}</code></p><p>Development branch: <code>{c.github.defaultDevBranch}</code></p>
-        <Link className="text-[var(--w3-gold-400)] underline" to="/github">Check repository connection</Link>
-      </SettingCard>
-      <InventorySettingCard title="Staged packages" query={staged} to="/packages" />
-      <InventorySettingCard title="Installed package directory" query={installed} to="/packages" />
-      <InventorySettingCard title="Backup directory" query={backups} to="/backups" />
-      <SettingCard title="Terminal access" icon={<TerminalSquare size={14} />} state={terminal.isPending ? 'Checking' : terminalData?.available ? 'Available' : 'Unavailable'} tone={terminalData?.available ? 'success' : 'warning'}>
-        <p>{terminalData?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking host terminal availability.')}</p>
-        <p>Host setting: {c.terminal.enabled ? 'enabled' : 'disabled'}. Terminal commands affect the Forge host.</p>
-        <Link className="text-[var(--w3-gold-400)] underline" to="/terminal">Open Terminal</Link>
-      </SettingCard>
-      <SettingCard title="Lowe's material pricing" icon={<Network size={14} />} state={!c.materialPricing.enabled ? 'Disabled' : c.materialPricing.configured ? 'Configured' : 'Needs setup'} tone={c.materialPricing.enabled && c.materialPricing.configured ? 'info' : 'slate'}>
-        <p>Existing pricing service for future Forge item-cost workflows.</p>
-        <p>Up to {c.materialPricing.maxProducts} products per request.</p>
-        <p>Charge limits: {money(c.materialPricing.maxRequestChargeCents)} per request / {money(c.materialPricing.maxDailyChargeCents)} per day.</p>
-      </SettingCard>
-      <SettingCard title="Material matcher / Ollama" icon={<Cpu size={14} />} state={c.ollama.configured ? 'Configured' : 'Needs setup'} tone={c.ollama.configured ? 'info' : 'slate'}>
-        <p>Model: <code>{c.ollama.model || 'Not configured'}</code></p><p>Configured model for matching material-pricing results. Forge Chat is planned separately.</p>
-      </SettingCard>
-      <SettingCard title="n8n" icon={<Network size={14} />} state={c.n8n.configured ? 'Link configured' : 'Needs setup'} tone={c.n8n.configured ? 'info' : 'slate'}>
-        {c.n8n.url ? <ExternalConnection href={c.n8n.url} label="Open n8n" /> : <p>No n8n instance link configured.</p>}
-        <p>The Forge automation interface is planned. An instance link does not establish API access.</p>
-      </SettingCard>
+  const rootsQ = useQuery({
+    queryKey: ['admin', 'files', 'roots'],
+    queryFn: () => adminGet<RootsResponse>('/files/roots')
+  });
+
+  return (
+    <div className="space-y-4">
+      <SectionHeader
+        title="Settings"
+        subtitle="Operating policies for the Admin Console."
+        actions={<Badge tone="success">Read Only</Badge>}
+      />
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <PolicyCard
+          icon={<ShieldAlert size={14} />}
+          title="Internal Only"
+          state={<Badge tone="warning">Internal Only</Badge>}
+        >
+          The Admin API and Console are gated behind an internal-only guard. Do not expose to
+          the public internet until real auth and roles land.
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<Lock size={14} />}
+          title="No Public Exposure"
+          state={<Badge tone="danger">Do Not Publish</Badge>}
+        >
+          Caddy / Cloudflare must not proxy <code className="font-mono">/admin</code> or{' '}
+          <code className="font-mono">/api/admin/*</code> to the open internet. Reverse-proxy
+          rules are validated out-of-band.
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<Upload size={14} />}
+          title="Uploads Disabled"
+          state={<Badge tone="success">Disabled</Badge>}
+        >
+          No file upload endpoint is shipped. The backend has no{' '}
+          <code className="font-mono">multer</code> dependency and no multipart handler.
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<PackageX size={14} />}
+          title="Write Actions Disabled"
+          state={<Badge tone="success">Read Only</Badge>}
+        >
+          No deploy / apply / reset / purge / verify-package action is exposed from the UI.
+          Every admin route is HTTP <Badge tone="info">GET</Badge>.
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<Archive size={14} />}
+          title="Package Standard"
+          state={<Badge tone="gold">Canonical</Badge>}
+        >
+          <code className="font-mono text-[var(--w3-text)]">{consoleText("w3buildcost-vX")}.Y.Z.tar.gz</code>
+          <div className="mt-1 text-[11px] text-[var(--w3-text-muted)]">
+            Non-conforming files are listed but flagged. deploy-{consoleText("w3buildcost")}.sh still consumes the
+            newest tarball in <code className="font-mono">{consoleText("/opt/w3buildcost-update-packages/")}</code>.
+          </div>
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<FolderTree size={14} />}
+          title="Allowed File Roots"
+          state={
+            <Badge tone="slate">
+              {rootsQ.data?.roots.length ?? '…'} Root
+              {rootsQ.data?.roots.length === 1 ? '' : 's'}
+            </Badge>
+          }
+        >
+          {rootsQ.data?.roots.length ? (
+            <ul className="space-y-0.5 font-mono text-[11px]">
+              {rootsQ.data.roots.map((r) => (
+                <li key={r.id} className="flex items-center gap-1">
+                  <span className="text-[var(--w3-text-muted)]">{r.label}:</span>
+                  <span className="text-[var(--w3-text)]">{r.path}</span>
+                  {!r.exists ? <Badge tone="warning">Missing</Badge> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span className="text-[var(--w3-text-muted)]">Loading Allowlist…</span>
+          )}
+        </PolicyCard>
+
+        <PolicyCard
+          icon={<FileText size={14} />}
+          title="Backup Policy"
+          state={<Badge tone="purple">App + DB Pairs</Badge>}
+        >
+          Backups are taken nightly to <code className="font-mono">{consoleText("/opt/w3buildcost-backups")}</code> as
+          paired app + database archives. Pre-v0.5.0 backups are surfaced as{' '}
+          <Badge tone="warning">Legacy Candidate</Badge> for off-line cleanup via{' '}
+          <code className="font-mono">cleanup-legacy-{consoleText("w3buildcost")}.sh</code>.
+        </PolicyCard>
+      </div>
+
+      <Card>
+        <CardBody className="text-xs text-[var(--w3-text-muted)]">
+          Dashboard layout (widget order + visibility) is stored in this browser's{' '}
+          <code className="font-mono">localStorage</code> under{' '}
+          <code className="font-mono">{DASHBOARD_LAYOUT_STORAGE_KEY}</code>. Layouts are not
+          shared across browsers or devices. Database-backed layouts ship later in the v0.5.x
+          line.
+        </CardBody>
+      </Card>
     </div>
-    <Card><CardHeader title="Operating boundaries" /><CardBody className="grid grid-cols-1 gap-4 text-xs text-[var(--w3-text-muted)] md:grid-cols-2">
-      <div className="space-y-2"><h3 className="flex items-center gap-2 text-sm font-medium text-[var(--w3-text)]"><Lock size={14} /> Registered controls</h3><p>Registered controls use Forge's safe runner and their declared permissions. Terminal sessions provide separate interactive host access and can change host files.</p></div>
-      <div className="space-y-2"><h3 className="flex items-center gap-2 text-sm font-medium text-[var(--w3-text)]"><ShieldCheck size={14} /> Release authority</h3><p>Production release approval remains with the owner. Forge's registered app authority: deploy {s.authority.mayDeploy ? 'enabled' : 'disabled'}, release tagging {s.authority.mayTagRelease ? 'enabled' : 'disabled'}, production data writes {s.authority.mayModifyProductionData ? 'enabled' : 'disabled'}.</p></div>
-    </CardBody></Card>
-    <Card><CardBody className="space-y-1 text-xs text-[var(--w3-text-muted)]">
-      <p>App: <code>{s.app}</code> · v{s.version}</p><p className="break-all">Forge root: <code>{s.forgeRoot}</code></p><p>Host: <code>{s.host}</code> · {s.platform} · Node {s.nodeVersion}</p>
-    </CardBody></Card>
-  </div>;
-}
-function money(cents: number) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100); }
-function ExternalConnection({ href, label }: { href: string; label: string }) {
-  return <a className="block break-all text-[var(--w3-gold-400)] underline" href={href} target="_blank" rel="noreferrer">{label}</a>;
-}
-function SettingCard({ title, icon, state, tone, children }: { title: string; icon: ReactNode; state: string; tone: BadgeTone; children: ReactNode }) {
-  return <Card><CardHeader title={<span className="flex items-center gap-2">{icon}{title}</span>} right={<Badge tone={tone}>{state}</Badge>} /><CardBody className="space-y-2 text-xs text-[var(--w3-text-muted)]">{children}</CardBody></Card>;
+  );
 }
 
-function InventorySettingCard({ title, query, to }: { title: string; query: ReturnType<typeof usePackageInventory> | ReturnType<typeof useBackupInventory>; to: string }) {
-  const status = inventoryStatus(query);
-  const metadata = inventoryData<ArtifactInventory>(query);
-  const available = availableInventory<ArtifactInventory>(query);
-  return <SettingCard title={title} icon={to === '/backups' ? <Archive size={14} /> : <Package size={14} />} state={status.label} tone={status.tone}>
-    {metadata ? <><p>App: {metadata.app.name}</p><p className="break-all">Directory: <code>{metadata.root || 'Not configured'}</code></p></> : null}<p>{status.message}</p>
-    {available ? <p>{'packages' in available ? available.packages.length : available.backups.length} listed files. Contents have not been verified.</p> : null}
-    <Link className="text-[var(--w3-gold-400)] underline" to={to}>{to === '/backups' ? 'Open Backups' : 'Open Packages'}</Link>
-  </SettingCard>;
+function PolicyCard({
+  icon,
+  title,
+  state,
+  children
+}: {
+  icon: ReactNode;
+  title: string;
+  state: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card>
+      <CardBody className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--w3-text)]">
+            <span style={{ color: 'var(--w3-gold-400)' }}>{icon}</span>
+            <span>{title}</span>
+          </div>
+          {state}
+        </div>
+        <div className="text-xs text-[var(--w3-text-muted)]">{children}</div>
+      </CardBody>
+    </Card>
+  );
 }

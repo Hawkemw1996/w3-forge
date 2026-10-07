@@ -7,184 +7,154 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { readFileSync } from 'node:fs';
 
-const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
-const { AdminLayout } = await server.ssrLoadModule('/src/components/AdminLayout.tsx');
-const { CoreAuthGate } = await server.ssrLoadModule('/src/components/CoreAuthGate.tsx');
-const { GitHubValidationPage } = await server.ssrLoadModule('/src/pages/GitHubValidationPage.tsx');
-const { DashboardPage } = await server.ssrLoadModule('/src/pages/DashboardPage.tsx');
-const { ProductionReadinessPage } = await server.ssrLoadModule('/src/pages/ProductionReadinessPage.tsx');
-const { SettingsPage } = await server.ssrLoadModule('/src/pages/SettingsPage.tsx');
-const { PackagesPage } = await server.ssrLoadModule('/src/pages/PackagesPage.tsx');
-const { BackupsPage } = await server.ssrLoadModule('/src/pages/BackupsPage.tsx');
-const { inventoryData, availableInventory, inventoryStatus } = await server.ssrLoadModule('/src/lib/inventory.ts');
+const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+const load = file => server.ssrLoadModule('/src/' + file);
+const { AdminLayout } = await load('components/AdminLayout.tsx');
+const { AdminAuthGate } = await load('components/AdminAuthGate.tsx');
+const { GitHubPage } = await load('pages/GitHubPage.tsx');
+const { DashboardPage } = await load('pages/DashboardPage.tsx');
+const { ProductionReadinessPage } = await load('pages/ProductionReadinessPage.tsx');
+const { SettingsPage } = await load('pages/SettingsPage.tsx');
+const { PackagesPage } = await load('pages/PackagesPage.tsx');
+const { BackupsPage } = await load('pages/BackupsPage.tsx');
+const { AccessDeniedPage, CoreUnavailablePage, LoginPage, safeNext } = await load('pages/AuthPages.tsx');
+const config = await server.ssrLoadModule('../../shared/consoleApp.ts');
+const { loadConsoleConfiguration } = await load('bootstrap.ts');
+const { adminGet, adminPost, adminPut } = await load('lib/api.ts');
 test.after(() => server.close());
-globalThis.window = { location: { search: '' } };
-const status = { configured: true, authenticated: true, coreUrl: 'https://core.test',
-  connection: { status: 'approved', fingerprint: '1234567890abcdef' }, user: { id: '1', username: 'operator', appRole: 'admin' } };
-function render(component, auth = status, values = []) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
-  client.setQueryData(['core', 'auth'], auth);
-  client.setQueryData(['admin', 'version'], { version: '0.4.1', nodeEnv: 'development' });
+globalThis.window = { location: { search: '', pathname: '/admin/' }, dispatchEvent() {}, matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
+const status = { authenticated: true, loginAvailable: true, sessionError: null, user: { displayName: 'operator', permissions: ['forge:read', 'forge:write', 'forge:admin'] } };
+function render(component, { auth = status, values = [], errors = [], route = '/' } = {}) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, retryOnMount: false, staleTime: Infinity, gcTime: Infinity } } });
+  client.setQueryData(['auth', 'status'], auth);
+  client.setQueryData(['admin', 'version'], { app: 'w3forge', version: '0.4.1', nodeEnv: 'development', startedAt: '2026-10-07T00:00:00Z' });
   for (const [key, value] of values) client.setQueryData(key, value);
-  const html = renderToString(React.createElement(QueryClientProvider, { client }, React.createElement(MemoryRouter, {}, component)));
-  client.clear(); return html;
+  for (const [key, error] of errors) {
+    client.setQueryData(key, {});
+    client.getQueryCache().find({ queryKey: key }).setState({ status: 'error', fetchStatus: 'idle', data: undefined, error });
+  }
+  const html = renderToString(React.createElement(QueryClientProvider, { client }, React.createElement(MemoryRouter, { initialEntries: [route] }, component)));
+  client.clear(); return html.replace(/<!-- -->/g, '');
 }
-test('the console uses current shared navigation, environment badges and account footer', () => {
-  const html = render(React.createElement(AdminLayout, {}, 'PAGE_CONTENT'));
-  for (const text of ['W3 Forge', 'v0.4.1', 'Development build', 'Signed in as operator', 'Sign out', 'GitHub / Releases', 'Packages', 'Backups', 'Production Readiness', 'File Browser', 'Controls', 'Terminal', 'PAGE_CONTENT', 'w3-sidebar', 'md:sticky', 'sticky top-0']) assert.ok(html.includes(text), text);
-  assert.ok(html.includes('href="https://core.test"'));
+const el = React.createElement;
+const git = { deployRoot: '/review/forge', isRepo: true, branch: 'dev/v0.4.1', headSha: '1234567890abcdef', headShortSha: '1234567', describedTag: null, clean: true, uncommittedCount: 0,
+  remote: 'https://github.com/example/forge.git', lastCommit: null, releaseVersion: '0.4.1', status: 'ok', repositoryBinding: 'matched', configuredRepositoryUrl: 'https://github.com/example/forge' };
+const gitValues = [[['admin', 'git', 'status'], git], [['admin', 'git', 'tags'], { tags: [], count: 0, limit: 20, installedVersion: '0.4.1' }], [['admin', 'git', 'commits'], { commits: [], count: 0, limit: 25 }]];
+const packages = { root: '/opt/w3forge-update-packages', packages: [{ name: 'w3forge-v0.4.1.tar.gz', path: '/opt/w3forge-update-packages/w3forge-v0.4.1.tar.gz', sizeBytes: 1024, mtime: '2026-10-07T00:00:00Z', validName: true, parsedVersion: '0.4.1' }] };
+const backups = { root: '/opt/backups/w3forge', totalSizeBytes: 2048, backups: [{ pairTimestamp: '2026-10-07_00-00-00', appArchive: { name: 'w3forge_app_2026-10-07_00-00-00.tar.gz', sizeBytes: 1024, mtime: '2026-10-07T00:00:00Z' }, dbArchive: { name: 'w3forge_db_2026-10-07_00-00-00.sql', sizeBytes: 1024, mtime: '2026-10-07T00:00:00Z' }, parsedVersion: '0.4.1', kind: 'paired' }] };
+const readiness = { system: { version: '0.4.1', gitCommit: '1234567', environment: 'development' }, migration_version: '1', production_data_mode: false, all_checks_pass: false, pass_count: 0, total_checks: 1,
+  checks: [{ key: 'database', label: 'Database', pass: false, detail: 'Database unavailable' }], backup: { exists: false, filename: null, size_bytes: null, mtime: null, age_hours: null, health: 'unknown' }, cutover_record: null };
+
+test('the console retains every canonical navigation item and product/account footer', () => {
+  const html = render(el(AdminLayout, {}, 'PAGE_CONTENT'));
+  for (const text of ['W3 Forge', 'v0.4.1', 'Development build', 'Signed in as operator', 'Sign out', 'PAGE_CONTENT', 'w3-sidebar', 'md:sticky', 'sticky top-0', 'href="/forge"']) assert.ok(html.includes(text), text);
   const labels = ['Dashboard', 'System Status', 'Logs', 'Packages', 'Backups', 'File Browser', 'GitHub / Releases', 'Terminal', 'Controls', 'Production Readiness', 'Settings'];
-  const indexes = labels.map(label => html.indexOf('>' + label + '</span>'));
-  assert.ok(indexes.every((value, index) => value >= 0 && (!index || value > indexes[index - 1])), 'canonical navigation order');
-  assert.doesNotMatch(html, /Engineering console/);
-  assert.match(html, /href="\/packages"/);
-  assert.match(html, /href="\/backups"/);
-  assert.doesNotMatch(html, /href="\/command-center/);
-  assert.doesNotMatch(html, /role="dialog"/, 'closed mobile drawer must not leave hidden focusable links');
+  const indices = labels.map(label => html.indexOf('>' + label + '</span>'));
+  assert.ok(indices.every((value, index) => value >= 0 && (!index || value > indices[index - 1])));
+  assert.doesNotMatch(html, /Core-managed|Engineering console|role="dialog"/);
 });
-test('unapproved installation shows fingerprint and browser sign-in without password fields', () => {
-  const html = render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT'), { ...status, authenticated: false, user: null, connection: { ...status.connection, status: 'pending' } });
-  assert.match(html, /Sign in with W3 Core/); assert.match(html, /1234567890abcdef/);
-  assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"|name="password"/);
+test('unapproved installations cannot render protected content or password fields', () => {
+  const html = render(el(AdminAuthGate, {}, 'PRIVATE_CONTENT'), { auth: { ...status, authenticated: false, loginAvailable: false, user: null } });
+  assert.match(html, /Redirecting/); assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"/);
 });
 test('viewer and editor assignments cannot render the admin console', () => {
-  for (const appRole of ['viewer', 'editor']) {
-    const html = render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT'), { ...status, user: { ...status.user, appRole } });
-    assert.match(html, /Forge admin access required/); assert.doesNotMatch(html, /PRIVATE_CONTENT/);
-  }
-  assert.match(render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT')), /PRIVATE_CONTENT/);
+  for (const permissions of [['forge:read'], ['forge:read', 'forge:write'], ['buildcost:admin']]) assert.doesNotMatch(render(el(AdminAuthGate, {}, 'PRIVATE_CONTENT'), { auth: { ...status, user: { ...status.user, permissions } } }), /PRIVATE_CONTENT/);
+  assert.match(render(el(AdminAuthGate, {}, 'PRIVATE_CONTENT')), /PRIVATE_CONTENT/);
 });
-test('GitHub / Releases shows workspace status and routes execution through existing Controls', () => {
-  const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], { branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: false, statusShort: '', devBranches: ['dev/v0.4.1'] }]]);
-  for (const text of ['GitHub / Releases', 'GitHub Release Standard', 'Current Git Status', 'dev/v0.4.1', 'Allowed branch', 'Clean', 'Open Controls']) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /Deploy|Publish|Merge|Create release/);
+test('missing encryption or unavailable Core uses the shared unavailable redirect state', () => {
+  const html = render(el(AdminAuthGate, {}, 'PRIVATE_CONTENT'), { auth: { ...status, authenticated: false, loginAvailable: false, user: null, sessionError: { code: 'SESSION_SECRET_MISSING', message: 'Setup incomplete' } } });
+  assert.match(html, /Redirecting/); assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"/);
 });
-test('existing Controls and File Browser remain routed behind the Core gate', () => {
+test('all operational routes use the canonical gate and route recovery boundary', () => {
   const app = readFileSync('src/App.tsx', 'utf8');
-  assert.match(app, /<CoreAuthGate><AdminLayout>/);
-  assert.match(app, /path="\/files" element={<FileBrowserPage/);
-  assert.match(app, /path="\/controls" element={<ControlsPage/);
-  assert.match(app, /path="\/terminal" element={<Suspense/);
+  assert.match(app, /<AdminAuthGate>/); assert.match(app, /<RouteErrorBoundary>/);
+  for (const route of ['files', 'controls', 'terminal', 'github', 'packages', 'backups', 'production-readiness']) assert.ok(app.includes('path="/' + route + '"'));
   assert.match(app, /lazy\(\(\) => import\('\.\/pages\/TerminalPage'\)/);
 });
-
-
-const gitIdentity = { appId: 'w3forge', appName: 'W3 Forge', configuredRepositoryUrl: 'https://github.com/example/forge', remoteRepositoryUrl: 'https://github.com/example/forge', repositoryBinding: 'matched', repositoryMessage: 'Workspace origin matches this app.' };
-const connections = {
-  app: { id: 'w3forge', name: 'W3 Forge', version: '0.4.1' },
-  core: { configured: true, publicUrl: 'https://core.test' },
-  github: { repositoryUrl: 'https://github.com/example/forge', workspace: '/review/forge', defaultDevBranch: 'dev/v0.4.1' },
-  terminal: { enabled: true },
-  materialPricing: { enabled: true, configured: true, maxProducts: 50, maxRequestChargeCents: 100, maxDailyChargeCents: 1000 },
-  ollama: { configured: true, model: 'forge-model' },
-  n8n: { configured: true, url: 'https://automation.test' },
-  chat: { status: 'planned' }, businessAutomations: { status: 'planned' }
-};
-const system = { app: 'w3forge', version: '0.4.1', forgeRoot: '/review/forge', host: 'forge', platform: 'linux', nodeVersion: 'v22', uptimeSeconds: 123,
-  authority: { mayDeploy: false, mayTagRelease: false, mayModifyProductionData: false } };
-const terminal = { available: false, enabled: true, supported: false, message: 'Terminal is not available on this host.', hostname: 'forge', access: 'root-login' };
-const appValues = [[['connections'], connections], [['system'], system], [['admin', 'terminal', 'status'], terminal],
-  [['logs'], { files: ['admin/operations.log'] }],
-  [['overview'], { attention: { message: 'Review configuration before use.', items: [] } }]];
-
-test('dashboard uses the common operations tiles and truthful unavailable states', () => {
-  const html = render(React.createElement(DashboardPage), status, appValues);
-  for (const text of ['Operations Overview', 'System Health', 'Version', 'Attention Required', 'Recent Logs', 'Memory / CPU', 'Disk Usage', 'Staged Packages', 'Installed Packages', 'Backup Summary', 'Unavailable', 'admin/operations.log', 'href="/system"', 'href="/logs"']) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /Application modules|W3 Forge Workspace|Forge Chat|Start Chat|Run Automation|Start Scraping|n8n automation interface/);
-  assert.match(html, /disabled=""[^>]*>.*?Customize/);
-});
-
-test('readiness uses the standard checklist without claiming configuration approves a release', () => {
-  const html = render(React.createElement(ProductionReadinessPage), status, [...appValues, [['git', 'status'], { branch: 'dev/v0.4.1', branchAllowed: true, dirty: true }]]);
-  for (const text of ['Production Readiness', 'Readiness Checklist', 'Configured', 'Changes present', 'Owner review required', 'Manual review required', 'do not approve a release', 'table-dark', 'mobile-cards']) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /All checks pass|Enable Production|production-cutover/);
-});
-
-test('settings show configuration and pricing limits without claiming untested services are connected', () => {
-  const html = render(React.createElement(SettingsPage), status, appValues);
-  for (const text of ['Settings', 'read-only', 'not that a service is reachable', 'forge-model', '$1.00', '$10.00', 'Terminal commands affect the Forge host', 'can change host files', 'does not establish API access']) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /type="password"|type="text"|Root shell connected/);
-});
-
-test('GitHub shows repository and local tracking metadata without implying a remote connection was checked', () => {
-  const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], {
-    ...gitIdentity, branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: true, statusShort: ' M README.md', devBranches: ['dev/v0.4.1'],
-    repositoryUrl: 'https://github.com/example/forge', remoteConfigured: true, head: '0123456789abcdef', upstream: 'origin/dev/v0.4.1', ahead: 2, behind: 1, defaultDevBranch: 'dev/v0.4.1'
-  }]]);
-  for (const text of ['Not checked', 'Check Remote', '0123456789ab', 'origin/dev/v0.4.1', '2 ahead', '1 behind', 'Changes present', 'last fetched', 'href="https://github.com/example/forge"']) assert.ok(html.includes(text), text);
+test('GitHub exposes the complete release workflow, source inventory, and histories', () => {
+  const html = render(el(GitHubPage), { values: gitValues });
+  for (const text of ['GitHub / Releases', 'GitHub Release Standard', 'Current Source Snapshot', 'Check Remote', 'Fetch Tags', 'Compare Installed', 'Release / Tag History', 'Commit History', 'dev/v0.4.1', '/review/forge']) assert.ok(html.includes(text), text);
   assert.doesNotMatch(html, /type="password"|Save token/);
+  const source = readFileSync('src/pages/GitHubPage.tsx', 'utf8');
+  for (const component of ['UnifiedReleaseWorkflow', 'PipelineStateSummary', 'SafePreflightButton']) assert.ok(source.includes('<' + component));
 });
-
-test('GitHub leaves the remote check disabled when the workspace has no remote', () => {
-  const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], {
-    branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: false, statusShort: '', devBranches: [],
-    repositoryUrl: null, remoteConfigured: false, head: '', upstream: null, ahead: null, behind: null, defaultDevBranch: 'dev/v0.4.1'
-  }]]);
-  assert.match(html, /No repository remote is configured/);
-  assert.match(html, /class="btn btn-primary" disabled=""/);
-  assert.match(html, /No upstream configured/);
+test('dashboard customization is fully enabled with the canonical persisted-layout contract', () => {
+  const layout = { version: '0.4.1', schema: 1, updated_at: '2026-10-07T00:00:00Z', source: 'file', path: '/settings/admin-dashboard.json', hidden_tiles: [], layouts: { lg: [], md: [], sm: [], xs: [] } };
+  const html = render(el(DashboardPage), { values: [[['admin', 'dashboard', 'layout'], layout]] });
+  assert.match(html, /Operations Overview/); assert.match(html, /Customize/);
+  assert.doesNotMatch(html, /disabled=""[^>]*>.*?Customize/);
+  const source = readFileSync('src/hooks/useDashboardLayout.ts', 'utf8');
+  assert.ok(source.includes("adminPut<DashboardLayoutPayload>('/dashboard/layout'")); assert.ok(source.includes("adminPost<DashboardLayoutPayload>('/dashboard/layout/reset'"));
 });
-
-
-test('missing session encryption setup is explained without offering sign-in or exposing protected content', () => {
-  const html = render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT'), {
-    ...status, configured: false, authenticated: false, user: null,
-    setupError: 'Configure a separate FORGE_SESSION_SECRET with at least 32 characters before signing in.'
-  });
-  assert.match(html, /FORGE_SESSION_SECRET/);
-  assert.doesNotMatch(html, /PRIVATE_CONTENT|type="password"/);
+test('dashboard failure shows error rather than fabricated operational data', () => {
+  const html = render(el(DashboardPage), { errors: [[['admin', 'dashboard', 'layout'], new Error('Layout unavailable')]] });
+  assert.match(html, /Layout unavailable/); assert.doesNotMatch(html, /All monitored checks are clear/);
+});
+test('readiness uses canonical checks and the gated production cutover workflow', () => {
+  const html = render(el(ProductionReadinessPage), { values: [[['admin', 'production-readiness'], readiness]] });
+  for (const text of ['Production Readiness Checklist', 'Database unavailable', 'Backup Health', 'Production Cutover Record']) assert.ok(html.includes(text), text);
   assert.match(html, /disabled=""/);
+  assert.match(readFileSync('src/pages/ProductionReadinessPage.tsx', 'utf8'), /adminPost\('\/production-cutover'/);
 });
-
-const inventory = { app: { id: 'w3forge', name: 'W3 Forge' }, root: '/review/forge/packages',
-  connection: { configured: true, available: true, state: 'ready', message: null }, truncated: false };
-const packageInventory = { ...inventory, packages: [{ name: 'w3forge.tar.gz', path: '/review/forge/packages/v0.4.1/w3forge.tar.gz',
-  sizeBytes: 1024, mtime: '2026-10-07T01:00:00.000Z', validName: true, parsedVersion: '0.4.1', layout: 'canonical' }] };
-const backupInventory = { ...inventory, root: '/review/forge/backups', backups: [{ name: 'w3forge-v0.4.1-fixture.sql.gz',
-  sizeBytes: 512, mtime: '2026-10-07T01:00:00.000Z', parsedVersion: '0.4.1', kind: 'database' }], totalSizeBytes: 512 };
-
-test('package and backup pages display app-specific metadata without execution actions', () => {
-  const packages = render(React.createElement(PackagesPage), status, [
-    [['admin', 'packages', 'staged'], packageInventory], [['admin', 'packages', 'installed'], { ...inventory, packages: [] }]
-  ]);
-  for (const text of ['W3 Forge', '/review/forge/packages', 'w3forge.tar.gz', 'Staged Packages', 'Installed Packages', 'mobile-cards', 'table-dark']) assert.ok(packages.includes(text), text);
-  const backups = render(React.createElement(BackupsPage), status, [[['admin', 'backups'], backupInventory]]);
-  for (const text of ['w3forge-v0.4.1-fixture.sql.gz', 'Database file', 'Not verified', 'Latest Backup File', 'Backup History']) assert.ok(backups.includes(text), text);
-  assert.doesNotMatch(packages + backups, /<button[^>]*>[^<]*(Install|Restore|Delete|Deploy)/);
+test('readiness failures are visible instead of approving cutover', () => {
+  const html = render(el(ProductionReadinessPage), { errors: [[['admin', 'production-readiness'], new Error('Readiness unavailable')]] });
+  assert.match(html, /Readiness unavailable/); assert.doesNotMatch(html, /All Checks Pass/);
 });
-test('inventory pages distinguish disconnected storage from an empty connected directory', () => {
-  for (const [state, label] of [['not_configured', 'Not configured'], ['missing', 'Directory missing'], ['unavailable', 'Unavailable']]) {
-    const data = { ...packageInventory, connection: { configured: state !== 'not_configured', available: false, state, message: null } };
-    const html = render(React.createElement(PackagesPage), status, [
-      [['admin', 'packages', 'staged'], data], [['admin', 'packages', 'installed'], data]
-    ]);
-    assert.ok(html.includes(label), label); assert.match(html, /Retry/);
-    assert.doesNotMatch(html, /w3forge\.tar\.gz<\/div>|No staged packages found/);
-  }
-  const html = render(React.createElement(PackagesPage), status, [
-    [['admin', 'packages', 'staged'], { ...inventory, packages: [] }], [['admin', 'packages', 'installed'], { ...inventory, packages: [] }]
-  ]);
-  assert.match(html, /No staged packages found/); assert.match(html, /Available/);
+test('settings preserve the complete canonical policy cards and reference copy', () => {
+  const html = render(el(SettingsPage), { values: [[['admin', 'files', 'roots'], { roots: [{ id: 'runtime', path: '/srv/forge', label: 'Runtime', exists: true }], forbidden: [] }]] });
+  for (const text of ['Settings', 'Internal Only', 'No Public Exposure', 'Uploads Disabled', 'Write Actions Disabled', 'Package Standard', 'Allowed File Roots', 'Backup Policy', '/srv/forge', 'localStorage']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /Forge Chat|n8n|not that a service is reachable|type="password"/);
 });
-test('inventory adapters hide cached data on failure and label truncated listings', () => {
-  const ready = { isPending: false, isError: false, error: null, data: packageInventory };
-  assert.equal(availableInventory(ready), packageInventory);
-  for (const state of [{ isError: true, error: new Error('Storage failed') }, { isPending: true }]) {
-    const query = { ...ready, ...state };
-    assert.equal(inventoryData(query), undefined); assert.equal(availableInventory(query), undefined);
-    assert.notEqual(inventoryStatus(query).label, 'Available');
-  }
-  assert.equal(inventoryStatus({ ...ready, data: { ...packageInventory, truncated: true } }).label, 'Partial listing');
+test('settings preserves the canonical allowlist loading presentation', () => {
+  const html = render(el(SettingsPage));
+  assert.match(html, /Settings/); assert.match(html, /Allowed File Roots/); assert.match(html, /Loading Allowlist/);
 });
-test('a mismatched workspace cannot replace the app repository link or enable connection check', () => {
-  const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], {
-    ...gitIdentity, workspace: '/review/forge', branch: 'dev/v0.4.1', branchAllowed: true, dirty: false,
-    repositoryUrl: gitIdentity.configuredRepositoryUrl, remoteConfigured: true,
-    remoteRepositoryUrl: 'https://github.com/example/buildcost', repositoryBinding: 'mismatch',
-    repositoryMessage: 'Workspace origin points to a different repository.'
-  }]]);
-  assert.match(html, /href="https:\/\/github.com\/example\/forge"/);
-  assert.doesNotMatch(html, /href="https:\/\/github.com\/example\/buildcost"/);
-  assert.match(html, /Workspace origin: /); assert.match(html, /Needs attention/);
-  assert.match(html, /class="btn btn-primary" disabled=""/);
+test('packages retain the reference staged/installed table and mobile-card presentation', () => {
+  const html = render(el(PackagesPage), { values: [[['admin', 'packages', 'staged'], packages], [['admin', 'packages', 'installed'], packages]] });
+  for (const text of ['W3 Forge', 'w3forge-v0.4.1.tar.gz', 'Staged Packages', 'Installed Packages', 'table-dark', 'mobile-cards']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /w3buildcost|Core-managed/);
+});
+test('backup history retains paired application/database metadata and latest backup view', () => {
+  const html = render(el(BackupsPage), { values: [[['admin', 'backups'], backups]] });
+  for (const text of ['Latest Backup Set', 'Backup History', 'w3forge_app_2026-10-07_00-00-00.tar.gz', 'w3forge_db_2026-10-07_00-00-00.sql']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /w3buildcost/); assert.match(html, />Clean<\/td>/);
+});
+test('empty and failed inventory requests remain distinguishable', () => {
+  const empty = render(el(PackagesPage), { values: [[['admin', 'packages', 'staged'], { ...packages, packages: [] }], [['admin', 'packages', 'installed'], { ...packages, packages: [] }]] });
+  assert.match(empty, /No .*Packages/i);
+  const failed = render(el(PackagesPage), { errors: [[['admin', 'packages', 'staged'], new Error('Storage unavailable')], [['admin', 'packages', 'installed'], new Error('Storage unavailable')]] });
+  assert.match(failed, /Storage unavailable/); assert.doesNotMatch(failed, /w3forge-v0\.4\.1\.tar\.gz/);
+});
+test('canonical auth pages explain Core access and contain no local credential form', () => {
+  assert.match(render(el(LoginPage)), /Sign in with W3 Core/);
+  assert.match(render(el(AccessDeniedPage), { route: '/access-denied?area=admin' }), /W3 Forge administrator access/);
+  assert.match(render(el(CoreUnavailablePage)), /W3 Forge verifies every user with W3 Core/);
+  assert.doesNotMatch(render(el(LoginPage)), /type="password"|name="password"/);
+});
+test('auth return targets cannot redirect to another origin or auth loop', () => {
+  for (const value of ['https://evil.test', '//evil.test', '/\\evil.test', '/forge/login', '/api/auth/login', '/%2f%2fevil.test']) assert.equal(safeNext(value), '/');
+  assert.equal(safeNext('/admin/github'), '/admin/github');
+  assert.equal(safeNext('/forge'), '/');
+});
+test('app configuration owns identity, paths and package validation without changing API routes', () => {
+  assert.equal(config.consoleText('W3 BuildCost /opt/w3buildcost-backups w3buildcost.tar.gz buildcost:admin'), 'W3 Forge /opt/backups/w3forge w3forge.tar.gz forge:admin');
+  assert.equal(new RegExp(config.consolePattern('^w3buildcost-v\\d+\\.\\d+\\.\\d+\\.tar\\.gz$')).test('w3forge-v0.4.1.tar.gz'), true);
+  assert.equal(new RegExp(config.consolePattern('^w3buildcost-v\\d+\\.\\d+\\.\\d+\\.tar\\.gz$')).test('w3buildcost-v0.4.1.tar.gz'), false);
+  assert.throws(() => config.configureConsole({}), /incomplete/);
+});
+test('configuration bootstrap blocks operational rendering for a failed or malformed response', async t => {
+  t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ success: false }), { status: 500 }));
+  await assert.rejects(loadConsoleConfiguration());
+  globalThis.fetch.mock.mockImplementation(async () => new Response(JSON.stringify({ success: true, data: {} }), { status: 200 }));
+  await assert.rejects(loadConsoleConfiguration(), /incomplete/);
+  globalThis.fetch.mock.mockImplementation(async () => new Response('{}', { status: 401 }));
+  await loadConsoleConfiguration();
+});
+test('admin transport preserves structured refusal details and same-origin mutation contracts', async t => {
+  const calls = [];
+  t.mock.method(globalThis, 'fetch', async (url, options) => { calls.push({ url, options }); return new Response(JSON.stringify({ success: true, data: { stored: true } }), { status: 200 }); });
+  await adminPut('/dashboard/layout', { layouts: {} }); await adminPost('/controls/pipeline-test-dev/validate', { inputs: {} });
+  assert.equal(calls[0].url, '/api/admin/dashboard/layout'); assert.equal(calls[0].options.method, 'PUT'); assert.equal(calls[0].options.credentials, 'same-origin');
+  globalThis.fetch.mock.mockImplementation(async () => new Response(JSON.stringify({ success: true, data: { runStatus: 'blocked', reason: 'Repository mismatch' } }), { status: 409 }));
+  await assert.rejects(adminGet('/git/status'), /blocked: Repository mismatch/);
 });

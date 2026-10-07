@@ -1,54 +1,317 @@
+import { consoleText } from "../../../../shared/consoleApp";
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
-import { RefreshCw } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { AdminListPage } from '../components/ui/AdminListPage';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/States';
 import { adminGet } from '../lib/api';
 import { formatBytes, formatTimestamp } from '../lib/format';
-import { availableInventory, inventoryData, inventoryStatus, usePackageInventory, type PackageEntry } from '../lib/inventory';
 
-// Core / BuildCost page composition with Forge's per-app metadata adapter.
+interface PackageEntry {
+  name: string;
+  path: string;
+  sizeBytes: number;
+  mtime: string;
+  validName: boolean;
+  parsedVersion: string | null;
+}
+
+interface PackagesResponse {
+  root: string;
+  packages: PackageEntry[];
+}
+
+interface VersionInfo {
+  app: string;
+  version: string;
+  nodeEnv: string;
+  startedAt: string;
+}
+
 export function PackagesPage() {
-  const version = useQuery({ queryKey: ['admin', 'version'], queryFn: () => adminGet<{ app: string; version: string }>('/version') });
-  const staged = usePackageInventory('staged');
-  const installed = usePackageInventory('installed');
-  const app = inventoryData(staged)?.app || inventoryData(installed)?.app;
-  const refresh = () => { void staged.refetch(); void installed.refetch(); void version.refetch(); };
-  return <AdminListPage header={{ title: 'Packages', subtitle: `Read-only staged and installed-directory inventories for ${app?.name || 'W3 Forge'}.`, actions: <div className="flex max-w-[calc(100vw-3rem)] flex-wrap items-center gap-2">
-    <Badge tone="warning">Read Only</Badge>{!version.isError && version.data ? <Badge tone="gold">Running: v{version.data.version}</Badge> : null}
-    <button type="button" className="btn" disabled={staged.isFetching || installed.isFetching || version.isFetching} onClick={refresh}><RefreshCw size={14} /> Refresh</button>
-  </div> }}
-    standardCard={{ title: 'Package Naming Standard', body: <>
-      <code className="rounded px-2 py-1 text-xs font-mono" style={{ background: 'var(--w3-navy-800)', border: '1px solid var(--w3-border)', color: 'var(--w3-text)' }}>vX.Y.Z/{app?.id || 'w3forge'}.tar.gz</code>
-      <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-[var(--w3-text-muted)]"><li>Each app uses its own repository and package directories. Legacy flat files use <code>{app?.id || 'w3forge'}-vX.Y.Z.tar.gz</code>.</li><li>Filename and storage-layout labels describe metadata only; archive contents and installation status are not verified.</li><li>Files in the installed directory are listed as history, not proof of a successful deployment. Production changes require the owner's approval.</li></ul>
-    </> }}
-    currentStateCard={{ title: 'Staged Packages', right: <InventoryBadge query={staged} />, flush: true, body: <PackageInventory query={staged} emptyLabel="No staged packages found." /> }}
-    historyTables={[{ title: 'Installed Packages', right: <InventoryBadge query={installed} />, flush: true, body: <PackageInventory query={installed} emptyLabel="No packages found in the installed directory." /> }]}
-    detailsSlot={<div className="flex flex-wrap gap-2"><Link className="btn" to="/github">GitHub / Releases</Link><Link className="btn" to="/backups">Backups</Link><Link className="btn" to="/settings">Settings</Link></div>} />;
+  const versionQ = useQuery({
+    queryKey: ['admin', 'version'],
+    queryFn: () => adminGet<VersionInfo>('/version')
+  });
+  const stagedQ = useQuery({
+    queryKey: ['admin', 'packages', 'staged'],
+    queryFn: () => adminGet<PackagesResponse>('/packages/staged'),
+    refetchInterval: 30_000
+  });
+  const installedQ = useQuery({
+    queryKey: ['admin', 'packages', 'installed'],
+    queryFn: () => adminGet<PackagesResponse>('/packages/installed'),
+    refetchInterval: 60_000
+  });
+
+  const currentVersion = versionQ.data?.version ?? null;
+
+  return (
+    <AdminListPage
+      header={{
+        title: 'Packages',
+        subtitle: 'Read-Only Listing Of Staged And Installed Release Tarballs.',
+        actions: (
+          <>
+            <Badge tone="warning">Read Only</Badge>
+            {currentVersion ? (
+              <Badge tone="gold">Installed: v{currentVersion}</Badge>
+            ) : null}
+          </>
+        )
+      }}
+      standardCard={{
+        title: 'Package Naming Standard',
+        subtitle: consoleText('W3 BuildCost Release Tarballs Must Use The Canonical Name Below.'),
+        body: (
+          <>
+            <code
+              className="rounded px-2 py-1 text-xs font-mono"
+              style={{
+                background: 'var(--w3-navy-800)',
+                border: '1px solid var(--w3-border)',
+                color: 'var(--w3-text)'
+              }}
+            >
+              {consoleText("w3buildcost-vX")}.Y.Z.tar.gz
+            </code>
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-[var(--w3-text-muted)]">
+              <li>
+                Single Canonical Format For Every Release Build (lowercase{' '}
+                <code className="font-mono text-[var(--w3-text)]">{consoleText("w3buildcost-v")}</code> Prefix).
+              </li>
+              <li>
+                Files Not Matching The Pattern Are Listed But Flagged{' '}
+                <Badge tone="warning">Non-Standard</Badge>. They Are Not Blocked At The OS
+                Level.
+              </li>
+              <li>
+                <code className="font-mono text-[var(--w3-text)]">deploy-{consoleText("w3buildcost")}.sh</code> Still
+                Consumes The Newest Tarball In{' '}
+                <code className="font-mono text-[var(--w3-text)]">{consoleText("/opt/w3buildcost-update-packages/")}</code>.
+              </li>
+              <li>
+                Tarballs Must Contain A Single Inner{' '}
+                <code className="font-mono text-[var(--w3-text)]">{consoleText("w3buildcost/")}</code> Root.
+              </li>
+            </ul>
+          </>
+        )
+      }}
+      currentStateCard={{
+        title: 'Staged Packages',
+        subtitle: consoleText('/opt/w3buildcost-update-packages'),
+        flush: true,
+        body: (
+          <PackageTable q={stagedQ} currentVersion={currentVersion} kind="staged" />
+        )
+      }}
+      historyTables={[
+        {
+          title: 'Installed Packages',
+          subtitle: consoleText('/opt/w3buildcost-update-packages/installed'),
+          flush: true,
+          body: (
+            <PackageTable
+              q={installedQ}
+              currentVersion={currentVersion}
+              kind="installed"
+            />
+          )
+        }
+      ]}
+    />
+  );
 }
-function InventoryBadge({ query }: { query: ReturnType<typeof usePackageInventory> }) {
-  const status = inventoryStatus(query);
-  return <Badge tone={status.tone}>{status.label}</Badge>;
+
+function packageStatusBadges({
+  p,
+  currentVersion,
+  kind
+}: {
+  p: PackageEntry;
+  currentVersion: string | null;
+  kind: 'staged' | 'installed';
+}): { primary: 'Ready' | 'Current' | 'Canonical' | 'Non-Standard' | 'Invalid' | 'Older' | 'Newer' | 'Previous'; tone: 'success' | 'gold' | 'warning' | 'slate' } {
+  if (!p.validName)
+    return { primary: 'Non-Standard', tone: 'warning' };
+  if (currentVersion && p.parsedVersion === currentVersion) {
+    return { primary: 'Current', tone: 'gold' };
+  }
+  if (kind === 'installed') {
+    return { primary: 'Previous', tone: 'slate' };
+  }
+  if (currentVersion && p.parsedVersion) {
+    const c = currentVersion.split('.').map((n) => parseInt(n, 10));
+    const v = p.parsedVersion.split('.').map((n) => parseInt(n, 10));
+    for (let i = 0; i < 3; i++) {
+      if ((v[i] ?? 0) > (c[i] ?? 0)) return { primary: 'Newer', tone: 'gold' };
+      if ((v[i] ?? 0) < (c[i] ?? 0)) return { primary: 'Older', tone: 'slate' };
+    }
+  }
+  return { primary: 'Ready', tone: 'success' };
 }
-function PackageInventory({ query, emptyLabel }: { query: ReturnType<typeof usePackageInventory>; emptyLabel: string }) {
-  const data = inventoryData(query);
-  const available = availableInventory(query);
-  const status = inventoryStatus(query);
-  if (query.isPending) return <div className="p-4"><LoadingState label="Loading package inventory…" /></div>;
-  if (query.isError) return <div className="p-4 space-y-3"><ErrorState title="Package inventory unavailable" error={query.error} /><Retry query={query} /></div>;
-  return <>
-    <div className="p-4 space-y-2 text-xs text-[var(--w3-text-muted)]"><p>App: {data?.app.name || 'W3 Forge'}</p><p className="break-all">Directory: <code>{data?.root || 'Not configured'}</code></p>{available ? <p>{status.message}</p> : <><EmptyState>{status.message}</EmptyState><Retry query={query} /></>}</div>
-    {available ? available.packages.length ? <PackageTable entries={available.packages} /> : <div className="p-4 pt-0"><EmptyState>{emptyLabel}</EmptyState></div> : null}
-  </>;
-}
-function Retry({ query }: { query: ReturnType<typeof usePackageInventory> }) {
-  return <button type="button" className="btn" disabled={query.isFetching} onClick={() => void query.refetch()}><RefreshCw size={13} /> Retry</button>;
-}
-function PackageTable({ entries }: { entries: PackageEntry[] }) {
-  return <><div className="desktop-table overflow-x-auto"><table className="table-dark w-full"><thead><tr><th>Name</th><th>Version</th><th>Size</th><th>Modified (UTC)</th><th>Filename</th><th>Storage layout</th></tr></thead><tbody>{entries.map(entry => <tr key={entry.path}>
-    <td className="font-mono text-xs break-all" title={entry.path}>{entry.name}</td><td>{entry.parsedVersion ? <Badge tone="slate">v{entry.parsedVersion}</Badge> : '—'}</td><td>{formatBytes(entry.sizeBytes)}</td><td className="text-xs text-[var(--w3-text-muted)]">{formatTimestamp(entry.mtime)}</td><td><Badge tone={entry.validName ? 'info' : 'warning'}>{entry.validName ? 'Standard name' : 'Non-Standard'}</Badge></td><td className="text-xs">{entry.layout === 'canonical' ? 'Canonical' : 'Legacy flat'}</td>
-  </tr>)}</tbody></table></div><div className="mobile-cards p-3">{entries.map(entry => <div className="stack-card" key={entry.path}>
-    <div className="stack-card__row"><div className="stack-card__title font-mono break-all">{entry.name}</div></div><div className="stack-card__meta"><Badge tone={entry.validName ? 'info' : 'warning'}>{entry.validName ? 'Standard name' : 'Non-Standard'}</Badge>{entry.parsedVersion ? <Badge tone="slate">v{entry.parsedVersion}</Badge> : <span>Version unknown</span>}<span>{formatBytes(entry.sizeBytes)}</span></div><p className="text-xs text-[var(--w3-text-muted)]">Modified: {formatTimestamp(entry.mtime)} UTC</p><p className="text-xs text-[var(--w3-text-muted)]">Storage layout: {entry.layout === 'canonical' ? 'Canonical' : 'Legacy flat'}</p>
-  </div>)}</div></>;
+
+function PackageTable({
+  q,
+  currentVersion,
+  kind
+}: {
+  q: ReturnType<typeof useQuery<PackagesResponse>>;
+  currentVersion: string | null;
+  kind: 'staged' | 'installed';
+}) {
+  if (q.isLoading)
+    return (
+      <div className="p-4">
+        <LoadingState />
+      </div>
+    );
+  if (q.error)
+    return (
+      <div className="p-4">
+        <ErrorState error={q.error} />
+      </div>
+    );
+  if (!q.data || q.data.packages.length === 0)
+    return (
+      <div className="p-4">
+        <EmptyState>No Packages Found.</EmptyState>
+      </div>
+    );
+
+  const isHistory = kind === 'installed';
+
+  return (
+    <>
+      {/* Desktop table (≥ 768px) */}
+      <div className="desktop-table">
+        <table className="table-dark">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Version</th>
+              <th>Size</th>
+              <th>{isHistory ? 'Modified / Installed' : 'Modified'}</th>
+              <th>Status</th>
+              {isHistory ? <th>Notes</th> : <th>Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {q.data.packages.map((p) => {
+              const isCurrent =
+                currentVersion != null && p.parsedVersion === currentVersion;
+              const status = packageStatusBadges({ p, currentVersion, kind });
+              return (
+                <tr
+                  key={p.path}
+                  style={
+                    isCurrent
+                      ? {
+                          boxShadow: 'inset 3px 0 0 0 var(--w3-gold-500)',
+                          background: 'rgba(217,164,65,0.06)'
+                        }
+                      : undefined
+                  }
+                >
+                  <td className="font-mono text-xs">
+                    <div className="flex items-center gap-2">
+                      <span>{p.name}</span>
+                      {p.validName ? (
+                        <Badge tone="success">Canonical</Badge>
+                      ) : (
+                        <Badge tone="warning">Non-Standard</Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    {p.parsedVersion ? (
+                      <Badge tone={isCurrent ? 'gold' : 'slate'}>v{p.parsedVersion}</Badge>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td>{formatBytes(p.sizeBytes)}</td>
+                  <td className="text-xs text-[var(--w3-text-muted)]">
+                    {formatTimestamp(p.mtime)}
+                  </td>
+                  <td>
+                    <Badge tone={status.tone}>{status.primary}</Badge>
+                  </td>
+                  <td>
+                    {isHistory ? (
+                      <span className="text-[11px] text-[var(--w3-text-muted)]">
+                        {isCurrent ? 'Currently Installed' : 'Archived After Deploy'}
+                      </span>
+                    ) : (
+                      <span title="Read Only In v0.5.2 — Write Actions Are Disabled.">
+                        <button type="button" className="btn !px-2 !py-1" disabled>
+                          <Lock size={11} />
+                          Read Only
+                        </button>
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile stacked cards (< 768px) — v0.5.4 */}
+      <div className="mobile-cards p-3">
+        {q.data.packages.map((p) => {
+          const isCurrent =
+            currentVersion != null && p.parsedVersion === currentVersion;
+          const status = packageStatusBadges({ p, currentVersion, kind });
+          return (
+            <div
+              key={p.path}
+              className="stack-card"
+              style={
+                isCurrent
+                  ? {
+                      boxShadow: 'inset 3px 0 0 0 var(--w3-gold-500)',
+                      background: 'rgba(217,164,65,0.06)'
+                    }
+                  : undefined
+              }
+            >
+              <div className="stack-card__row">
+                <div className="stack-card__title font-mono">{p.name}</div>
+                {p.validName ? (
+                  <Badge tone="success">Canonical</Badge>
+                ) : (
+                  <Badge tone="warning">Non-Standard</Badge>
+                )}
+              </div>
+              <div className="stack-card__meta">
+                {p.parsedVersion ? (
+                  <Badge tone={isCurrent ? 'gold' : 'slate'}>v{p.parsedVersion}</Badge>
+                ) : (
+                  <span>—</span>
+                )}
+                <Badge tone={status.tone}>{status.primary}</Badge>
+                <span>{formatBytes(p.sizeBytes)}</span>
+                <span>{formatTimestamp(p.mtime)}</span>
+              </div>
+              <div className="stack-card__row">
+                {isHistory ? (
+                  <span className="text-[11px] text-[var(--w3-text-muted)]">
+                    {isCurrent ? 'Currently Installed' : 'Archived After Deploy'}
+                  </span>
+                ) : (
+                  <button type="button" className="btn !px-2 !py-1" disabled>
+                    <Lock size={11} />
+                    Read Only
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
 }

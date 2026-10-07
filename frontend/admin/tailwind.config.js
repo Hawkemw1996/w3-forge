@@ -1,9 +1,14 @@
 /** @type {import('tailwindcss').Config} */
-// W3 Core Admin — v0.5.1 dark command center.
+// W3 BuildCost Admin — v0.5.1 dark command center.
 // Color values stay in CSS variables (see src/styles/tokens.css); the Tailwind
 // theme mirrors them so component classes can pick them up by name.
 export default {
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: [
+    './index.html',
+    './src/**/*.{ts,tsx}',
+    // v0.10.7 — scan the shared W3 UI System components for utility classes.
+    '../shared/**/*.{ts,tsx}'
+  ],
   theme: {
     extend: {
       colors: {

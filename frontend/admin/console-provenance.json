@@ -1,0 +1,582 @@
+{
+  "reference": "W3 BuildCost dev/v0.3.9",
+  "referenceCommit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+  "files": [
+    {
+      "source": "frontend/admin/src/App.tsx",
+      "target": "frontend/admin/src/App.tsx",
+      "sourceSha256": "02bad90d3121c3df192819ab295d11329e44578808a6b63eaeb51a4c35d5ff0b",
+      "local": "src/App.tsx",
+      "sha256": "ffb6fc03357e537c9709cdaef6e27865839e675d925951f6b21a3022d7e7e031",
+      "adaptation": "Canonical routes wrapped in existing route error boundary."
+    },
+    {
+      "source": "frontend/admin/src/components/AdminAuthGate.tsx",
+      "target": "frontend/admin/src/components/AdminAuthGate.tsx",
+      "sourceSha256": "fd9da67bcdd61e4d022f605b175658a6598ddb3d6b2425389058fc5e1b37727f",
+      "local": "src/components/AdminAuthGate.tsx",
+      "sha256": "5f1a8024386d91564b14f30affbeea73f138d9b86a086b9785742d2e6ae1c542",
+      "adaptation": "Configured app permission/destinations plus immediate revalidation after protected API failures."
+    },
+    {
+      "source": "frontend/admin/src/components/AdminLayout.tsx",
+      "target": "frontend/admin/src/components/AdminLayout.tsx",
+      "sourceSha256": "fa45fd2a9ce6445c8af606266e49e4ebdb5a9c2016fa0b5b2763feabbe1397e3",
+      "local": "src/components/AdminLayout.tsx",
+      "sha256": "62f2f204528296f49243f7db313e4256b4cd3a1de9bd4f36b6c94b0562b2cc4a",
+      "adaptation": "Configuration plus preserved keyboard focus trap, hidden mobile drawer removal and focus return."
+    },
+    {
+      "source": "frontend/admin/src/components/dashboard/DashboardTile.tsx",
+      "target": "frontend/admin/src/components/dashboard/DashboardTile.tsx",
+      "sourceSha256": "1ebf7ab7b08136cf6d9d7d8c5e05d7a5178f7c6b2a7243a431c7e42cc55c0a32",
+      "local": "src/components/dashboard/DashboardTile.tsx",
+      "sha256": "1ebf7ab7b08136cf6d9d7d8c5e05d7a5178f7c6b2a7243a431c7e42cc55c0a32",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/dashboard/TileGrid.tsx",
+      "target": "frontend/admin/src/components/dashboard/TileGrid.tsx",
+      "sourceSha256": "0870428045459839c9f084e67ef9562b9b358ed634001b58e63da9a0dfd9aea6",
+      "local": "src/components/dashboard/TileGrid.tsx",
+      "sha256": "0870428045459839c9f084e67ef9562b9b358ed634001b58e63da9a0dfd9aea6",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/AdminListPage.tsx",
+      "target": "frontend/admin/src/components/ui/AdminListPage.tsx",
+      "sourceSha256": "3b341e0d32f8ba40555496d596b11ea88a08d97a4eab4dbc90e2c8ed80c0454c",
+      "local": "src/components/ui/AdminListPage.tsx",
+      "sha256": "3b341e0d32f8ba40555496d596b11ea88a08d97a4eab4dbc90e2c8ed80c0454c",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/Badge.tsx",
+      "target": "frontend/admin/src/components/ui/Badge.tsx",
+      "sourceSha256": "ebee1b83bf6c7c11b4fef74968ec0fe58240c8fada11a4538c50362186782284",
+      "local": "src/components/ui/Badge.tsx",
+      "sha256": "ebee1b83bf6c7c11b4fef74968ec0fe58240c8fada11a4538c50362186782284",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/Card.tsx",
+      "target": "frontend/admin/src/components/ui/Card.tsx",
+      "sourceSha256": "a1ee7c46e123a4c97df52e82ceb1d8375a41885a0fe62fe4889df3c6876a0c1b",
+      "local": "src/components/ui/Card.tsx",
+      "sha256": "a1ee7c46e123a4c97df52e82ceb1d8375a41885a0fe62fe4889df3c6876a0c1b",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/DarkSelect.tsx",
+      "target": "frontend/admin/src/components/ui/DarkSelect.tsx",
+      "sourceSha256": "97e476eefa4a3345b7229b49b9d1e782b68c58d6ad41edf0e963deb59c5dfe17",
+      "local": "src/components/ui/DarkSelect.tsx",
+      "sha256": "97e476eefa4a3345b7229b49b9d1e782b68c58d6ad41edf0e963deb59c5dfe17",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/MetricTile.tsx",
+      "target": "frontend/admin/src/components/ui/MetricTile.tsx",
+      "sourceSha256": "707c250c01451d30cee554f5c809933846e8919c85166421e44d2b058d933f49",
+      "local": "src/components/ui/MetricTile.tsx",
+      "sha256": "707c250c01451d30cee554f5c809933846e8919c85166421e44d2b058d933f49",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/ProgressBar.tsx",
+      "target": "frontend/admin/src/components/ui/ProgressBar.tsx",
+      "sourceSha256": "6a1db5c4291f3e2c0dc4b1456d15d68c4b8c50c51664adae4f70b2a21ce7ae32",
+      "local": "src/components/ui/ProgressBar.tsx",
+      "sha256": "6a1db5c4291f3e2c0dc4b1456d15d68c4b8c50c51664adae4f70b2a21ce7ae32",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/SectionHeader.tsx",
+      "target": "frontend/admin/src/components/ui/SectionHeader.tsx",
+      "sourceSha256": "479d50db4d8b549970d8d04f652bb30d20bba88ac2939d4d8c1c19b0d76cd669",
+      "local": "src/components/ui/SectionHeader.tsx",
+      "sha256": "479d50db4d8b549970d8d04f652bb30d20bba88ac2939d4d8c1c19b0d76cd669",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/States.tsx",
+      "target": "frontend/admin/src/components/ui/States.tsx",
+      "sourceSha256": "dcd98b4add685dfe35a68b5c28681189b79980389cbf7705af4833a4a943a6f8",
+      "local": "src/components/ui/States.tsx",
+      "sha256": "dcd98b4add685dfe35a68b5c28681189b79980389cbf7705af4833a4a943a6f8",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/ui/StatusPill.tsx",
+      "target": "frontend/admin/src/components/ui/StatusPill.tsx",
+      "sourceSha256": "c9f5822daffeab5eee37c452684cba8877255e6d3739c5eb1915f13eed1e1cde",
+      "local": "src/components/ui/StatusPill.tsx",
+      "sha256": "c9f5822daffeab5eee37c452684cba8877255e6d3739c5eb1915f13eed1e1cde",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/widgets/AttentionRequiredWidget.tsx",
+      "target": "frontend/admin/src/components/widgets/AttentionRequiredWidget.tsx",
+      "sourceSha256": "b3a29350fc6fc728a299facaaa12fb6b8bac4f2478feb38e664582d396bacd61",
+      "local": "src/components/widgets/AttentionRequiredWidget.tsx",
+      "sha256": "b3a29350fc6fc728a299facaaa12fb6b8bac4f2478feb38e664582d396bacd61",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/widgets/LogViewerPanel.tsx",
+      "target": "frontend/admin/src/components/widgets/LogViewerPanel.tsx",
+      "sourceSha256": "434413e15f0079fdd0e7e6d062d92187297fbdcb0719a7ccb729407f337da79b",
+      "local": "src/components/widgets/LogViewerPanel.tsx",
+      "sha256": "434413e15f0079fdd0e7e6d062d92187297fbdcb0719a7ccb729407f337da79b",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/widgets/types.ts",
+      "target": "frontend/admin/src/components/widgets/types.ts",
+      "sourceSha256": "4b16ae11f65f2f02f1905262b9235813f13525020747834d0b53330ec2f553ad",
+      "local": "src/components/widgets/types.ts",
+      "sha256": "4b16ae11f65f2f02f1905262b9235813f13525020747834d0b53330ec2f553ad",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/components/widgets/widgets.tsx",
+      "target": "frontend/admin/src/components/widgets/widgets.tsx",
+      "sourceSha256": "47ae5e687ecda4d0cbe169eb48f2ddb9ea01b6cfd20b82dc286888b9521c56ea",
+      "local": "src/components/widgets/widgets.tsx",
+      "sha256": "45e1d093cdf8faf226a271ff1bf9cf9f4eb9ff806110f9d2b1e849dd96188b70",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/config/dashboardTiles.tsx",
+      "target": "frontend/admin/src/config/dashboardTiles.tsx",
+      "sourceSha256": "9cfeb3ba9ff06c6ad00006accf88318a50af758257c709c90233544ceb57255e",
+      "local": "src/config/dashboardTiles.tsx",
+      "sha256": "76c524663a204fc776d8e3889443c27dcaefaa7f84192eac824366c8c6223477",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/hooks/useDashboardLayout.ts",
+      "target": "frontend/admin/src/hooks/useDashboardLayout.ts",
+      "sourceSha256": "2b7df07e8fd5ea35e3349da72a17eec2529d20982ce948a02e0d38861261522e",
+      "local": "src/hooks/useDashboardLayout.ts",
+      "sha256": "81be2540fc66b2745dd79ade115408faa21659d5b06923e17ab32062ad995c06",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/lib/api.ts",
+      "target": "frontend/admin/src/lib/api.ts",
+      "sourceSha256": "515ca900047a47afaa6feb0e32af570a6232fdc89d11d21c044712bd30cb1ddb",
+      "local": "src/lib/api.ts",
+      "sha256": "be61c7cfb4edcb31cc1e0e3bd657e70bda3a3c441027ae01add87cde47ff46f4",
+      "adaptation": "Canonical API contract plus protected-response revalidation event."
+    },
+    {
+      "source": "frontend/admin/src/lib/attention.ts",
+      "target": "frontend/admin/src/lib/attention.ts",
+      "sourceSha256": "a1a020a798151e8e6e889d1290c8694abc4f589a66213b9c63d36be51609e8f1",
+      "local": "src/lib/attention.ts",
+      "sha256": "a1a020a798151e8e6e889d1290c8694abc4f589a66213b9c63d36be51609e8f1",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/devBranchVersion.ts",
+      "target": "frontend/admin/src/lib/devBranchVersion.ts",
+      "sourceSha256": "b816ce9727c4df4849cb9c9f5038725424b1793edc903bcc15ad87b05b25ed85",
+      "local": "src/lib/devBranchVersion.ts",
+      "sha256": "b816ce9727c4df4849cb9c9f5038725424b1793edc903bcc15ad87b05b25ed85",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/format.ts",
+      "target": "frontend/admin/src/lib/format.ts",
+      "sourceSha256": "85fe960724d4e7f0165f74eaaf2f0be323f50b91332b73e65495b29feeb3435c",
+      "local": "src/lib/format.ts",
+      "sha256": "85fe960724d4e7f0165f74eaaf2f0be323f50b91332b73e65495b29feeb3435c",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/logParser.ts",
+      "target": "frontend/admin/src/lib/logParser.ts",
+      "sourceSha256": "865834b26bc39ec7f984ad7fed0514a5ce215908caf264b7f7e803839cc1fdd3",
+      "local": "src/lib/logParser.ts",
+      "sha256": "865834b26bc39ec7f984ad7fed0514a5ce215908caf264b7f7e803839cc1fdd3",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/terminal.ts",
+      "target": "frontend/admin/src/lib/terminal.ts",
+      "sourceSha256": "8162df2b9e9504f60aabef69ce63ad8987c7ac7fde7812124a77af2e5a1aeabf",
+      "local": "src/lib/terminal.ts",
+      "sha256": "520dfda364627ee018d6aac8188b5e0e6f9d4246862cb21f56266031107d8922",
+      "adaptation": "Canonical transport/lifecycle plus protected-response revalidation and configured host/container terminology."
+    },
+    {
+      "source": "frontend/admin/src/lib/terminalScreen.ts",
+      "target": "frontend/admin/src/lib/terminalScreen.ts",
+      "sourceSha256": "7655f81f24a6a3cd64765900c4f028d538d7281a22c3f2dbc34c055f6e7d3001",
+      "local": "src/lib/terminalScreen.ts",
+      "sha256": "7655f81f24a6a3cd64765900c4f028d538d7281a22c3f2dbc34c055f6e7d3001",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/tileDensity.ts",
+      "target": "frontend/admin/src/lib/tileDensity.ts",
+      "sourceSha256": "e399ff4f1d6860c56f9766d67fc5f0ce4ff8c3a974e929d6abd8c54b21d5244d",
+      "local": "src/lib/tileDensity.ts",
+      "sha256": "e399ff4f1d6860c56f9766d67fc5f0ce4ff8c3a974e929d6abd8c54b21d5244d",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/lib/utils.ts",
+      "target": "frontend/admin/src/lib/utils.ts",
+      "sourceSha256": "b4ec27cd25e55c78b20bd0536dfe4dfd9914876c5bb563560b8326257d24deb2",
+      "local": "src/lib/utils.ts",
+      "sha256": "b4ec27cd25e55c78b20bd0536dfe4dfd9914876c5bb563560b8326257d24deb2",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/main.tsx",
+      "target": "frontend/admin/src/main.tsx",
+      "sourceSha256": "ef2d31e3127505851ab1959cd70e11f26919bcff5b31c65ba28721bd1887c6c3",
+      "local": "src/main.tsx",
+      "sha256": "009dcc93450ebf8355bc4af5cfb2072a907cb24b08952c2b4cec8486e960ca4a",
+      "adaptation": "Config-first bootstrap and separate canonical public auth routes; same admin providers."
+    },
+    {
+      "source": "frontend/admin/src/pages/BackupsPage.tsx",
+      "target": "frontend/admin/src/pages/BackupsPage.tsx",
+      "sourceSha256": "db6f34725a6fd707e86555fe2d0ee9eea75b6e79da5dcefd39f2d93ca444024a",
+      "local": "src/pages/BackupsPage.tsx",
+      "sha256": "738b8bbbf34a904b05be13ba8298b6de69733d1a5bc75bf60d0435e415cedb37",
+      "adaptation": "Configuration-only identity, path and legacy backup cutoff substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/controls/ControlCard.tsx",
+      "target": "frontend/admin/src/pages/controls/ControlCard.tsx",
+      "sourceSha256": "586fc772c41bbe6b0513d02c32703708a632d8813827835e354bc4319062f41a",
+      "local": "src/pages/controls/ControlCard.tsx",
+      "sha256": "bfa0891f41b985358e9c86efc4bd23843774d0c3ec82362644b41f25b52707b8",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/controls/controlsTypes.ts",
+      "target": "frontend/admin/src/pages/controls/controlsTypes.ts",
+      "sourceSha256": "94746f1db10a89b0098c34dbb652841a6dc9cc5fa3316a77add362545f7f04e4",
+      "local": "src/pages/controls/controlsTypes.ts",
+      "sha256": "94746f1db10a89b0098c34dbb652841a6dc9cc5fa3316a77add362545f7f04e4",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/pages/controls/deployResult.ts",
+      "target": "frontend/admin/src/pages/controls/deployResult.ts",
+      "sourceSha256": "f112f2612edef5797125a364bb2a1802229e5871a4a60bd6d5e05ace408faf96",
+      "local": "src/pages/controls/deployResult.ts",
+      "sha256": "df922fbd0e2bef52ef5d6bad169521c557cd10a9f527d6f6109acdc1a332cfea",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/controls/uiSections.ts",
+      "target": "frontend/admin/src/pages/controls/uiSections.ts",
+      "sourceSha256": "67e8457b027e485b61063a42550c7cf6a66d804d29cf359d435101671bafdc80",
+      "local": "src/pages/controls/uiSections.ts",
+      "sha256": "41a3bc6164005de2088c9d06973aa2391c6d01680b4d151338968cc3382275b9",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/ControlsPage.tsx",
+      "target": "frontend/admin/src/pages/ControlsPage.tsx",
+      "sourceSha256": "051033d5ab363cef3b21c41fb472ae766c4e4600ca672d84c063b5744ed8fc56",
+      "local": "src/pages/ControlsPage.tsx",
+      "sha256": "0dec88a329048a9a38d706647143884527cb6d1008ff15fc4f795f518cb19fe8",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/DashboardPage.tsx",
+      "target": "frontend/admin/src/pages/DashboardPage.tsx",
+      "sourceSha256": "b8eb988c5d33b38c75cf37457e6f07452dd07fcb13e2603851724022d821a334",
+      "local": "src/pages/DashboardPage.tsx",
+      "sha256": "b8eb988c5d33b38c75cf37457e6f07452dd07fcb13e2603851724022d821a334",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/pages/FileBrowserPage.tsx",
+      "target": "frontend/admin/src/pages/FileBrowserPage.tsx",
+      "sourceSha256": "07acf4595b25273cdacbf3187a400712ff282f06eecdd22cdcbcccc822fb8037",
+      "local": "src/pages/FileBrowserPage.tsx",
+      "sha256": "79be22ea1c61eb7f5c4c8886be4439d9d45d8c59894e30f1489dd75213d68e9e",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/github/DeploySourcePanel.tsx",
+      "target": "frontend/admin/src/pages/github/DeploySourcePanel.tsx",
+      "sourceSha256": "97c0116acec0a4f00e2853cf54c1dd42122e51f47c71f11308a25bc6ad66c50d",
+      "local": "src/pages/github/DeploySourcePanel.tsx",
+      "sha256": "e06a294fdeba2de745fc075397e7631c2cd3bea44d2e81fffd4d0229497d9c37",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/github/pipelineContext.tsx",
+      "target": "frontend/admin/src/pages/github/pipelineContext.tsx",
+      "sourceSha256": "e9ba672bf468f1f702440fff2cc2ddec4d78c366fdeae063a23a7d8b852ab413",
+      "local": "src/pages/github/pipelineContext.tsx",
+      "sha256": "e9ba672bf468f1f702440fff2cc2ddec4d78c366fdeae063a23a7d8b852ab413",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/pages/github/PipelineHelpPanel.tsx",
+      "target": "frontend/admin/src/pages/github/PipelineHelpPanel.tsx",
+      "sourceSha256": "0ea444b13b4402522539874ae7d51be8aaddbb521706ad2140d8166e7e749d41",
+      "local": "src/pages/github/PipelineHelpPanel.tsx",
+      "sha256": "49ffa8538ed61649c29fe3b2d203716d226a25a40cc2ed645a5604e2c634957d",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/github/PipelineReadinessChecklist.tsx",
+      "target": "frontend/admin/src/pages/github/PipelineReadinessChecklist.tsx",
+      "sourceSha256": "f9927547c148f16989aed7c1140587f5ea1f299a45f5e7d119fd912289c8560a",
+      "local": "src/pages/github/PipelineReadinessChecklist.tsx",
+      "sha256": "e803ca3cbd37303aa59712ae5e6366225475adb9e174cc310c434de20cd9ee64",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/github/PipelineStateSummary.tsx",
+      "target": "frontend/admin/src/pages/github/PipelineStateSummary.tsx",
+      "sourceSha256": "0a8a71218997085e0b6e5d3c71fc6ea5131810ef970ddaf68a8bd39e8b903321",
+      "local": "src/pages/github/PipelineStateSummary.tsx",
+      "sha256": "0a8a71218997085e0b6e5d3c71fc6ea5131810ef970ddaf68a8bd39e8b903321",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/pages/github/ReleasePipelinePanel.tsx",
+      "target": "frontend/admin/src/pages/github/ReleasePipelinePanel.tsx",
+      "sourceSha256": "70048fce05bca80da67626c595aeadaf31a92791171422295b8be20d259c2766",
+      "local": "src/pages/github/ReleasePipelinePanel.tsx",
+      "sha256": "c1456a77518493abdf41f1b1940c675318f77ac11cc9b5e220617d4721e138d5",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/github/SafePreflightButton.tsx",
+      "target": "frontend/admin/src/pages/github/SafePreflightButton.tsx",
+      "sourceSha256": "404f01e9ad5504cbfe3ea07117fdacac51e0c8ad7a67fc39c25a23f4437e4327",
+      "local": "src/pages/github/SafePreflightButton.tsx",
+      "sha256": "404f01e9ad5504cbfe3ea07117fdacac51e0c8ad7a67fc39c25a23f4437e4327",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/pages/github/UnifiedReleaseWorkflow.tsx",
+      "target": "frontend/admin/src/pages/github/UnifiedReleaseWorkflow.tsx",
+      "sourceSha256": "a24fdf12d901f4c31b0d814dae07b66c6f426d76dd3a3de663d9831fb88f5b56",
+      "local": "src/pages/github/UnifiedReleaseWorkflow.tsx",
+      "sha256": "c9bfb3efdd9ec826835f21724c5f23b57ba4a7e48f1e34cb7076698681c2f417",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/GitHubPage.tsx",
+      "target": "frontend/admin/src/pages/GitHubPage.tsx",
+      "sourceSha256": "acee7c550ad613e39f5126bbce75cd3b39216e87c2501d8a1be3e9c731a916d5",
+      "local": "src/pages/GitHubPage.tsx",
+      "sha256": "f21bd86d9193c931448a3b865a964539617bc83c53e5a0075fb497c2b65e2b84",
+      "adaptation": "Configured repository ownership and guarded remote actions; stale connection result resets on identity change/refresh."
+    },
+    {
+      "source": "frontend/admin/src/pages/LogsPage.tsx",
+      "target": "frontend/admin/src/pages/LogsPage.tsx",
+      "sourceSha256": "49ab04c3da115ed2a93118999d83353956f29cd5f88d8762272acd53a25a033b",
+      "local": "src/pages/LogsPage.tsx",
+      "sha256": "c516e7c752c4c63b2d7862c43ad967c047ebb09abdf0032b587b01901f4e3777",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/PackagesPage.tsx",
+      "target": "frontend/admin/src/pages/PackagesPage.tsx",
+      "sourceSha256": "a83e3bf5a664c763fafd26608d8d49e5d61698c7fbdaee8042b96f52c0de904c",
+      "local": "src/pages/PackagesPage.tsx",
+      "sha256": "4a98f5ad70a1794391ef4e25a9b31633da091ed962e59e71414bbeff331f36c3",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/ProductionReadinessPage.tsx",
+      "target": "frontend/admin/src/pages/ProductionReadinessPage.tsx",
+      "sourceSha256": "2fe0e33523db398993e0e86082b1489ebf37ce37e37b7700ea5fd787926387fe",
+      "local": "src/pages/ProductionReadinessPage.tsx",
+      "sha256": "05864f0a0abf37f2bb8af6b4917595757bc209a60df389fe083cd33465dea7c7",
+      "adaptation": "Configuration-only identity substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/SettingsPage.tsx",
+      "target": "frontend/admin/src/pages/SettingsPage.tsx",
+      "sourceSha256": "fd3ff4a6fd502f7b63d6290aacdd4635eb37b5fa0fbeabca91f0706913799601",
+      "local": "src/pages/SettingsPage.tsx",
+      "sha256": "6780eec8d2dc8fac070bc4fd039477ca08c5f9a2efe856d80801c05dde2be929",
+      "adaptation": "Configuration-only identity and path substitutions; canonical policy copy retained."
+    },
+    {
+      "source": "frontend/admin/src/pages/SystemStatusPage.tsx",
+      "target": "frontend/admin/src/pages/SystemStatusPage.tsx",
+      "sourceSha256": "e1669a095748e645d8aa7f64988c5df2391f746d8fa2f19a2136091c27798036",
+      "local": "src/pages/SystemStatusPage.tsx",
+      "sha256": "8a7b4c9cbd12e2a66363193c03217775c1539648cbc8d21cc5ec70d3159654fb",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/admin/src/pages/TerminalPage.tsx",
+      "target": "frontend/admin/src/pages/TerminalPage.tsx",
+      "sourceSha256": "9f0098f0d74d31b2aa6edb7484049495d8166a8aff49d543b4706a81554b7367",
+      "local": "src/pages/TerminalPage.tsx",
+      "sha256": "708b168d1303e5b472b22910f953e155155f59b01837416ffbb9d550469ba5f2",
+      "adaptation": "Configured app identity and host/container terminology; failed status hides cached availability."
+    },
+    {
+      "source": "frontend/admin/src/styles/tokens.css",
+      "target": "frontend/admin/src/styles/tokens.css",
+      "sourceSha256": "5d597be23cb8b387018af61b5eaaea13fabd133300a50be8cae8bf642bfa0006",
+      "local": "src/styles/tokens.css",
+      "sha256": "5d597be23cb8b387018af61b5eaaea13fabd133300a50be8cae8bf642bfa0006",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/admin/src/styles.css",
+      "target": "frontend/admin/src/styles.css",
+      "sourceSha256": "96c69eb71600c2a51969b44187f6b1de6bcd84bc4f5f9d8d1ffa46f2bdf98050",
+      "local": "src/styles.css",
+      "sha256": "96c69eb71600c2a51969b44187f6b1de6bcd84bc4f5f9d8d1ffa46f2bdf98050",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/index.ts",
+      "target": "frontend/shared/components/index.ts",
+      "sourceSha256": "38f28401df53bd5ff7765f5f918fec76d7804519b11f1e91671d750d3201c9d5",
+      "local": "../shared/components/index.ts",
+      "sha256": "38f28401df53bd5ff7765f5f918fec76d7804519b11f1e91671d750d3201c9d5",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Badge.tsx",
+      "target": "frontend/shared/components/W3Badge.tsx",
+      "sourceSha256": "8c0a7e3e0531ebe6c551285bc9f3ed5c0de7ad14677c8afee1963dd205755a76",
+      "local": "../shared/components/W3Badge.tsx",
+      "sha256": "8c0a7e3e0531ebe6c551285bc9f3ed5c0de7ad14677c8afee1963dd205755a76",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Button.tsx",
+      "target": "frontend/shared/components/W3Button.tsx",
+      "sourceSha256": "ae37441630fb50242c52b03bbd49ff8161078cdbbd824a8fde1892f68f0409d7",
+      "local": "../shared/components/W3Button.tsx",
+      "sha256": "ae37441630fb50242c52b03bbd49ff8161078cdbbd824a8fde1892f68f0409d7",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Card.tsx",
+      "target": "frontend/shared/components/W3Card.tsx",
+      "sourceSha256": "4aca7bc72bf6065a15559a0a76943605448d39ff279551a0a55e82aa1e6e4616",
+      "local": "../shared/components/W3Card.tsx",
+      "sha256": "4aca7bc72bf6065a15559a0a76943605448d39ff279551a0a55e82aa1e6e4616",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Layout.tsx",
+      "target": "frontend/shared/components/W3Layout.tsx",
+      "sourceSha256": "c4d22373b0503db9f072d520f46ebbec4099fefd1714562843afa54f2c05eeb7",
+      "local": "../shared/components/W3Layout.tsx",
+      "sha256": "c4d22373b0503db9f072d520f46ebbec4099fefd1714562843afa54f2c05eeb7",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3PageHeader.tsx",
+      "target": "frontend/shared/components/W3PageHeader.tsx",
+      "sourceSha256": "6464756120d2cbd386eba4a31c19fd983c915c67336e24318fef03dd8c30dc04",
+      "local": "../shared/components/W3PageHeader.tsx",
+      "sha256": "6464756120d2cbd386eba4a31c19fd983c915c67336e24318fef03dd8c30dc04",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Sidebar.tsx",
+      "target": "frontend/shared/components/W3Sidebar.tsx",
+      "sourceSha256": "9ceb07e53e202c3be54b19ce81a02ce656aa2e4bc9b5cb8a8e2f8c2189ae0f14",
+      "local": "../shared/components/W3Sidebar.tsx",
+      "sha256": "9ceb07e53e202c3be54b19ce81a02ce656aa2e4bc9b5cb8a8e2f8c2189ae0f14",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/components/W3Table.tsx",
+      "target": "frontend/shared/components/W3Table.tsx",
+      "sourceSha256": "ac716b7edee4f9fed8466b22a237e9a5ddc8ab590bc0fd5e305fa5654276f9b4",
+      "local": "../shared/components/W3Table.tsx",
+      "sha256": "ac716b7edee4f9fed8466b22a237e9a5ddc8ab590bc0fd5e305fa5654276f9b4",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/lib/cn.ts",
+      "target": "frontend/shared/lib/cn.ts",
+      "sourceSha256": "555b80124ec88d6bd36a885d937770440b4f2c968b2417d72a970c743473f4c7",
+      "local": "../shared/lib/cn.ts",
+      "sha256": "555b80124ec88d6bd36a885d937770440b4f2c968b2417d72a970c743473f4c7",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/README.md",
+      "target": "frontend/shared/README.md",
+      "sourceSha256": "479404c1dbcd32dba1f5b20b9e95e0de274b71491900241a911c268db27b78da",
+      "local": "../shared/README.md",
+      "sha256": "479404c1dbcd32dba1f5b20b9e95e0de274b71491900241a911c268db27b78da",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/styles/primitives.css",
+      "target": "frontend/shared/styles/primitives.css",
+      "sourceSha256": "d186ff598b46755c26a328777846d317ed5261eb36994951ca7b89447d94eb85",
+      "local": "../shared/styles/primitives.css",
+      "sha256": "d186ff598b46755c26a328777846d317ed5261eb36994951ca7b89447d94eb85",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/shared/styles/tokens.css",
+      "target": "frontend/shared/styles/tokens.css",
+      "sourceSha256": "959f91756c3d0e5dbc7fac060e7a1e09b1e8b848f4018ee530c9f73ddc1517e0",
+      "local": "../shared/styles/tokens.css",
+      "sha256": "959f91756c3d0e5dbc7fac060e7a1e09b1e8b848f4018ee530c9f73ddc1517e0",
+      "adaptation": null
+    },
+    {
+      "source": "frontend/app/src/pages/AuthPages.tsx",
+      "target": "frontend/admin/src/pages/AuthPages.tsx",
+      "sourceSha256": "ff3c6cd6c3502516e9c943fbea3b5e99aa624ee6e126cddeaf2fa5e767520a43",
+      "local": "src/pages/AuthPages.tsx",
+      "sha256": "b7f742852bf4d2ca6d05478f52c5419304483ac77a2b475bfd1ade4454098029",
+      "adaptation": "Configured identity; canonical auth helpers relocated and AuthShell exported for separate product landing."
+    },
+    {
+      "source": "frontend/app/src/lib/api.ts",
+      "target": "frontend/admin/src/lib/authApi.ts",
+      "sourceSha256": "75ae100d92f3fe7905291e71dce2b25aa2ea75306e8021d3b246e203de30f906",
+      "local": "src/lib/authApi.ts",
+      "sha256": "ae5115973b5b8d80b528de4f47eeaf90a088a467378e332211db2f123245e91f",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "frontend/app/src/lib/session.ts",
+      "target": "frontend/admin/src/lib/authSession.ts",
+      "sourceSha256": "86ada112677356cc6f19410c0f4194531cdddb9a3be26d9f04a46ab6b7d8310a",
+      "local": "src/lib/authSession.ts",
+      "sha256": "4e1334ba5d27345cd491004efcad8a23e9866edcc676d3c31675a0de48818621",
+      "adaptation": "Canonical auth-only helper extraction; omits unrelated BuildCost product data cache access."
+    },
+    {
+      "source": "frontend/app/src/lib/appInfo.ts",
+      "target": "frontend/admin/src/lib/appInfo.ts",
+      "sourceSha256": "91a6227cebef2c5c66619cafadacfee97850c659dac5f8ad2da448b541ac0e17",
+      "local": "src/lib/appInfo.ts",
+      "sha256": "e8e4bdb3ddc11934d7afed8f9693297a8e8e2ceb73b164bbf009f3f2a9ef3d5c",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    },
+    {
+      "source": "shared/navigation.ts",
+      "target": "shared/navigation.ts",
+      "sourceSha256": "1b67655b0d8908ec8ec5da1de0db1fe23d2caec3a0d4f9bcd5e76f2b908a41eb",
+      "local": "../../shared/navigation.ts",
+      "sha256": "a32fd8f0c96e33f61ee7f1f837a49d272f1df6c8632066b5b89b971106820e57",
+      "adaptation": "Configuration-only identity, permission, path, naming or import-topology substitutions."
+    }
+  ]
+}

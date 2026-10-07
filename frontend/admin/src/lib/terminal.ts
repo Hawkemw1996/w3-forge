@@ -1,3 +1,4 @@
+import { consoleMachineText } from '../../../../shared/consoleApp';
 import { AdminApiError, ApiEnvelope } from './api';
 
 export interface TerminalStatus {
@@ -27,7 +28,7 @@ export const terminalRequest: TerminalTransport = async <T>(path: string, option
       window.dispatchEvent(new Event('w3-auth-problem'));
     }
     throw new AdminApiError(response.status, code,
-      error?.message ?? 'Could not reach the Forge host terminal. Reconnect to try again.');
+      error?.message ?? consoleMachineText('Could not reach the container terminal. Reconnect to try again.'));
   }
   return envelope.data as T;
 };

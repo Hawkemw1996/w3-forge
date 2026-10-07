@@ -1,0 +1,343 @@
+{
+  "reference": "W3 BuildCost dev/v0.3.9",
+  "referenceCommit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+  "hashNormalization": "UTF-8 with CRLF normalized to LF",
+  "files": [
+    {
+      "source": "scripts/backup-list-w3buildcost.sh",
+      "target": "scripts/admin/backup-list-w3forge.sh",
+      "sourceSha256": "a6d9ca50dd90fa2d99d3549474ad6f2ee1af22fd09dd9656ef1cdadfb2accfc2",
+      "sha256": "4861703bdaf76d390ba6defb8c06720abab8bf5c91b8fd1071ea79dbfdbd097c",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/backup-verify-w3buildcost.sh",
+      "target": "scripts/admin/backup-verify-w3forge.sh",
+      "sourceSha256": "9d703e56ae2cd4898f7a5641065f10d65ef7e04e1cb806d4ef16ce4f78d63ed2",
+      "sha256": "ee3c252aac9d9a46d1e90045a40ab88bb90cfd1b1c9ae900c1b34cb8f3d495ef",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/backup-w3buildcost-ui.sh",
+      "target": "scripts/admin/backup-w3forge-ui.sh",
+      "sourceSha256": "811bd3623e94f4725d10eb07284aa8b38c484836c0f0d477f8c090adcd8d4229",
+      "sha256": "04d6a492c3bf278a6483db844d2bc5ad73b035f602f01bd77aa1d576ab9c1067",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/backup-w3buildcost.sh",
+      "target": "scripts/admin/backup-w3forge.sh",
+      "sourceSha256": "681e1e0bc737270497a840bf221d1d00b3a1b15e713f32ee5603f0dce1946d71",
+      "sha256": "f5032206caaab8c5ecdab79d2660f5127997f8da5ca8ec27312752031ea383fd",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/changed-files-w3buildcost.sh",
+      "target": "scripts/admin/changed-files-w3forge.sh",
+      "sourceSha256": "3ddafad509f7ec583e6c29d07fc5e61d3f13b67bd945825acc1cb05507040d38",
+      "sha256": "bcc7d1c7319d016d02916b1098d63c36be85aa01ea52da62b67552d8d71dc83a",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/deploy-w3buildcost-noninteractive.sh",
+      "target": "scripts/admin/deploy-w3forge-noninteractive.sh",
+      "sourceSha256": "5bbe677e16ed6d7bcc93cbad7c0c35643ee6fc0a952df890373d18c231c32991",
+      "sha256": "064f842858ca459191e743dd38d8983ade7d5746793f1e0b1917e9f48b9763b4",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/deploy-w3buildcost-ui.sh",
+      "target": "scripts/admin/deploy-w3forge-ui.sh",
+      "sourceSha256": "9c8406c5ff706673bdd0fae7b83286f9e87b39559d19af705bf80d6663ce5975",
+      "sha256": "fb994b4af6121d597ab58f79afa531b6ddf047eb12f323cd13817ce3a7554fa7",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/deploy-w3buildcost.sh",
+      "target": "scripts/admin/deploy-w3forge.sh",
+      "sourceSha256": "6e9f2043ac0ee96247c461a89b6e527447d2b3d0e867e162be4f209bc8591c61",
+      "sha256": "00f5002ba655c656cb81d59a9181365daf6655a14da0cc78f6324748a4661324",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/doctor-w3buildcost.sh",
+      "target": "scripts/admin/doctor-w3forge.sh",
+      "sourceSha256": "02c47ac844452519c8c1c7b93d36dcee79cb1828f7c632abccf75e03873570f5",
+      "sha256": "39b03aace3078290afa67e36fe4076bcceed488a3f2756c697170fcf95f443ae",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/install-server-scripts.sh",
+      "target": "scripts/admin/install-server-scripts.sh",
+      "sourceSha256": "31708b323a4749ebea7887e1b441d216253ae53af2e401403b22f37cd656b78a",
+      "sha256": "ad05a9664dbce8b544f67976a32138c9405cbef68528a22ba8d78b2276c42dde",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/logs-w3buildcost.sh",
+      "target": "scripts/admin/logs-w3forge.sh",
+      "sourceSha256": "625c1a426a64e78d4f2da26778108b4e98794a15a698bc111619b5343d9a10c4",
+      "sha256": "1e89ba1d46b6141e4bab83c869d61b9f8b71de00e0da05aeb077b99e7c1cd819",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/mark-w3buildcost-stable.sh",
+      "target": "scripts/admin/mark-w3forge-stable.sh",
+      "sourceSha256": "f55b870e76b549b5b131f656d9bc64760f16d7294bf949d243e552d5912bdd1a",
+      "sha256": "5e9c90b3a75def28990bd0129345bfb8482fb026488a516906d10e33037fefcc",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/migrate-w3buildcost.sh",
+      "target": "scripts/admin/migrate-w3forge.sh",
+      "sourceSha256": "85b19af7b3d6e3b85a41f9d00212a52c6ae15c0f8138b99863596a4d31685a31",
+      "sha256": "0893a1c6b8df4578bab38d619cccb21b5a04d030bc9843eb7531ec2a421115d2",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/package-list-w3buildcost.sh",
+      "target": "scripts/admin/package-list-w3forge.sh",
+      "sourceSha256": "81c30c8dd1931561c64e803636e1493eb43181685a92dca6bba674b3dcfefd87",
+      "sha256": "c08027cedfdfe2525f4d040b5bd25d2c720903dcdf297baf8f84c95318999841",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/package-verify-w3buildcost-ui.sh",
+      "target": "scripts/admin/package-verify-w3forge-ui.sh",
+      "sourceSha256": "430a628d4ac316eca16ae755b2a2faab68524a686701a91ca11dc30efc7d8e35",
+      "sha256": "918f2f9e47394f6f799c8797957e7709d6a45cd73af0da220607e0d7220448c7",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/package-verify-w3buildcost.sh",
+      "target": "scripts/admin/package-verify-w3forge.sh",
+      "sourceSha256": "f43a53c18b9296b3b3c1e5b0703056c1523f4dde9c0f58d5edcdb58ea6e7df24",
+      "sha256": "03c56e11cce9934c847ef423ebf51319894e2c99265f142d846ed38bd2e0ffc8",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/package-w3buildcost-review.sh",
+      "target": "scripts/admin/package-w3forge-review.sh",
+      "sourceSha256": "31c7ba130a0d56694f5f532416956e8c6bdcca5b7b0a06f393de0b778114432f",
+      "sha256": "13fa8c1f8e1f32f40dff0ff691170828162cb61f24f98145e1d292a32a13e8a8",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/patch-apply-w3buildcost.sh",
+      "target": "scripts/admin/patch-apply-w3forge.sh",
+      "sourceSha256": "4ce3aa7accadda6fd1a5a31ab57aaee34c02069c69cb51f30d51dcbc0f091e75",
+      "sha256": "b1ee20448ecf3f7ec4d4b2304e9b24d9fdc442a947b0c25a8d99b613421da979",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/patch-verify-w3buildcost.sh",
+      "target": "scripts/admin/patch-verify-w3forge.sh",
+      "sourceSha256": "2480e2d8378ed868569f1546ff6bd2862831f4b585bc1df5317c356f878c4517",
+      "sha256": "e01f075764bba31e2a264fc7cdf6823300a9e49355add115e7d6426dec04acb9",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-check-remote-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-check-remote-w3forge-ui.sh",
+      "sourceSha256": "0075b8d0be39591835f3858dee1d51dea2c6af23bb2e17d543c65f04dcedda44",
+      "sha256": "7710cd560c303fbaeb69c02163b6b4fd8e73b776a5957ab3f66a776e82d61c4e",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-checkout-dev-branch-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-checkout-dev-branch-w3forge-ui.sh",
+      "sourceSha256": "4fb60371bee8f6ca71b7e156b1eeb5a2bdb77c39c448dc596c03ee22bbea5bb1",
+      "sha256": "a644e7c198fe97ef77f1cba651cdf5ff829ca7597d4495f39bea17ee0387e1f8",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-create-tag-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-create-tag-w3forge-ui.sh",
+      "sourceSha256": "c439a628a3b28ef48e47b4d92a43cc56ffbd8ec3acf92c2cae2349bde3e5d839",
+      "sha256": "d9f29b38f7f37e187696312cc766ffb4791f5c13c4700801b906f6b9d0f50cca",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-delete-tag-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-delete-tag-w3forge-ui.sh",
+      "sourceSha256": "e1c8c77f96cfbdb7b493b4b1890e5ad3f0f27e171256dfda5acc60516a96b0ad",
+      "sha256": "b9a0d81fc14c0b1582407d024896b89de3e6152c915d1d042cabaee6e3df72a3",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-deploy-dev-package-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-deploy-dev-package-w3forge-ui.sh",
+      "sourceSha256": "22c7c5d5fa767f6c88d5263bc0cd282be31a774339a49f1d6df30986c1a8f307",
+      "sha256": "16260b32042debbe108585f7e07068833d6a14c4d42b0f4bfa3e65c9c77f3478",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-fetch-tags-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-fetch-tags-w3forge-ui.sh",
+      "sourceSha256": "755f3989b8f01d83d11a3b19dd74b2514b455ede6984830ce484359a45b9e92a",
+      "sha256": "8fff072915cb248fc7f222b8be678da9db2754f76b1399f122a71a28bd921031",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-package-dev-release-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-package-dev-release-w3forge-ui.sh",
+      "sourceSha256": "06e88b37c932d16c72c77a6f2421dc51c79c9b76007c34290e4c9a72ca837a24",
+      "sha256": "3fbaae4c5ce88bc40230352486232762c9a77c52a1025c28ea5aa4ac21de3b6f",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-promote-dev-to-main-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-promote-dev-to-main-w3forge-ui.sh",
+      "sourceSha256": "a85885e9c78f643a6edcc267be07ed8d3523ae4f03e151ae9fbd7685d166d9a3",
+      "sha256": "a6a01c7b67b467fcd2114b900ccdd6dfba922761c423b0f45b1905759eeda988",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-pull-latest-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-pull-latest-w3forge-ui.sh",
+      "sourceSha256": "d97f3cb48fe25d813548b4207f44053891a1bfaf516da60714fcae3a3d322bea",
+      "sha256": "1f056cba84da2c7e331db12827471fc9573cfa68c0bf8430de7c824eba3f440c",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-push-dev-branch-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-push-dev-branch-w3forge-ui.sh",
+      "sourceSha256": "5e56bf973b8c11041e22b3be6fff5d893d2f36c3384e3789ba33a8e871c18bd6",
+      "sha256": "fd778cb8b0bf399024a4f78b96de63ca9fe2235863f200ef55b8e4601c7e772a",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-reset-working-tree-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-reset-working-tree-w3forge-ui.sh",
+      "sourceSha256": "0e84ebb55820fcb3cc024772277b00e3add0e56035b493e7a494acd4977c39cf",
+      "sha256": "3020981fca163d91b50262164d674aee91aa24cf4f308f651b2f2ae9c7ff1378",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-rollback-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-rollback-w3forge-ui.sh",
+      "sourceSha256": "9d86862cc907177dead770d5ac81535bebc0414a55b6500e230e565cb841ed90",
+      "sha256": "239bf96c75389fedad338fc127a13e13de026760872a25789f98a3cc79f1ed71",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-test-dev-branch-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-test-dev-branch-w3forge-ui.sh",
+      "sourceSha256": "5419808585ae66c7b4da63cb627f92e88ae3dccfcad802475c4a87b84a83094e",
+      "sha256": "5e06a7e4acd85ad3a3e423866e13676373471f92aef1d36e05e47c5a71c6b0e7",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/pipeline-verify-dev-package-w3buildcost-ui.sh",
+      "target": "scripts/admin/pipeline-verify-dev-package-w3forge-ui.sh",
+      "sourceSha256": "089de04390f29c71e68ae263aad166e97cf4572a1c3d5edfdca396574e3fe124",
+      "sha256": "019b13007121527f1efc64ad4ceeab7cc3fec8b37d61bb7fe6476fbc0d99d42e",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/release-current-w3buildcost-ui.sh",
+      "target": "scripts/admin/release-current-w3forge-ui.sh",
+      "sourceSha256": "77c2bc681b62cd8d359a60f6cf4e0040e8fffecd7f5e9f22cf83f93e0aa867bc",
+      "sha256": "06e1d9741b99149f96b49123a9b51ffc262296cf5548a85348a06d4ad1c4505a",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/release-current-w3buildcost.sh",
+      "target": "scripts/admin/release-current-w3forge.sh",
+      "sourceSha256": "cee33bfe1f3ec58a62a136e972c721255634a806a914b3e27aaff9ec88e0c9b1",
+      "sha256": "b4ccf8860242619f6e4168d21cbbf80d469520899629a5f7faeb6efcda8cb088",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/restart-w3buildcost-service.sh",
+      "target": "scripts/admin/restart-w3forge-service.sh",
+      "sourceSha256": "1abdaad7f2c675ad249e17c2993c67f08d163eb86901fb9c34b7867dc6029e56",
+      "sha256": "0aafe8f4a3683c9ce4b6f0751c7cad2db023eae9deb58945f91c46aa81578980",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/restore-test-w3buildcost-ui.sh",
+      "target": "scripts/admin/restore-test-w3forge-ui.sh",
+      "sourceSha256": "91830165e5eb47fdbe1b2dd67aa96b2f76bb284bc88d739e333a74a655390cb1",
+      "sha256": "6ea1551d21f6356166e01da6440a85902d01bf6e531ca084ec6b2c58b5f5e52d",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/restore-test-w3buildcost.sh",
+      "target": "scripts/admin/restore-test-w3forge.sh",
+      "sourceSha256": "b638fa5819f1dfb82e1004718944a8f419acd87b08c0ba0d07bb459259c52c61",
+      "sha256": "e27cc62d7465c5e8bfcbf28d2de328134f4e3a104a3370db68f7f2bdbc07ba87",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/restore-w3buildcost-ui.sh",
+      "target": "scripts/admin/restore-w3forge-ui.sh",
+      "sourceSha256": "58ffc7aab80ca36191db34349160a28fcb8a7082c47f677bfd098622726d0aa5",
+      "sha256": "9daec8387e635d1de8555e2f99164087ed67dd6b09da9538dc6aa612046c856e",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/restore-w3buildcost.sh",
+      "target": "scripts/admin/restore-w3forge.sh",
+      "sourceSha256": "e412bacdb2d0112779c3a8ffb629723710b7b5426cb06c29145ccda726b6a3e6",
+      "sha256": "4c79facaa32450ed046c2d882508e6e8dda7ff5ec8211531b021c6663d153f85",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/review-w3buildcost-branch.sh",
+      "target": "scripts/admin/review-w3forge-branch.sh",
+      "sourceSha256": "c9b06ef4b26ce7a996ef48d015027811b607e60a955ae0e119862f37ed09236e",
+      "sha256": "cad34ded48f1c1cec87e936d60cce1f462cd49fc68aef4be6cf83e602129a083",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/rollback-w3buildcost-stable.sh",
+      "target": "scripts/admin/rollback-w3forge-stable.sh",
+      "sourceSha256": "47802eca33529d9a2e0cc82cfd6271765b8376ec3a41611e63a91a15f0fedfee",
+      "sha256": "92c81b48adb463cb4c9e022b714ae698782b3dd8adcdac2279d92fccacee71ca",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/smoke-test-w3buildcost.sh",
+      "target": "scripts/admin/smoke-test-w3forge.sh",
+      "sourceSha256": "d83a104375f03d20e530f0337cc87c1571d8991f04d9a7b4c196baa4aee4788c",
+      "sha256": "f466838da1868728659149c3d9b3274f828bf9945483149397edcf554c7f3eca",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/status-w3buildcost.sh",
+      "target": "scripts/admin/status-w3forge.sh",
+      "sourceSha256": "6729c87321d727838fa837b86584d1d3b9c917a64fe2c9c19fb2fa111bff30ff",
+      "sha256": "2e93fceb83c42941aec87d02773f787c8a6bd6298b9ff413eda9f7e6394298d4",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/verify-w3buildcost-db.sh",
+      "target": "scripts/admin/verify-w3forge-db.sh",
+      "sourceSha256": "31374461e75fb396032957917b34b0209eef704aa3bd6a7f094297b74daab4ee",
+      "sha256": "b0a22fa2d470fa8634bb700034f4761a7aac406c0bed4babee2be293e5cc4f58",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/_w3buildcost-log.sh",
+      "target": "scripts/admin/_w3forge-log.sh",
+      "sourceSha256": "65aa9795d3a8bda38701182eb62abeec39580f7a1d559b5c8ad2f969d2324ac8",
+      "sha256": "4227187dd5fe8e427a4223bb92c99a539c3283835295edda3f5e42812d7ec7e5",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/_w3buildcost-migration-ledger.sh",
+      "target": "scripts/admin/_w3forge-migration-ledger.sh",
+      "sourceSha256": "d2e5eb9faa040d08d38de73b87cf228d7f29602fc4849a82738d78a324704c89",
+      "sha256": "b69e60169e3e8288cb0df37fee527c19cdd71e15647bb4f9334734aa86b24906",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "scripts/_w3buildcost-pipeline-common.sh",
+      "target": "scripts/admin/_w3forge-pipeline-common.sh",
+      "sourceSha256": "462ceb28830de53ab129be49d6255145c117be560c4d5aec7a58bd62669ae33e",
+      "sha256": "3847974f6a3dba7579a61032b4a606d67821a02a5e2a1d26557e4d5cae367340",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    }
+  ]
+}

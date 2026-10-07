@@ -1,0 +1,287 @@
+{
+  "reference": "W3 BuildCost dev/v0.3.9",
+  "referenceCommit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+  "hashNormalization": "UTF-8 with CRLF normalized to LF",
+  "files": [
+    {
+      "source": "backend/src/admin/adminAudit.ts",
+      "target": "backend/src/console/adminAudit.ts",
+      "sourceSha256": "7ee36f3d1aca6718abea8dbc6995b6905d27de703b6ebaad4885bcb05391b53f",
+      "sha256": "15c2af41355668734e8bb898507fd9f1c794b4522803937248f7e328c5cda93b",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/adminGuard.ts",
+      "target": "backend/src/console/adminGuard.ts",
+      "sourceSha256": "f59e2dbf09377e8b73f46ec231442aee4a83bde3d8533ea40a7f3474f314e4b7",
+      "sha256": "c95bbcc64d6e242348e0fea3ca18de5bf2e07f4ba73cc436183c8422d1308b57",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/appCapabilities.ts",
+      "target": "backend/src/console/appCapabilities.ts",
+      "sourceSha256": "4babc07bfdc67c84667788a04eb66cfe40c291beab3f0040114f85e0d94a6d0b",
+      "sha256": "4b108a9d5f771985fc95bee4982ce7d7ad597b684bc57a5ce131a89b927fd7c5",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/appConfigAccessors.ts",
+      "target": "backend/src/console/appConfigAccessors.ts",
+      "sourceSha256": "357294c474c1e4d7f7667f3c3477c2d65ead8abf6db5925dcf19538b8898137e",
+      "sha256": "d1d6935ddbcd6ecd955833051def6c799b6c356456f69beb986174f3dad18a50",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/appContext.ts",
+      "target": "backend/src/console/appContext.ts",
+      "sourceSha256": "d812e30a34435628fadf4281a1a4dc8083715c17a788b54d4d62c75f02f0a83d",
+      "sha256": "37acd2f33aad276451eb8f08c14b60ef962e2810d5b10496b12e0c18214b49fa",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/appRegistry.ts",
+      "target": "backend/src/console/appRegistry.ts",
+      "sourceSha256": "a13c8a9b50cfd7c7ddda6e27415d394cca83be5156390e752d32698ef7879cfb",
+      "sha256": "0ee067087d9b7ebf585bba6346b198a100d3ba4fcd12046a2e975917e5192628",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/attention.ts",
+      "target": "backend/src/console/attention.ts",
+      "sourceSha256": "54cc77df90e04514a21cf6627f077ebd993eaf17aa5af4f3e95f84d100658ab6",
+      "sha256": "00639132cc3a29eff4769c3df4e4f72d7c5596d415c7a490d58342b7bd3d3263",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/actionLock.ts",
+      "target": "backend/src/console/controls/actionLock.ts",
+      "sourceSha256": "0ef3f391f14c7a02f9ea81a2489bc352d8019709da07c7759d9c58b558681728",
+      "sha256": "f7471be5f8c4127bbbc6a236c6ee64202eee2fe6191e04a46016ac9687107079",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/appControlRegistry.ts",
+      "target": "backend/src/console/controls/appControlRegistry.ts",
+      "sourceSha256": "d2ff26cb19d7e4523e82509613db74fbfa64e4c07479cae67d15f3c5e41fbeec",
+      "sha256": "55e2bf9db4f9f1788f7dbf50c3684f39d1c85717ce37150d360329b71f5aa363",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/pipelineOverrides.ts",
+      "target": "backend/src/console/controls/pipelineOverrides.ts",
+      "sourceSha256": "c7c5ad41f2e4b2de2b875370b26b9b046c44f8f4f5b42a94e4d6b40dc4dd427a",
+      "sha256": "c7c5ad41f2e4b2de2b875370b26b9b046c44f8f4f5b42a94e4d6b40dc4dd427a",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/registry.ts",
+      "target": "backend/src/console/controls/registry.ts",
+      "sourceSha256": "842653d898580aae02b19286cc98f132ed9b89fd2c1fe914b32673e19f8d7fa4",
+      "sha256": "b36fbba9c1429fc78cd4532c95435bc1fc98b2938707f9e6fc95edbc439463a1",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/safeRunner.ts",
+      "target": "backend/src/console/controls/safeRunner.ts",
+      "sourceSha256": "c925b8d2901a6c30b8c451995048c4bbfb422b28e1f7ba8aa2442bc27ad2389a",
+      "sha256": "84d5618e86abcd344f3dbb24b3c93708f2606947830c7f39e9f3a1e6a50b0bc3",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/types.ts",
+      "target": "backend/src/console/controls/types.ts",
+      "sourceSha256": "1b0c58826c673ec7bf9bf68ee6eb2bc60fe15a5f14a29c7e50304d75f5b7914b",
+      "sha256": "6b06181d08cfdefda0ae6da6298dc4851fc0b3ac0905826fc08ead1eb6d56cd6",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/controls/validator.ts",
+      "target": "backend/src/console/controls/validator.ts",
+      "sourceSha256": "f62f703dcf37abf36af0ac70586db2240dcf4b9ee329e7dcd67df97117790aea",
+      "sha256": "f62f703dcf37abf36af0ac70586db2240dcf4b9ee329e7dcd67df97117790aea",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/fileBrowser/appFileBrowserRegistry.ts",
+      "target": "backend/src/console/fileBrowser/appFileBrowserRegistry.ts",
+      "sourceSha256": "54a45b402852bdf18d3c52e0994ff1daceb065e7c9a324e5f8acf870d7624aad",
+      "sha256": "f0d8cb2365bb50de81571bc799ff8275e9f47d66c22f712fe5628ed56e7034c0",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/githubValidation/appGitHubWorkflowRegistry.ts",
+      "target": "backend/src/console/githubValidation/appGitHubWorkflowRegistry.ts",
+      "sourceSha256": "2cf31dc71b6b6ae556641abf3a44269ebf5975a6c87c6c2d40fdd21ce45f3868",
+      "sha256": "074db0a11b5862721dc4dd6ea2cdf2f8457bda500eb2d3909a860aa41833b6ad",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/index.ts",
+      "target": "backend/src/console/index.ts",
+      "sourceSha256": "e177613ea5af4fca34e967cbe1b5a79f207499b62ed4c16640a05c0a6ef19ef7",
+      "sha256": "34ac81bceaa7c77b6de0443809b2bb52fe518db41c49ae9e34a77635cf0d652e",
+      "adaptation": "Existing Core app authentication/network/origin guards, own admin database and public console configuration."
+    },
+    {
+      "source": "backend/src/admin/paths.ts",
+      "target": "backend/src/console/paths.ts",
+      "sourceSha256": "42c385aca4ec986804c761b5e5d4b925173bb27f28578d507c5f0348d0e64081",
+      "sha256": "eae36f3d902d5ee6c57ab405fae55341c222a42ddafec988bb639474d0b59a40",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/backupsRoutes.ts",
+      "target": "backend/src/console/routes/backupsRoutes.ts",
+      "sourceSha256": "7a0f93cd8f26cfea9eeb84f46c3611a0345d11effe3dce6c0610d9c2fd01a9c0",
+      "sha256": "51cef165040e29f67ea2deb3f1aef3ef4ba03c90d2898ff1cba95b6f45954cb1",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/controlsRoutes.ts",
+      "target": "backend/src/console/routes/controlsRoutes.ts",
+      "sourceSha256": "7fd07ad3595142285a8cfded5072f98ae791dd0693beb79f3533e51d01eb7ebb",
+      "sha256": "0e3a870129cc88666fa8c27f2ebe768de19390b8ab3e4fdd34f67016815ff4b4",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/dashboardLayoutRoutes.ts",
+      "target": "backend/src/console/routes/dashboardLayoutRoutes.ts",
+      "sourceSha256": "a5509c493471538ec8095a0642540c321d2d4850fe374050f98fec9bd728fdaa",
+      "sha256": "e0731e8208d8c69c7ab5a7ea466b3510965de43bf7a34e2b7d7ddb392224952a",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/filesRoutes.ts",
+      "target": "backend/src/console/routes/filesRoutes.ts",
+      "sourceSha256": "dd00eaaf2325ca1e249ea4ca61565fb03c8f2068ce7e16dca99c71d9e8292e71",
+      "sha256": "171f6a03a18fd76d07a85ee909d08f005e739e5d0c36f11ca39845b46ab4b7ca",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/gitRoutes.ts",
+      "target": "backend/src/console/routes/gitRoutes.ts",
+      "sourceSha256": "3ef60ab4fd21c3ad6819eb0e25fe18014f0e43ad93f52525fa66b81b305b8af1",
+      "sha256": "1cf3b4bc4359191355ac098ba33ff6d9f86d1600ed167f159087f3e2ce28bd3c",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/logsRoutes.ts",
+      "target": "backend/src/console/routes/logsRoutes.ts",
+      "sourceSha256": "d3fd7dfca44906fd073ff90ead8e4c4b0b3b79be49f2153fbf68b5497748f6af",
+      "sha256": "60089573b0196d9aeef6a5d921098b86633bf80ab94908f316b3e0eb57b30631",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/overviewRoutes.ts",
+      "target": "backend/src/console/routes/overviewRoutes.ts",
+      "sourceSha256": "5f6749d1f86e96d728614cdf9127ffe0d6fd96be0798840485d108b4bc56b3c2",
+      "sha256": "5f6749d1f86e96d728614cdf9127ffe0d6fd96be0798840485d108b4bc56b3c2",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/packagesRoutes.ts",
+      "target": "backend/src/console/routes/packagesRoutes.ts",
+      "sourceSha256": "e9949bcab07f23718f7f046f84b93a512240057612e2691b815b3dd8b419d276",
+      "sha256": "9105e8751c39d12387d9520697cc2fa20cc0f97b8b402b4fe7cd2bf0900f28d8",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/productionReadinessRoutes.ts",
+      "target": "backend/src/console/routes/productionReadinessRoutes.ts",
+      "sourceSha256": "bc0d5dde07913e588b10fd0c3ea58e795635e00879d5909531797d94d05058de",
+      "sha256": "19f7a7ae6c0435f079aa9e5ee63be81720a93b6979c5a945ccf8b2a2c0f87dc4",
+      "adaptation": "Canonical routes against Forge administrative tables and existing Core connection contract; no BuildCost business schema."
+    },
+    {
+      "source": "backend/src/admin/routes/systemRoutes.ts",
+      "target": "backend/src/console/routes/systemRoutes.ts",
+      "sourceSha256": "ee16481fb33c377c1d4f50e16b981219c2c25bf6ec3dc087734844d593ddf102",
+      "sha256": "d34d3cbe0260f4ebb15996e81c055c83d1e675df4bfae89c5fb1ec570555f8c3",
+      "adaptation": "App identity/configuration bindings and documented common safeguards; see docs/ADMIN_CONSOLE_PARITY.md."
+    },
+    {
+      "source": "backend/src/admin/routes/terminalRoutes.ts",
+      "target": "backend/src/console/routes/terminalRoutes.ts",
+      "sourceSha256": "ba9d6c5ca88b68900c27330c9745d165642c08cb0a85b0fbfca6f8607229d624",
+      "sha256": "da929d2df7565db704c2b2e144761c46b321d75f15c82377579b7254b42d9418",
+      "adaptation": "Preserves canonical contracts and the established encrypted/revalidated Forge terminal session implementation."
+    },
+    {
+      "source": "backend/src/admin/terminal/runtime.ts",
+      "target": "backend/src/console/terminal/runtime.ts",
+      "sourceSha256": "5c6711892b27e07192b3dd88f7308c838b222c0410b6ec94ed2a25d7a4335630",
+      "sha256": "4dd063c4a4ffa7e1ad6a66a3e3c8b6d3c5e04de8ed03dcabb44b138976e219e3",
+      "adaptation": "Preserves canonical contracts and the established encrypted/revalidated Forge terminal session implementation."
+    },
+    {
+      "source": "backend/src/admin/terminal/sessionManager.ts",
+      "target": "backend/src/console/terminal/sessionManager.ts",
+      "sourceSha256": "5d1eba35d2f61d81ec57e04f039f9527bf6d6d2f96bd67874cdff678328c8662",
+      "sha256": "cf80bc4798db308e4c8687a7b42e9801dd213b128a1569faa91b5765206e1afe",
+      "adaptation": "Preserves canonical contracts and the established encrypted/revalidated Forge terminal session implementation."
+    },
+    {
+      "source": "backend/src/config/env.ts",
+      "target": "backend/src/config/env.ts",
+      "sourceSha256": "c2465fe4404fc6a8fe03730fc3ac78dcad7d728f6aca51564497194918c90130",
+      "sha256": "715e66ee4d30bc2c7d1da486c7ff03a977dc120a6a23479a40fe3ba40e11b884",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/types/api.ts",
+      "target": "backend/src/types/api.ts",
+      "sourceSha256": "1b81b374e0d371d94dec65eb15320ea6a04489e79c080a2bfeb00af866ca6061",
+      "sha256": "1b81b374e0d371d94dec65eb15320ea6a04489e79c080a2bfeb00af866ca6061",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/services/dashboardLayoutStore.ts",
+      "target": "backend/src/services/dashboardLayoutStore.ts",
+      "sourceSha256": "becec10e31ff210b9aea998e8cfbb9d1c0524a8e69a82a66b189c119ae2c4797",
+      "sha256": "36af3ec1b46e812ed04abc39fedb2f82c4b00c79b87d7bb83ec5a98c9b014286",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/services/memoryReader.ts",
+      "target": "backend/src/services/memoryReader.ts",
+      "sourceSha256": "84a2e29b7f111e386b1c234625fdfbe78adac03424a70868a13ba19650aeec3e",
+      "sha256": "84a2e29b7f111e386b1c234625fdfbe78adac03424a70868a13ba19650aeec3e",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/security/safeLogging.ts",
+      "target": "backend/src/security/safeLogging.ts",
+      "sourceSha256": "06eb8c2c3c8c37596213a033ebc06265690d42dacabcfc59cb8af27974b4db2c",
+      "sha256": "e9a72541e8b7e242af5b2c88f92d0a07ca2ee81b25db665514aa959f6201d7d9",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/db/database.ts",
+      "target": "backend/src/db/database.ts",
+      "sourceSha256": "ae44acfbe361356d628de7fb9858a8d326e351c34ccad25c37c043accef52742",
+      "sha256": "66529c6bf6f570244c355e55470ba19a39bc5fb25d5bcd6e523823e7af4b3cd2",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/db/testDatabaseGuard.ts",
+      "target": "backend/src/db/testDatabaseGuard.ts",
+      "sourceSha256": "61edf5785ca14b0028b473e8dc5a87802f8b150c92d0ffcfd101db2588f4ae6f",
+      "sha256": "14f8a0b10fea8bd4e5ff525f11e492fecc756bd20d484ae3f0013dee34a1bd7e",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/db/migrate.ts",
+      "target": "backend/src/db/migrate.ts",
+      "sourceSha256": "131fa4d5f3b4e11a49f3f26d5d892c9dfe8ba3b9deac7255abe8986b368e1446",
+      "sha256": "951ba306e8d8b3beab1341762cdec820bdc7d6f4bd1ef7dbb5894083d5f25f85",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    },
+    {
+      "source": "backend/src/db/migrateCli.ts",
+      "target": "backend/src/db/migrateCli.ts",
+      "sourceSha256": "a7f756a0fb35377e28b6e339883f436685bf69e7e64a42ddb1dd34fb31fc9ff4",
+      "sha256": "a58324abeea4a3e23dfc0a0f03ea07b073409b211d31709835782db91ae5f2ac",
+      "adaptation": "Forge installation/environment boundary, own-database guard and canonical administrative persistence."
+    }
+  ]
+}

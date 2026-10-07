@@ -37,23 +37,23 @@ describe('Core connection and browser sign-in', () => {
     const result = await f.agent.get(callback);
     expect(result.status).toBe(303); expect(result.headers.location).toBe('/admin/files');
     const me = await f.agent.get('/api/auth/status');
-    expect(me.body.data.user).toEqual({ id: '1', username: 'operator', appRole: 'admin' });
+    expect(me.body.data.user).toEqual({ coreUserId: '1', username: 'operator', displayName: 'operator', coreRole: 'admin', appRole: 'admin', permissions: ['forge:read', 'forge:write', 'forge:admin'], coreStatus: 'verified', lastVerifiedAt: expect.any(String), expiresAt: expect.any(String) });
     expect(me.headers['cache-control']).toBe('no-store');
     expect(JSON.stringify(me.body)).not.toContain('T'.repeat(43));
     expect(f.state.calls).toContain('/api/app-discovery/announce');
     expect((await f.agent.get('/api/admin/controls')).status).toBe(200);
-    expect((await f.agent.get(callback)).headers.location).toContain('sign_in=failed');
+    expect((await f.agent.get(callback)).headers.location).toBe('/forge/login?error=sign_in_failed');
   });
   it('rejects callbacks from another browser and mismatched state', async () => {
     const f = setup();
     const callback = await f.begin(f.agent);
-    expect((await request(f.app).get(callback)).headers.location).toContain('sign_in=failed');
-    expect((await f.agent.get(callback.replace(/state=.*/, 'state=bad'))).headers.location).toContain('sign_in=failed');
+    expect((await request(f.app).get(callback)).headers.location).toBe('/forge/login?error=sign_in_failed');
+    expect((await f.agent.get(callback.replace(/state=.*/, 'state=bad'))).headers.location).toBe('/forge/login?error=sign_in_failed');
     expect((await f.agent.get('/api/admin/version')).status).toBe(401);
     expect(f.state.calls).not.toContain('/api/app-sign-in/exchange');
   });
   it('prevents external or authentication return targets', () => {
-    for (const p of ['https://evil.test/admin/', '//evil.test/admin', '/api/auth/callback', '/admin\\evil', '/admin/\n/evil']) expect(safeReturnPath(p)).toBe('/admin/');
+    for (const p of ['https://evil.test/admin/', '//evil.test/admin', '/api/auth/callback', '/admin\\evil', '/admin/\n/evil']) expect(safeReturnPath(p)).toBe('/forge');
     expect(safeReturnPath('/admin/files?path=docs')).toBe('/admin/files?path=docs');
   });
   it('requires an app admin assignment, regardless of any platform role', async () => {
@@ -144,8 +144,53 @@ describe('shared W3 session encryption standard', () => {
   it('refuses a callback if encryption configuration becomes invalid before exchange', async () => {
     const f=setup();const callback=await f.begin(f.agent);
     f.authOptions.sessionSecret='';
-    expect((await f.agent.get(callback)).headers.location).toContain('sign_in=unavailable');
+    expect((await f.agent.get(callback)).headers.location).toBe('/forge/core-unavailable');
     expect(f.state.calls).not.toContain('/api/app-sign-in/exchange');
     expect(f.state.tokens.size).toBe(0);
+  });
+});
+
+
+describe('canonical console authentication contract', () => {
+  it('returns canonical status and /me permissions only from current app assignments', async () => {
+    const f = setup();
+    const anonymous = await f.agent.get('/api/auth/status');
+    expect(anonymous.body.data).toMatchObject({ identityProvider: 'w3core', coreConfigured: true, loginAvailable: true, loginUnavailableReason: null, authenticated: false, user: null, sessionError: null });
+    expect((await f.agent.get('/api/auth/me')).status).toBe(401);
+    await f.login(f.agent);
+    for (const [role, permissions] of [
+      ['admin', ['forge:read', 'forge:write', 'forge:admin']],
+      ['editor', ['forge:read', 'forge:write']],
+      ['viewer', ['forge:read']]
+    ] as const) {
+      f.state.role = role;
+      const me = await f.agent.get('/api/auth/me');
+      expect(me.status).toBe(200);
+      expect(me.body.data).toMatchObject({ coreUserId: '1', displayName: 'operator', coreRole: role, appRole: role, permissions, coreStatus: 'verified' });
+      expect(Date.parse(me.body.data.lastVerifiedAt)).toBeLessThanOrEqual(Date.now());
+      expect(Date.parse(me.body.data.expiresAt)).toBeGreaterThan(Date.now());
+    }
+  });
+  it('reports Core outages in canonical status without authenticating stale data', async () => {
+    const f = setup(); await f.login(f.agent); f.state.down = true;
+    const status = await f.agent.get('/api/auth/status');
+    expect(status.status).toBe(200);
+    expect(status.body.data).toMatchObject({ authenticated: false, user: null, sessionError: { code: 'CORE_UNAVAILABLE' } });
+    expect((await f.agent.get('/api/auth/me')).status).toBe(503);
+    expect((await f.agent.get('/api/admin/version')).status).toBe(503);
+    f.state.down = false; f.state.revoked = true;
+    expect((await f.agent.get('/api/auth/me')).status).toBe(401);
+    f.state.revoked = false;
+    expect((await f.agent.get('/api/auth/status')).body.data.authenticated).toBe(false);
+  });
+  it('keeps local two-factor handling unavailable and accepts only safe app return routes', async () => {
+    const f = setup();
+    const legacy = await f.agent.post('/api/auth/login/verify-2fa').send({ code: '123456' });
+    expect(legacy.status).toBe(410); expect(legacy.body.error.code).toBe('CORE_SIGN_IN_REQUIRED');
+    expect(f.state.calls).toEqual([]);
+    for (const target of ['/forge/login', '/forge/access-denied', '/forge/core-unavailable', '/forge/%2flogin', '/forge/%5c%5cevil.test', '/forge/%0aevil', '/forge/%']) expect(safeReturnPath(target)).toBe('/forge');
+    expect(safeReturnPath('/forge/chat?room=one')).toBe('/forge/chat?room=one');
+    const signedIn = await f.agent.get(await f.begin(f.agent, '/forge/chat?room=one'));
+    expect(signedIn.headers.location).toBe('/forge/chat?room=one');
   });
 });

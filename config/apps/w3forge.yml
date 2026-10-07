@@ -1,57 +1,38 @@
+# Shared BuildCost admin contract; only Forge identity and installation paths differ.
 app_id: w3forge
 name: W3 Forge
 version: 0.4.1
-
 repo:
   url: https://github.com/Hawkemw1996/w3-forge.git
   default_dev_branch: dev/v0.4.1
-  allowed_branch_pattern: '^dev/v[0-9]+\.[0-9]+\.[0-9]+$'
+  allowed_branch_pattern: ^dev/v[0-9]+\.[0-9]+\.[0-9]+$
   blocked_branches:
     - main
     - master
-
 paths:
   deploy: /opt/w3forge-deploy
   runtime: /opt/w3forge
-  workspaces: /opt/w3forge-deploy
-  scripts: /opt/scripts
+  scripts: /opt/w3forge-scripts
   logs: /opt/logs/w3forge
   backups: /opt/backups/w3forge
-  # Optional app-owned read-only package inventories; set host paths when connected.
-  # packages_staged: /absolute/path/to/this/apps/staged/packages
-  # packages_installed: /absolute/path/to/this/apps/installed/packages
-
+  update_packages: /opt/w3forge-update-packages
+  installed_packages: /opt/w3forge-update-packages/installed
+  workspaces: /opt/w3forge-deploy
 service:
-  name: ""
-
+  name: w3forge-admin.service
+  port: 8765
+  health_url: http://127.0.0.1:8765/health
+  version_url: http://127.0.0.1:8765/version
 authority:
   may_inspect: true
   may_edit_dev_branch: true
   may_commit_dev_branch: true
   may_push_dev_branch: true
-  may_deploy: false
+  may_deploy: true
   may_tag_release: false
   may_modify_production_data: false
-
-# v0.2.0 workflow control: optional validation/test commands.
-# Commands run inside paths.workspaces via w3-app-test.sh.
-# Deploy / release / package-movement commands are blocked by guard.
-#
-# v0.2.1: safe self-test commands added for W3 Forge.
-# require_local_model is opt-in; when false or absent the workflow
-# does not WARN if Ollama is missing.
-tests:
-  validate_config: true
-  require_local_model: false
-  commands:
-    - bash -n scripts/*.sh
-    - ./scripts/w3-app-config-validate.sh --app w3forge
-    - ./scripts/w3-app-branch-check.sh --app w3forge
-
-# v0.4.0: Forge Admin Interface foundation.
-# Loopback-bound local admin UI + backend. Controls list is the
-# allowlist of Forge-safe scripts the safeRunner will execute.
-# No deploy / release / package / backup-restore controls.
+  may_package: true
+  requires_user_release_gate: true
 admin_console:
   enabled: true
   listen_host: 127.0.0.1
@@ -69,3 +50,63 @@ admin_console:
     - w3-app-diff-summary.sh
     - w3-app-review-report.sh
     - w3-app-review-ready.sh
+  role: master
+  preserve_ui: true
+  preserve_github_validation_tab: true
+  preserve_controls_tab: true
+  preserve_file_browser_tab: true
+controls:
+  mode: legacy-compatible
+  registry_migration_status: controls_registry_foundation
+  app_id: w3forge
+  allow_legacy_w3forge_controls: true
+file_browser:
+  mode: legacy-compatible
+  registry_migration_status: file_browser_foundation
+  app_id: w3forge
+  allow_host_local_roots: true
+  allowed_roots:
+    - app
+    - deploy
+    - deploy-scripts
+    - deploy-docs
+    - scripts
+    - update-packages
+    - update-packages-installed
+    - backups
+    - logs
+    - cleanup-review
+github_workflow:
+  mode: legacy-compatible
+  registry_migration_status: github_validation_foundation
+  app_id: w3forge
+  allow_release_pipeline: true
+  enforce_main_protection: true
+  enforce_release_gate: true
+capabilities:
+  database:
+    enabled: true
+    type: postgres
+    readonly: false
+    health_check: true
+  controls:
+    enabled: true
+  github_validation:
+    enabled: true
+  file_browser:
+    enabled: true
+  logs:
+    enabled: true
+  health_monitoring:
+    enabled: true
+  deployment:
+    enabled: true
+  cooperative_development:
+    enabled: false
+tests:
+  validate_config: true
+  require_local_model: false
+  commands:
+    - bash -n scripts/*.sh
+    - ./scripts/w3-app-config-validate.sh --app w3forge
+    - ./scripts/w3-app-branch-check.sh --app w3forge

@@ -100,8 +100,8 @@ if ! grep -qE '^admin_console:[[:space:]]*$' "$CONFIG"; then
 fi
 
 ENABLED="$(section_value admin_console enabled)"
-HOST="$(section_value admin_console listen_host)"
-PORT="$(section_value admin_console listen_port)"
+HOST="${W3_FORGE_ADMIN_HOST:-$(section_value admin_console listen_host)}"
+PORT="${W3_FORGE_ADMIN_PORT:-$(section_value admin_console listen_port)}"
 AUDIT="$(section_value admin_console audit_log)"
 
 if [[ "$ENABLED" != "true" ]]; then
@@ -132,7 +132,7 @@ BACKEND_ENTRY="$BACKEND_DIR/dist/index.js"
 
 if [[ ! -f "$BACKEND_ENTRY" ]]; then
   echo "ERROR: Backend bundle not found: $BACKEND_ENTRY"
-  echo "       Run: (cd $BACKEND_DIR && npm ci && npm run build)"
+  echo "       Run: (cd $W3_FORGE_ROOT && npm ci && npm run build)"
   exit 1
 fi
 
