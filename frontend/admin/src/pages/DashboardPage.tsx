@@ -1,88 +1,75 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Github, Info, MessageSquare, Network, Settings, ShieldAlert, ShoppingCart, TerminalSquare, Workflow } from 'lucide-react';
+import { Activity, Archive, Cpu, HardDrive, Package, PackageCheck, Settings2, ShieldAlert, Tag, Terminal } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { SectionHeader } from '../components/ui/SectionHeader';
-import { LoadingState, ErrorState } from '../components/ui/States';
-import { MetricTile } from '../components/ui/MetricTile';
+import { LoadingState, ErrorState, EmptyState } from '../components/ui/States';
 import { adminGet } from '../lib/api';
-import type { Connections } from '../lib/connections';
-import { terminalRequest, type TerminalStatus } from '../lib/terminal';
+import { formatDuration, formatTimestamp } from '../lib/format';
 
 interface OverviewResp {
-  attention: {
-    acknowledged: boolean; message: string;
-    items: Array<{ severity: 'info' | 'warning' | 'danger'; label: string }>;
-  };
+  attention: { message: string; items: Array<{ severity: 'info' | 'warning' | 'danger'; label: string }> };
 }
 interface SystemResp {
-  app: string; name: string; version: string; forgeRoot: string;
-  startedAt: string; uptimeSeconds: number;
-  authority: { mayDeploy: boolean; mayTagRelease: boolean; mayModifyProductionData: boolean };
+  app: string; name: string; version: string; startedAt: string; uptimeSeconds: number; host: string;
 }
+interface VersionResp { app: string; version: string; nodeEnv: string }
+interface LogsResp { files: string[] }
 
+// W3 Core / BuildCost Operations Overview: same operational tile names,
+// order and card chrome. The Forge adapter renders only data its API supplies.
 export function DashboardPage() {
   const overview = useQuery({ queryKey: ['overview'], queryFn: () => adminGet<OverviewResp>('/overview') });
-  const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system') });
-  const connections = useQuery({ queryKey: ['connections'], queryFn: () => adminGet<Connections>('/connections') });
-  const terminal = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
-
-  if (overview.isLoading || system.isLoading) return <LoadingState label="Loading dashboard" />;
-  if (overview.isError) return <ErrorState error={overview.error} />;
-  if (system.isError) return <ErrorState error={system.error} />;
-  const o = overview.data!;
-  const s = system.data!;
-  const c = connections.data;
-
-  return <div className="space-y-5">
-    <SectionHeader title="W3 Forge Workspace" subtitle="Engineering tools and the foundation for your business automations."
-      actions={<Link className="btn" to="/settings"><Settings size={14} /> Connections</Link>} />
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <MetricTile label="Active App" value={s.app} />
-      <MetricTile label="App Version" value={s.version} />
-      <MetricTile label="Uptime (s)" value={String(s.uptimeSeconds)} />
-      <MetricTile label="Deploy Authority" value={s.authority.mayDeploy ? 'yes' : 'no'} />
-    </div>
+  const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system'), refetchInterval: 30_000 });
+  const version = useQuery({ queryKey: ['admin', 'version'], queryFn: () => adminGet<VersionResp>('/version') });
+  const logs = useQuery({ queryKey: ['logs'], queryFn: () => adminGet<LogsResp>('/logs'), refetchInterval: 30_000 });
+  return <div className="space-y-4">
+    <SectionHeader title="Operations Overview" subtitle="System health, version, logs, packages, and backups."
+      actions={<span className="hidden md:inline-flex" title="Dashboard layout customization is not configured for this installation."><button type="button" className="btn" disabled><Settings2 size={14} /> Customize</button></span>} />
     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <Card><CardHeader title={<span className="flex items-center gap-2"><Github size={16} /> GitHub</span>} /><CardBody className="space-y-3">
-        <p className="text-sm text-[var(--w3-text-muted)]">Review your repository, check its connection, and validate the current development branch.</p>
-        <Link className="btn btn-primary" to="/github">Open GitHub Validation</Link>
-      </CardBody></Card>
-      <Card><CardHeader title={<span className="flex items-center gap-2"><TerminalSquare size={16} /> Terminal</span>}
-        right={<Badge tone={terminal.data?.available ? 'success' : 'slate'}>{terminal.isPending ? 'Checking' : terminal.data?.available ? 'Available' : 'Unavailable'}</Badge>} /><CardBody className="space-y-3">
-        <p className="text-sm text-[var(--w3-text-muted)]">{terminal.data?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking access to the Forge host terminal.')}</p>
-        <Link className="btn" to="/terminal">Open Terminal</Link>
-      </CardBody></Card>
-      <Card><CardHeader title={<span className="flex items-center gap-2"><Workflow size={16} /> Admin Controls</span>} /><CardBody className="space-y-3">
-        <p className="text-sm text-[var(--w3-text-muted)]">Run registered engineering checks, browse files, and inspect system health and logs.</p>
-        <div className="flex flex-wrap gap-2"><Link className="btn" to="/controls">Open Controls</Link><Link className="btn" to="/system">System Status</Link></div>
-      </CardBody></Card>
+      <Tile title="System Health" icon={<Activity size={14} />} right={<Badge tone={system.isError ? 'danger' : system.data ? 'success' : 'slate'}>{system.isError ? 'Unavailable' : system.data ? 'Responding' : 'Checking'}</Badge>}>
+        {system.isPending ? <LoadingState /> : system.isError ? <ErrorState error={system.error} /> : <div className="space-y-2 text-xs text-[var(--w3-text-muted)]">
+          <p className="text-sm font-semibold text-[var(--w3-text)]">{system.data.name}</p>
+          <p>Host: {system.data.host}</p><p>Uptime: {formatDuration(system.data.uptimeSeconds)}</p>
+          <Link className="btn" to="/system">System Status</Link>
+        </div>}
+      </Tile>
+      <Tile title="Version" icon={<Tag size={14} />} right={version.data ? <Badge tone="gold">v{version.data.version}</Badge> : null}>
+        {version.isPending ? <LoadingState /> : version.isError ? <ErrorState error={version.error} /> : <div>
+          <div className="stat-value">v{version.data.version}</div>
+          <div className="mt-1 text-xs text-[var(--w3-text-muted)]">{version.data.app} · {version.data.nodeEnv}</div>
+          <div className="mt-1 text-[11px] text-[var(--w3-text-dim)]">up since {formatTimestamp(system.data?.startedAt)}</div>
+        </div>}
+      </Tile>
+      <Tile title="Attention Required" icon={<ShieldAlert size={14} />} right={<Badge tone="info">Review</Badge>}>
+        {overview.isPending ? <LoadingState /> : overview.isError ? <ErrorState error={overview.error} /> : <div className="space-y-2 text-xs text-[var(--w3-text-muted)]">
+          <p>{overview.data.attention.message}</p>
+          <ul className="space-y-2">{overview.data.attention.items.map((item, index) => <li key={index} className="flex items-start gap-2"><Badge tone={item.severity}>{item.severity}</Badge><span>{item.label}</span></li>)}</ul>
+        </div>}
+      </Tile>
+      <div className="md:col-span-2">
+        <Card className="h-full"><CardHeader title={<span className="flex items-center gap-1.5"><Terminal size={14} /> Recent Logs</span>} right={logs.data ? <Badge tone="slate">{logs.data.files.length} {logs.data.files.length === 1 ? 'File' : 'Files'}</Badge> : null} />
+          <CardBody className="recent-logs-body !p-0">
+            <div className="recent-logs-meta text-xs text-[var(--w3-text-muted)]">Log files · choose a file in Logs to read its latest entries.</div>
+            <div className="recent-logs-inset"><div className="recent-logs-viewport">
+              {logs.isPending ? <LoadingState /> : logs.isError ? <ErrorState error={logs.error} /> : logs.data.files.length ? <ul className="space-y-1 p-3 text-xs font-mono">{logs.data.files.slice(0, 8).map(file => <li className="break-all" key={file}>{file}</li>)}</ul> : <EmptyState>No log files available.</EmptyState>}
+            </div><Link className="btn mt-3" to="/logs">Open Logs</Link></div>
+          </CardBody>
+        </Card>
+      </div>
+      <UnavailableTile title="Memory / CPU" icon={<Cpu size={14} />}>Resource measurements are not provided by this installation.</UnavailableTile>
+      <UnavailableTile title="Disk Usage" icon={<HardDrive size={14} />}>Disk measurements are not provided by this installation.</UnavailableTile>
+      <UnavailableTile title="Staged Packages" icon={<Package size={14} />}>Package staging is managed through W3 Core.</UnavailableTile>
+      <UnavailableTile title="Installed Packages" icon={<PackageCheck size={14} />}>Package history is managed through W3 Core.</UnavailableTile>
+      <UnavailableTile title="Backup Summary" icon={<Archive size={14} />}>Backups are managed through W3 Core.</UnavailableTile>
     </div>
-    <Card><CardHeader title="Application modules" /><CardBody><p className="mb-4 text-xs text-[var(--w3-text-muted)]">Connection settings are configuration only; they do not confirm service health.</p>
-      {connections.isPending ? <LoadingState label="Loading connection settings…" /> : connections.isError ? <ErrorState title="Could not load connection settings" error={connections.error} /> : c ? <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Module title="Lowe's material pricing" icon={<ShoppingCart size={16} />} state={!c.materialPricing.enabled ? 'Disabled' : c.materialPricing.configured ? 'Configured' : 'Needs setup'}>
-          Existing material-pricing service. The Forge item-cost interface is planned.
-        </Module>
-        <Module title="Forge Chat" icon={<MessageSquare size={16} />} state="Planned">
-          Your own chat window is the next application layer. Chat model selection and conversation workflows are planned.
-        </Module>
-        <Module title="n8n automation interface" icon={<Network size={16} />} state="Planned">
-          {c.n8n.configured && c.n8n.url ? <><a href={c.n8n.url} target="_blank" rel="noreferrer" className="text-[var(--w3-gold-400)] underline">Open configured n8n instance</a>. The Forge workflow interface is planned.</> : 'Connect an n8n instance in host settings before building the Forge workflow interface.'}
-        </Module>
-        <Module title="Business automations" icon={<Workflow size={16} />} state="Planned">
-          Additional business workflows will build on these admin and connection foundations.
-        </Module>
-      </div> : null}
-    </CardBody></Card>
-    <Card><CardBody>
-      <div className="flex items-center gap-2 text-sm font-semibold"><ShieldAlert size={14} /> Attention</div>
-      <p className="mt-1 text-xs text-[var(--w3-text-muted)]">{o.attention.message}</p>
-      <ul className="mt-3 space-y-1.5">{o.attention.items.map((item, i) => <li key={i} className="flex items-start gap-2 text-xs text-[var(--w3-text-muted)]"><Info size={12} className="mt-0.5 shrink-0" /><span>{item.label}</span></li>)}</ul>
-    </CardBody></Card>
   </div>;
 }
-
-function Module({ title, icon, state, children }: { title: string; icon: React.ReactNode; state: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><div className="flex flex-wrap items-center justify-between gap-2"><h3 className="flex items-center gap-2 text-sm font-medium">{icon}{title}</h3><Badge tone={state === 'Configured' ? 'info' : state === 'Needs setup' ? 'warning' : 'slate'}>{state}</Badge></div><p className="text-xs text-[var(--w3-text-muted)]">{children}</p></div>;
+function Tile({ title, icon, right, children }: { title: string; icon: ReactNode; right?: ReactNode; children: ReactNode }) {
+  return <Card className="h-full"><CardHeader title={<span className="flex items-center gap-1.5">{icon}{title}</span>} right={right} /><CardBody>{children}</CardBody></Card>;
+}
+function UnavailableTile({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
+  return <Tile title={title} icon={icon} right={<Badge tone="slate">Unavailable</Badge>}><EmptyState>{children}</EmptyState></Tile>;
 }

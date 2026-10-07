@@ -38,6 +38,19 @@
 // because the existing pipeline panel is short and the dropdown fits inline.
 // If the dropdown ever needs to escape an overflow:hidden container, swap
 // to a portal-based implementation.
+//
+// v0.12.10 — opt-in `fitOptions` sizing (default behaviour unchanged):
+//   The default select fills its container (`w-full`) and truncates long
+//   labels with an ellipsis. The Release Workflow branch picker sat in a
+//   flex row next to the Version field and header text, so `dev/v0.12.10`
+//   rendered as `dev/v0.1…`. With `fitOptions` the wrapper sizes itself to
+//   the widest option label (plus room for the check mark, chevron and a
+//   scrollbar) via an invisible sizer span, so the closed trigger AND every
+//   row of the open menu show the complete text. Labels stay on one line;
+//   `maxWidth: 100%` keeps the control inside its container / the viewport,
+//   and `title` tooltips supplement (never replace) the visible text.
+//   Existing call-sites that do not pass `fitOptions` are byte-for-byte the
+//   same layout as before.
 // =============================================================================
 
 import { useEffect, useId, useRef, useState, KeyboardEvent } from 'react';
@@ -70,7 +83,18 @@ export interface DarkSelectProps {
   className?: string;
   // Empty-state message when options has no usable entries.
   emptyMessage?: string;
+  // v0.12.10: size the trigger + menu to the widest option label instead of
+  // filling the container. Scoped opt-in; see header comment.
+  fitOptions?: boolean;
+  // v0.12.10: optional CSS min-width for the wrapper (only meaningful with
+  // `fitOptions`, e.g. '12rem' so a short list still yields a usable field).
+  minWidth?: string;
 }
+
+// Extra horizontal room reserved next to the widest label in `fitOptions`
+// mode: menu rows carry more padding + the 11px check mark than the trigger,
+// and a vertical scrollbar appears when options exceed `maxVisible`.
+const FIT_OPTIONS_LABEL_RESERVE = '2rem';
 
 export function DarkSelect({
   value,
@@ -82,7 +106,9 @@ export function DarkSelect({
   ariaLabel,
   maxVisible = 8,
   className,
-  emptyMessage
+  emptyMessage,
+  fitOptions = false,
+  minWidth
 }: DarkSelectProps) {
   const reactId = useId();
   const wrapId = id ?? `darkselect-${reactId}`;
@@ -99,6 +125,14 @@ export function DarkSelect({
   const displayLabel = selected
     ? selected.label
     : placeholder ?? '— Select —';
+  // v0.12.10 (`fitOptions` only): the longest text the trigger may ever have
+  // to show — every option label plus the placeholder — drives the width.
+  const widestLabel = fitOptions
+    ? [placeholder ?? '— Select —', ...options.map((o) => o.label)].reduce(
+        (acc, l) => (l.length > acc.length ? l : acc),
+        ''
+      )
+    : '';
 
   // Close on outside click.
   useEffect(() => {
@@ -177,6 +211,12 @@ export function DarkSelect({
       ref={wrapRef}
       id={wrapId}
       className={cn('relative', className)}
+      style={
+        fitOptions
+          ? { width: 'max-content', maxWidth: '100%', minWidth }
+          : undefined
+      }
+      data-fit-options={fitOptions ? 'true' : undefined}
     >
       <button
         type="button"
@@ -193,8 +233,31 @@ export function DarkSelect({
         }}
         className="flex w-full items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-left font-mono text-xs transition-colors"
         style={triggerColors}
+        title={fitOptions ? displayLabel : undefined}
       >
-        <span className="min-w-0 flex-1 truncate">{displayLabel}</span>
+        {fitOptions ? (
+          // Stacked grid: the invisible sizer establishes the width from the
+          // widest label (+ reserve), the visible label sits on top of it.
+          <span className="grid min-w-0 flex-1">
+            <span
+              aria-hidden="true"
+              className="invisible col-start-1 row-start-1 h-0 overflow-hidden whitespace-nowrap"
+              style={{ paddingRight: FIT_OPTIONS_LABEL_RESERVE }}
+            >
+              {widestLabel}
+            </span>
+            <span
+              className="col-start-1 row-start-1 min-w-0 truncate"
+              data-darkselect-label
+            >
+              {displayLabel}
+            </span>
+          </span>
+        ) : (
+          <span className="min-w-0 flex-1 truncate" data-darkselect-label>
+            {displayLabel}
+          </span>
+        )}
         <ChevronDown
           size={12}
           className={cn('flex-shrink-0 transition-transform', open ? 'rotate-180' : '')}
@@ -241,6 +304,7 @@ export function DarkSelect({
                     commit(idx);
                   }}
                   className="flex cursor-pointer items-center gap-2 px-2.5 py-1.5 font-mono text-[11.5px]"
+                  title={fitOptions ? opt.label : undefined}
                   style={{
                     background: active
                       ? 'rgba(240,193,90,0.10)'
@@ -253,7 +317,12 @@ export function DarkSelect({
                       : '2px solid transparent'
                   }}
                 >
-                  <span className="flex-1 truncate">{opt.label}</span>
+                  <span
+                    className={cn('flex-1', fitOptions ? 'whitespace-nowrap' : 'truncate')}
+                    data-darkselect-option-label
+                  >
+                    {opt.label}
+                  </span>
                   {opt.hint ? (
                     <span
                       className="flex-shrink-0 text-[10px]"
@@ -265,6 +334,7 @@ export function DarkSelect({
                   {isSelected ? (
                     <Check
                       size={11}
+                      className="flex-shrink-0"
                       style={{ color: 'var(--status-success, #4ade80)' }}
                     />
                   ) : null}

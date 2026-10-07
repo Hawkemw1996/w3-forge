@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ShieldAlert, ExternalLink, LogOut, LucideIcon } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, FlaskConical, ExternalLink, LogOut, LucideIcon } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { W3Badge, W3BadgeTone } from './W3Badge';
 
@@ -41,6 +41,14 @@ export interface W3SidebarStatus {
   label: string;
   tone: 'warning' | 'success' | 'info';
   icon: LucideIcon;
+}
+
+/** Runtime metadata is informational; unknown environments get no invented label. */
+export function runtimeSidebarStatus(nodeEnv?: string): W3SidebarStatus | undefined {
+  if (nodeEnv === 'production') return { label: 'Production', tone: 'success', icon: ShieldCheck };
+  if (nodeEnv === 'development') return { label: 'Development build', tone: 'warning', icon: FlaskConical };
+  if (nodeEnv === 'test') return { label: 'Test environment', tone: 'info', icon: FlaskConical };
+  return undefined;
 }
 
 export function W3SidebarBrand({
@@ -208,17 +216,25 @@ export function W3SidebarFooter({
   status,
   signedInAs,
   note,
-  onLogout
+  onLogout,
+  logoutPending = false,
+  logoutTestId = 'cc-logout-btn',
+  linkTestId,
+  signedInTestId
 }: {
   version?: string;
-  footerHref: string;
-  footerLabel: string;
+  footerHref?: string;
+  footerLabel?: string;
   footerIcon?: LucideIcon;
   status?: W3SidebarStatus;
   signedInAs?: string;
   note?: ReactNode;
   /** When provided, renders a Logout button below the footer link. */
   onLogout?: () => void;
+  logoutPending?: boolean;
+  logoutTestId?: string;
+  linkTestId?: string;
+  signedInTestId?: string;
 }) {
   return (
     <div
@@ -235,7 +251,7 @@ export function W3SidebarFooter({
         </div>
       ) : null}
       {signedInAs ? (
-        <div className="mt-1 truncate" title={`Signed in as ${signedInAs}`}>
+        <div className="mt-1 truncate" data-testid={signedInTestId} title={`Signed in as ${signedInAs}`}>
           Signed in as {signedInAs}
         </div>
       ) : null}
@@ -248,27 +264,29 @@ export function W3SidebarFooter({
           <span>{note}</span>
         </div>
       ) : null}
-      <div className={cn(Boolean(status || version || signedInAs || note) && 'mt-3')}>
+      {footerHref && footerLabel ? <div className={cn(Boolean(status || version || signedInAs || note) && 'mt-3')}>
         <a
           href={footerHref}
+          data-testid={linkTestId}
           className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs transition hover:bg-white/[0.04] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--w3-gold-400)]"
           style={{ borderColor: 'var(--w3-border)', color: 'var(--w3-text)' }}
         >
           <FooterIcon size={13} className="shrink-0" style={{ color: 'var(--w3-gold-400)' }} aria-hidden="true" />
           <span>{footerLabel}</span>
         </a>
-      </div>
+      </div> : null}
       {onLogout ? (
         <div className="mt-2">
           <button
             type="button"
-            data-testid="cc-logout-btn"
+            data-testid={logoutTestId}
+            disabled={logoutPending}
             onClick={onLogout}
             className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition hover:bg-white/[0.04] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--w3-gold-400)]"
             style={{ color: 'var(--w3-text-muted)' }}
           >
             <LogOut size={13} aria-hidden="true" />
-            <span>Sign out</span>
+            <span>{logoutPending ? 'Signing out…' : 'Sign out'}</span>
           </button>
         </div>
       ) : null}

@@ -5,55 +5,45 @@ import {
   Radar,
   Activity,
   FileText,
+  Package,
+  Archive,
   FolderTree,
   Github,
+  TerminalSquare,
   Settings,
   ShieldAlert,
   ShieldCheck,
-  FlaskConical,
   Sliders,
-  TerminalSquare,
   Menu,
   X
 } from 'lucide-react';
+import { W3SidebarBrand, W3SidebarNav, W3SidebarFooter, runtimeSidebarStatus } from '../shared/components/W3Sidebar';
+import { useCoreStatus, signOut } from './CoreAuthGate';
 import { useQuery } from '@tanstack/react-query';
 import { adminGet } from '../lib/api';
 import { cn } from '../lib/utils';
-import { useCoreStatus, signOut } from './CoreAuthGate';
-import { W3SidebarBrand, W3SidebarNav, W3SidebarFooter } from '../shared/components/W3Sidebar';
 
-// =============================================================================
-// AdminLayout — Forge v0.4.1, inherited from Core v0.12.16
-// =============================================================================
-//
-// Layout model:
-//   - Desktop (≥768px): left sidebar + main column. The sidebar is pinned
-//     full-height (sticky, top:0, h-screen) and the top header bar is sticky
-//     at top:0; only the main content column scrolls beneath them.
-//   - Tablet/Mobile (<768px): desktop sidebar is hidden; a hamburger button
-//     in the top header opens a slide-out drawer from the left. The drawer
-//     overlay remains fixed so it can dim the viewport, but the underlying
-//     content does not pin. The drawer auto-closes on route change, on
-//     outside-tap (overlay), and on Escape. Body scroll is locked while
-//     the drawer is open.
-//
-// v0.12.15: Sidebar fragments use the Command Center shared components.
-// Forge keeps its engineering routes and Core-owned sign-in.
+// Canonical W3 Core / BuildCost admin shell; Forge supplies its identity and Core-owned access.
 
 interface NavItem {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
+  enabled?: boolean;
+  badge?: string;
 }
 
 const NAV: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/system', label: 'System Status', icon: Activity },
   { to: '/logs', label: 'Logs', icon: FileText },
+  { to: '/packages', label: 'Packages', icon: Package, enabled: false, badge: 'W3 Core' },
+  { to: '/backups', label: 'Backups', icon: Archive, enabled: false, badge: 'W3 Core' },
   { to: '/files', label: 'File Browser', icon: FolderTree },
-  { to: '/github', label: 'GitHub Validation', icon: Github },
-  { to: '/controls', label: 'Controls', icon: Sliders },
+  { to: '/github', label: 'GitHub / Releases', icon: Github },
   { to: '/terminal', label: 'Terminal', icon: TerminalSquare },
+  { to: '/controls', label: 'Controls', icon: Sliders },
+  { to: '/production-readiness', label: 'Production Readiness', icon: ShieldCheck },
   { to: '/settings', label: 'Settings', icon: Settings }
 ];
 
@@ -208,24 +198,10 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   );
 }
 
-// -----------------------------------------------------------------------------
-// Shared sidebar fragments — used by both the desktop sidebar and the mobile
-// drawer so the two surfaces never drift.
-// -----------------------------------------------------------------------------
-
-function sidebarStatus(nodeEnv?: string) {
-  return nodeEnv === 'production'
-    ? { label: 'Production', tone: 'success' as const, icon: ShieldCheck }
-    : nodeEnv === 'development'
-      ? { label: 'Development build', tone: 'warning' as const, icon: FlaskConical }
-      : nodeEnv === 'test'
-        ? { label: 'Test environment', tone: 'info' as const, icon: FlaskConical }
-        : undefined;
-}
 
 function SidebarBrand({ version, nodeEnv, compact }: { version?: string; nodeEnv?: string; compact?: boolean }) {
   return <W3SidebarBrand title="W3 Forge" subtitle="Admin Console"
-    version={version ? 'v' + version : undefined} status={sidebarStatus(nodeEnv)} compact={compact} />;
+    version={version ? 'v' + version : undefined} status={runtimeSidebarStatus(nodeEnv)} compact={compact} />;
 }
 
 function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
@@ -235,19 +211,22 @@ function SidebarNav({ onNavigate }: { onNavigate: () => void }) {
 
 function SidebarFooter({ version, nodeEnv }: { version?: string; nodeEnv?: string }) {
   const status = useCoreStatus();
+  const inFlight = useRef(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState('');
-  const signingOut = useRef(false);
   const logout = async () => {
-    if (signingOut.current) return;
-    signingOut.current = true;
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSigningOut(true);
+    setError('');
     try { await signOut(); } catch { setError('Could not sign out. Please try again.'); }
-    finally { signingOut.current = false; }
+    finally { inFlight.current = false; setSigningOut(false); }
   };
   return <div>
-    <W3SidebarFooter version={version ? 'v' + version : undefined} status={sidebarStatus(nodeEnv)}
+    <W3SidebarFooter version={version ? 'v' + version : undefined} status={runtimeSidebarStatus(nodeEnv)}
       signedInAs={status.data?.user?.username} footerHref={status.data?.coreUrl ?? '/admin/'}
       footerLabel="W3 Core" footerIcon={Radar} onLogout={logout}
-      note="Engineering console · production release authority stays with the owner." />
+      logoutPending={signingOut} logoutTestId="admin-sign-out" />
     {error ? <p role="alert" className="px-5 pb-3 text-xs text-[var(--status-danger)]">{error}</p> : null}
   </div>;
 }

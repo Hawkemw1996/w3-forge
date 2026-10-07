@@ -12,6 +12,7 @@ const { AdminLayout } = await server.ssrLoadModule('/src/components/AdminLayout.
 const { CoreAuthGate } = await server.ssrLoadModule('/src/components/CoreAuthGate.tsx');
 const { GitHubValidationPage } = await server.ssrLoadModule('/src/pages/GitHubValidationPage.tsx');
 const { DashboardPage } = await server.ssrLoadModule('/src/pages/DashboardPage.tsx');
+const { ProductionReadinessPage } = await server.ssrLoadModule('/src/pages/ProductionReadinessPage.tsx');
 const { SettingsPage } = await server.ssrLoadModule('/src/pages/SettingsPage.tsx');
 test.after(() => server.close());
 globalThis.window = { location: { search: '' } };
@@ -27,8 +28,12 @@ function render(component, auth = status, values = []) {
 }
 test('the console uses current shared navigation, environment badges and account footer', () => {
   const html = render(React.createElement(AdminLayout, {}, 'PAGE_CONTENT'));
-  for (const text of ['W3 Forge', 'v0.4.1', 'Development build', 'Signed in as operator', 'Sign out', 'GitHub Validation', 'File Browser', 'Controls', 'Terminal', 'PAGE_CONTENT', 'w3-sidebar', 'md:sticky', 'sticky top-0']) assert.ok(html.includes(text), text);
+  for (const text of ['W3 Forge', 'v0.4.1', 'Development build', 'Signed in as operator', 'Sign out', 'GitHub / Releases', 'Packages', 'Backups', 'Production Readiness', 'File Browser', 'Controls', 'Terminal', 'PAGE_CONTENT', 'w3-sidebar', 'md:sticky', 'sticky top-0']) assert.ok(html.includes(text), text);
   assert.ok(html.includes('href="https://core.test"'));
+  const labels = ['Dashboard', 'System Status', 'Logs', 'Packages', 'Backups', 'File Browser', 'GitHub / Releases', 'Terminal', 'Controls', 'Production Readiness', 'Settings'];
+  const indexes = labels.map(label => html.indexOf('>' + label + '</span>'));
+  assert.ok(indexes.every((value, index) => value >= 0 && (!index || value > indexes[index - 1])), 'canonical navigation order');
+  assert.doesNotMatch(html, /Engineering console/);
   assert.doesNotMatch(html, /href="\/packages|href="\/backups|href="\/command-center/);
 });
 test('unapproved installation shows fingerprint and browser sign-in without password fields', () => {
@@ -43,9 +48,9 @@ test('viewer and editor assignments cannot render the admin console', () => {
   }
   assert.match(render(React.createElement(CoreAuthGate, {}, 'PRIVATE_CONTENT')), /PRIVATE_CONTENT/);
 });
-test('GitHub Validation shows workspace status and routes execution through existing Controls', () => {
+test('GitHub / Releases shows workspace status and routes execution through existing Controls', () => {
   const html = render(React.createElement(GitHubValidationPage), status, [[['git', 'status'], { branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: false, statusShort: '', devBranches: ['dev/v0.4.1'] }]]);
-  for (const text of ['GitHub Validation', 'dev/v0.4.1', 'Allowed branch', 'Clean', 'Open Controls']) assert.ok(html.includes(text), text);
+  for (const text of ['GitHub / Releases', 'GitHub Release Standard', 'Current Git Status', 'dev/v0.4.1', 'Allowed branch', 'Clean', 'Open Controls']) assert.ok(html.includes(text), text);
   assert.doesNotMatch(html, /Deploy|Publish|Merge|Create release/);
 });
 test('existing Controls and File Browser remain routed behind the Core gate', () => {
@@ -71,18 +76,25 @@ const system = { app: 'w3forge', version: '0.4.1', forgeRoot: '/review/forge', h
   authority: { mayDeploy: false, mayTagRelease: false, mayModifyProductionData: false } };
 const terminal = { available: false, enabled: true, supported: false, message: 'Terminal is not available on this host.', hostname: 'forge', access: 'root-login' };
 const appValues = [[['connections'], connections], [['system'], system], [['admin', 'terminal', 'status'], terminal],
+  [['logs'], { files: ['admin/operations.log'] }],
   [['overview'], { attention: { message: 'Review configuration before use.', items: [] } }]];
 
-test('workspace links to real admin tools and distinguishes configured services from planned modules', () => {
+test('dashboard uses the common operations tiles and truthful unavailable states', () => {
   const html = render(React.createElement(DashboardPage), status, appValues);
-  for (const text of ['W3 Forge Workspace', 'href="/github"', 'href="/terminal"', 'href="/controls"', 'Lowe', 'Forge Chat', 'n8n automation interface', 'Business automations', 'Configured', 'Planned', 'Unavailable', 'do not confirm service health']) assert.ok(html.includes(text), text);
-  assert.match(html, /href="https:\/\/automation.test"/);
-  assert.doesNotMatch(html, /type="password"|Start Chat|Run Automation|Start Scraping/);
+  for (const text of ['Operations Overview', 'System Health', 'Version', 'Attention Required', 'Recent Logs', 'Memory / CPU', 'Disk Usage', 'Staged Packages', 'Installed Packages', 'Backup Summary', 'Unavailable', 'admin/operations.log', 'href="/system"', 'href="/logs"']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /Application modules|W3 Forge Workspace|Forge Chat|Start Chat|Run Automation|Start Scraping|n8n automation interface/);
+  assert.match(html, /disabled=""[^>]*>.*?Customize/);
+});
+
+test('readiness uses the standard checklist without claiming configuration approves a release', () => {
+  const html = render(React.createElement(ProductionReadinessPage), status, [...appValues, [['git', 'status'], { branch: 'dev/v0.4.1', branchAllowed: true, dirty: true }]]);
+  for (const text of ['Production Readiness', 'Readiness Checklist', 'Configured', 'Changes present', 'Owner review required', 'Manual review required', 'do not approve a release', 'table-dark', 'mobile-cards']) assert.ok(html.includes(text), text);
+  assert.doesNotMatch(html, /All checks pass|Enable Production|production-cutover/);
 });
 
 test('settings show configuration and pricing limits without claiming untested services are connected', () => {
   const html = render(React.createElement(SettingsPage), status, appValues);
-  for (const text of ['Settings &amp; Connections', 'read-only', 'not that a service is reachable', 'forge-model', '$1.00', '$10.00', 'Terminal commands affect the Forge host', 'can change host files', 'does not establish API access']) assert.ok(html.includes(text), text);
+  for (const text of ['Settings', 'read-only', 'not that a service is reachable', 'forge-model', '$1.00', '$10.00', 'Terminal commands affect the Forge host', 'can change host files', 'does not establish API access']) assert.ok(html.includes(text), text);
   assert.doesNotMatch(html, /type="password"|type="text"|Root shell connected/);
 });
 
@@ -91,7 +103,7 @@ test('GitHub shows repository and local tracking metadata without implying a rem
     branch: 'dev/v0.4.1', workspace: '/review/forge', branchAllowed: true, dirty: true, statusShort: ' M README.md', devBranches: ['dev/v0.4.1'],
     repositoryUrl: 'https://github.com/example/forge', remoteConfigured: true, head: '0123456789abcdef', upstream: 'origin/dev/v0.4.1', ahead: 2, behind: 1, defaultDevBranch: 'dev/v0.4.1'
   }]]);
-  for (const text of ['Not checked', 'Check Connection', '0123456789ab', 'origin/dev/v0.4.1', '2 ahead', '1 behind', 'Changes present', 'last fetched', 'href="https://github.com/example/forge"']) assert.ok(html.includes(text), text);
+  for (const text of ['Not checked', 'Check Remote', '0123456789ab', 'origin/dev/v0.4.1', '2 ahead', '1 behind', 'Changes present', 'last fetched', 'href="https://github.com/example/forge"']) assert.ok(html.includes(text), text);
   assert.doesNotMatch(html, /type="password"|Save token/);
 });
 

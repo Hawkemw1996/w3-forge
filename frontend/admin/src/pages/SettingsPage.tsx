@@ -20,13 +20,14 @@ export function SettingsPage() {
   const system = useQuery({ queryKey: ['system'], queryFn: () => adminGet<SystemResp>('/system') });
   const connections = useQuery({ queryKey: ['connections'], queryFn: () => adminGet<Connections>('/connections') });
   const terminal = useQuery({ queryKey: ['admin', 'terminal', 'status'], queryFn: () => terminalRequest<TerminalStatus>('/status'), retry: false });
+  const terminalData = terminal.isError ? undefined : terminal.data;
   if (system.isPending || connections.isPending) return <LoadingState label="Loading settings…" />;
   if (system.isError) return <ErrorState title="Failed to load settings" error={system.error} />;
   if (connections.isError) return <ErrorState title="Failed to load connections" error={connections.error} />;
   const s = system.data!;
   const c = connections.data!;
   return <div className="space-y-4">
-    <SectionHeader title="Settings & Connections" subtitle="Configured services and operating boundaries for this Forge installation."
+    <SectionHeader title="Settings" subtitle="Configured services and operating boundaries for this Forge installation."
       actions={<button type="button" className="btn" disabled={system.isFetching || connections.isFetching || terminal.isFetching} onClick={() => { void system.refetch(); void connections.refetch(); void terminal.refetch(); }}><RefreshCw size={14} /> Refresh</button>} />
     <Card><CardBody className="text-sm text-[var(--w3-text-muted)]">These settings are read-only. Connection configuration is managed on the Forge host; app approval and user assignments are managed in W3 Core. Configured means settings are present, not that a service is reachable.</CardBody></Card>
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -39,8 +40,8 @@ export function SettingsPage() {
         <p className="break-all">Workspace: <code>{c.github.workspace}</code></p><p>Development branch: <code>{c.github.defaultDevBranch}</code></p>
         <Link className="text-[var(--w3-gold-400)] underline" to="/github">Check repository connection</Link>
       </SettingCard>
-      <SettingCard title="Terminal access" icon={<TerminalSquare size={14} />} state={terminal.isPending ? 'Checking' : terminal.data?.available ? 'Available' : 'Unavailable'} tone={terminal.data?.available ? 'success' : 'warning'}>
-        <p>{terminal.data?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking host terminal availability.')}</p>
+      <SettingCard title="Terminal access" icon={<TerminalSquare size={14} />} state={terminal.isPending ? 'Checking' : terminalData?.available ? 'Available' : 'Unavailable'} tone={terminalData?.available ? 'success' : 'warning'}>
+        <p>{terminalData?.message || (terminal.error instanceof Error ? terminal.error.message : 'Checking host terminal availability.')}</p>
         <p>Host setting: {c.terminal.enabled ? 'enabled' : 'disabled'}. Terminal commands affect the Forge host.</p>
         <Link className="text-[var(--w3-gold-400)] underline" to="/terminal">Open Terminal</Link>
       </SettingCard>

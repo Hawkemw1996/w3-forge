@@ -1,0 +1,132 @@
+{
+  "normalization": "UTF-8 with LF line endings; styles.css import paths resolve the same shared styles from each repo layout",
+  "files": [
+    {
+      "local": "src/components/ui/AdminListPage.tsx",
+      "source": "frontend/admin/src/components/ui/AdminListPage.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "3b341e0d32f8ba40555496d596b11ea88a08d97a4eab4dbc90e2c8ed80c0454c"
+    },
+    {
+      "local": "src/components/ui/Badge.tsx",
+      "source": "frontend/admin/src/components/ui/Badge.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "ebee1b83bf6c7c11b4fef74968ec0fe58240c8fada11a4538c50362186782284"
+    },
+    {
+      "local": "src/components/ui/Card.tsx",
+      "source": "frontend/admin/src/components/ui/Card.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "a1ee7c46e123a4c97df52e82ceb1d8375a41885a0fe62fe4889df3c6876a0c1b"
+    },
+    {
+      "local": "src/components/ui/DarkSelect.tsx",
+      "source": "frontend/admin/src/components/ui/DarkSelect.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "97e476eefa4a3345b7229b49b9d1e782b68c58d6ad41edf0e963deb59c5dfe17"
+    },
+    {
+      "local": "src/components/ui/MetricTile.tsx",
+      "source": "frontend/admin/src/components/ui/MetricTile.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "707c250c01451d30cee554f5c809933846e8919c85166421e44d2b058d933f49"
+    },
+    {
+      "local": "src/components/ui/ProgressBar.tsx",
+      "source": "frontend/admin/src/components/ui/ProgressBar.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "6a1db5c4291f3e2c0dc4b1456d15d68c4b8c50c51664adae4f70b2a21ce7ae32"
+    },
+    {
+      "local": "src/components/ui/SectionHeader.tsx",
+      "source": "frontend/admin/src/components/ui/SectionHeader.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "479d50db4d8b549970d8d04f652bb30d20bba88ac2939d4d8c1c19b0d76cd669"
+    },
+    {
+      "local": "src/components/ui/States.tsx",
+      "source": "frontend/admin/src/components/ui/States.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "dcd98b4add685dfe35a68b5c28681189b79980389cbf7705af4833a4a943a6f8"
+    },
+    {
+      "local": "src/components/ui/StatusPill.tsx",
+      "source": "frontend/admin/src/components/ui/StatusPill.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "c9f5822daffeab5eee37c452684cba8877255e6d3739c5eb1915f13eed1e1cde"
+    },
+    {
+      "local": "src/shared/components/W3Sidebar.tsx",
+      "source": "frontend/shared/components/W3Sidebar.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "9ceb07e53e202c3be54b19ce81a02ce656aa2e4bc9b5cb8a8e2f8c2189ae0f14"
+    },
+    {
+      "local": "src/shared/components/W3Badge.tsx",
+      "source": "frontend/shared/components/W3Badge.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "34098d60b90c23e98d246892cc23e1dd803371e46dca86277dc842eb371977dd"
+    },
+    {
+      "local": "src/shared/lib/cn.ts",
+      "source": "frontend/shared/lib/cn.ts",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "15a5523bc6be2411c4634258c2faa3eba582d8ab113a5323532b8808013a8ca1"
+    },
+    {
+      "local": "src/shared/styles/tokens.css",
+      "source": "frontend/shared/styles/tokens.css",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "c21024ac1fb4ca5a4da0ead350d09608818b3e0458a9e2c48987b7d9dfc51be3"
+    },
+    {
+      "local": "src/shared/styles/primitives.css",
+      "source": "frontend/shared/styles/primitives.css",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "ea136473c21268e7e121873d9562c137fe7854a39e3a1a9901b98221220bb87d"
+    },
+    {
+      "local": "src/styles.css",
+      "source": "frontend/admin/src/styles.css",
+      "repository": "https://github.com/Hawkemw1996/w3buildcost",
+      "commit": "d0cf34c5903940337e162a90771fbe09fd056ce6",
+      "sha256": "069015fbdf71eb16acca2e6cdeddc205601b5c00ead59889940c57e9ef88391d",
+      "normalizeStyleImports": true
+    },
+    {
+      "local": "src/components/operations/DashboardTile.tsx",
+      "source": "frontend/admin/src/components/dashboard/DashboardTile.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "1ebf7ab7b08136cf6d9d7d8c5e05d7a5178f7c6b2a7243a431c7e42cc55c0a32"
+    },
+    {
+      "local": "src/components/operations/LogViewerPanel.tsx",
+      "source": "frontend/admin/src/components/widgets/LogViewerPanel.tsx",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "434413e15f0079fdd0e7e6d062d92187297fbdcb0719a7ccb729407f337da79b"
+    },
+    {
+      "local": "src/components/operations/logParser.ts",
+      "source": "frontend/admin/src/lib/logParser.ts",
+      "repository": "https://github.com/Hawkemw1996/w3-core",
+      "commit": "c470e4ab8670dfbc0e2a20cbbc13f8903884b6ce",
+      "sha256": "865834b26bc39ec7f984ad7fed0514a5ce215908caf264b7f7e803839cc1fdd3"
+    }
+  ]
+}

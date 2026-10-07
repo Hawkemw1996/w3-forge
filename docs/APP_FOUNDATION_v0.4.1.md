@@ -6,7 +6,7 @@ Development branch: `dev/v0.4.1`. This change builds on the existing Core sign-i
 
 - Root URL opens the Forge workspace, using the established W3 admin layout.
 - Core app-admin access protects dashboard, connections, GitHub, terminal, files, logs and controls.
-- GitHub Validation shows the configured repository, local branch and commit, local tracking counts, working changes and allowed development branches. Check connection performs a bounded, noninteractive, read-only GitHub check using the host's existing credentials. Counts reflect local tracking refs, not a fetch. No credentials are entered into this UI.
+- GitHub / Releases shows the configured repository, local branch and commit, local tracking counts, working changes and allowed development branches. Check connection performs a bounded, noninteractive, read-only GitHub check using the host's existing credentials. Counts reflect local tracking refs, not a fetch. No credentials are entered into this UI.
 - Settings & Connections shows safe configuration readiness for Core, GitHub, terminal, the existing Lowe's/Apify material-pricing service, Ollama and an optional n8n instance link.
 - Terminal ports BuildCost's xterm/native PTY behavior to Forge's Core identity. It supports output, input, resizing, clear, interruption, reconnect and disconnect.
 - Optional systemd service template starts the app as the existing `forgeadmin` account, keeps it running across reboots, reads a protected environment file, and kills remaining terminal children when the service stops.
@@ -72,3 +72,5 @@ No live files, service settings or credentials were changed.
 ## Rollback
 
 Disable the terminal immediately with `ADMIN_TERMINAL_ENABLED=false` and restart the Forge service if necessary; this terminates PTYs. For code rollback, stop the new service, restore the preserved checkout/config and use the prior startup method. Do not casually revert to v0.4.0's weaker network-only admin access. The session-encryption change requires a new distinct `FORGE_SESSION_SECRET` on initial activation. Rotation/restart signs users out. No database schema/migration or production-data changes are part of this update. Keep the separate material-pricing ledger outside source checkouts and backups of pairing credentials protected.
+
+The [shared admin UI standard](SHARED_ADMIN_UI_v0.4.1.md) now governs the navigation, operations dashboard and common page presentation. Product chat and automation screens remain a separate application phase.

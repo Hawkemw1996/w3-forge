@@ -10,7 +10,7 @@ export function buildAdminOverviewRoutes(): Router {
       attention: {
         acknowledged: false,
         message:
-          'Review Settings for service configuration and GitHub Validation for repository access.',
+          'Review Settings for service configuration and GitHub / Releases for repository access.',
         items: [
           {
             severity: 'info',

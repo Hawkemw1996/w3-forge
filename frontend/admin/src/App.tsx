@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { CoreAuthGate } from './components/CoreAuthGate';
 import { GitHubValidationPage } from './pages/GitHubValidationPage';
 import { AdminLayout } from './components/AdminLayout';
+import { ProductionReadinessPage } from './pages/ProductionReadinessPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { SystemStatusPage } from './pages/SystemStatusPage';
 import { LogsPage } from './pages/LogsPage';
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/github" element={<GitHubValidationPage />} />
         <Route path="/controls" element={<ControlsPage />} />
         <Route path="/terminal" element={<Suspense fallback={<LoadingState label="Loading terminal…" />}><TerminalPage /></Suspense>} />
+        <Route path="/production-readiness" element={<ProductionReadinessPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

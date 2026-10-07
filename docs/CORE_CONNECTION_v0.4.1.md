@@ -24,7 +24,7 @@ Source reference: Core `dev/v0.12.16`, commit `b4770a51dc2a25e78f5b6e6ec3d577cbd
 
 - Current shared W3 sidebar, badge, design tokens and primitive styles copied with provenance under `frontend/admin/src/shared`.
 - Current pinned desktop sidebar/header, mobile drawer, environment badges, signed-in username and sign-out footer.
-- Forge GitHub Validation view displays its existing configured workspace/branch status and links to the existing registered Controls checks. This is local workspace validation, not a new remote GitHub checks API.
+- Forge GitHub / Releases view displays its existing configured workspace/branch status and links to the existing registered Controls checks. This is local workspace validation, not a new remote GitHub checks API.
 - Existing Controls, File Browser, logs, system and settings remain Forge-specific. Safe-runner allowlists, argument validation, `shell:false` and authority limits are retained.
 
 The later [application foundation update](APP_FOUNDATION_v0.4.1.md) adds the requested operator terminal, real GitHub connection diagnostics, and configuration readiness. Core's production package/deploy/backup pipeline remains outside Forge's registered authority. The terminal is a separate human-operated host capability with explicit enablement; registered automated controls retain their safety rules.
@@ -36,3 +36,5 @@ No live deployment, migration or pairing was performed. Configure and pair befor
 Review browser sign-in, admin access, a removed assignment, an outage and sign-out before release. Reverting code to v0.4.0 restores network-only administrative access; review that weaker policy before any rollback. There is no Forge schema or persistent business-data change. Source builds use the existing separate backend and frontend/admin package layout and existing launcher.
 
 The shared workspace authentication standard is verified in [the parity report](SHARED_AUTH_STANDARD_v0.4.1.md).
+
+The [shared admin UI standard](SHARED_ADMIN_UI_v0.4.1.md) now governs the navigation, operations dashboard and common page presentation. Product chat and automation screens remain a separate application phase.
