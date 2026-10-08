@@ -1,0 +1,33 @@
+name: Verify app and shared Admin Console
+on:
+  push:
+    branches: ['dev/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Read the immutable console pin
+        id: console
+        run: node -e "const fs=require('fs'),l=require('./admin-console.lock.json');if(!/^[a-f0-9]{40}$/.test(l.revision))throw Error('Invalid pin');fs.appendFileSync(process.env.GITHUB_OUTPUT,'revision='+l.revision+'\n')"
+      - name: Check out private console source
+        uses: actions/checkout@v4
+        with:
+          repository: Hawkemw1996/w3-admin-console
+          ref: ${{ steps.console.outputs.revision }}
+          token: ${{ secrets.ADMIN_CONSOLE_READ_TOKEN }}
+          path: .console-source
+          persist-credentials: false
+      - run: node scripts/admin-console.cjs sync --source .console-source
+      - run: npm ci
+      - run: npm run console:verify
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

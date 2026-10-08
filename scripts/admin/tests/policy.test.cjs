@@ -64,8 +64,11 @@ test('entrypoints load policy first, installations include guards/migrations, an
   assert.deepEqual(names, ['schema_migrations', 'audit_events', 'platform_config', 'production_cutover_record'].sort());
   const installer = fs.readFileSync(path.join(scripts, 'install-server-scripts.sh'), 'utf8');
   for (const name of fs.readdirSync(scripts).filter(n => (n.endsWith('.sh') || n.endsWith('.cjs')) && n !== 'install-server-scripts.sh')) assert.ok(installer.includes('$SOURCE_DIR/' + name), 'Missing installed helper/script: ' + name);
-  const registry = fs.readFileSync(path.join(root, 'backend/src/console/controls/registry.ts'), 'utf8');
-  const sources = [...registry.matchAll(/scriptSourcePath: 'scripts\/admin\/([^']+)'/g)].map(match => match[1]);
+  const {ADMIN_CONTROLS} = require(path.join(root, 'backend/dist/console/controls/registry.js'));
+  const sources = ADMIN_CONTROLS.map(control => {
+    assert.ok(control.scriptSourcePath.startsWith('scripts/admin/'), 'Forge script source stays in its app-owned operator folder');
+    return control.scriptSourcePath.slice('scripts/admin/'.length);
+  });
   assert.ok(sources.length > 20, 'Canonical controls source inventory must be present.');
   for (const name of sources) { assert.ok(fs.existsSync(path.join(scripts, name)), 'Missing source: ' + name); assert.ok(installer.includes('$SOURCE_DIR/' + name), 'Missing installed control: ' + name); }
   for (const name of fs.readdirSync(scripts).filter(n => n.endsWith('.sh') && !n.startsWith('_'))) {

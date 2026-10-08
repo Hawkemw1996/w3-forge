@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/Hawkemw1996/w3-admin-console.git",
+  "consumer": "w3forge",
+  "revision": "104e6494ab388eeae8f46593f2695c02d2e303eb",
+  "manifestSha256": "e54df3e02a09644943c407d17837e7a0899e1b93556358819cc93956d48b98ff",
+  "api": 1,
+  "version": "0.1.0",
+  "targets": {
+    "backend": "backend/src/console",
+    "frontend": "frontend/admin/src",
+    "shared": "frontend/shared"
+  }
+}

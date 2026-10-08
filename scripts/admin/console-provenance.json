@@ -182,8 +182,8 @@
       "source": "scripts/pipeline-package-dev-release-w3buildcost-ui.sh",
       "target": "scripts/admin/pipeline-package-dev-release-w3forge-ui.sh",
       "sourceSha256": "06e88b37c932d16c72c77a6f2421dc51c79c9b76007c34290e4c9a72ca837a24",
-      "sha256": "3fbaae4c5ce88bc40230352486232762c9a77c52a1025c28ea5aa4ac21de3b6f",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "5bffc1e42c3e563a081c16379b592fe5f6e6ea653b93e18a70ff1e0655496382",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. Archive the committed app plus hash-verified pinned shared console source for offline deployment."
     },
     {
       "source": "scripts/pipeline-promote-dev-to-main-w3buildcost-ui.sh",

@@ -1,13 +1,16 @@
 {
   "name": "w3-forge-admin-frontend",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
     "test": "node --test tests/*.test.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prebuild": "node ../../scripts/admin-console.cjs sync",
+    "pretypecheck": "node ../../scripts/admin-console.cjs sync",
+    "pretest": "node ../../scripts/admin-console.cjs sync"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.7",

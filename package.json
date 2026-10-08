@@ -1,18 +1,30 @@
 {
   "name": "w3forge",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "workspaces": [
     "backend",
     "frontend/admin"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces --if-present && node --test scripts/admin/tests/*.test.cjs && npm run parity:check",
+    "test": "npm run test --workspaces --if-present && node --test scripts/admin/tests/*.test.cjs && npm run parity:check && node --test scripts/test-admin-console.cjs",
     "typecheck": "npm run typecheck --workspace frontend/admin && npm run build --workspace backend",
     "db:migrate": "npm run db:migrate --workspace backend",
     "start": "node backend/dist/index.js",
-    "pretest": "npm run build --workspace backend",
-    "parity:check": "node scripts/check-console-parity.cjs"
+    "pretest": "npm run console:sync && npm run build --workspace backend",
+    "parity:check": "node scripts/check-console-parity.cjs",
+    "console:sync": "node scripts/admin-console.cjs sync",
+    "console:verify": "node scripts/admin-console.cjs verify",
+    "console:status": "node scripts/admin-console.cjs status",
+    "console:refs": "node scripts/admin-console.cjs refs",
+    "console:update": "node scripts/admin-console.cjs update",
+    "postinstall": "npm run console:sync",
+    "prebuild": "npm run console:sync",
+    "pretypecheck": "npm run console:sync",
+    "predev": "npm run console:sync"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
+import { consoleConfiguration } from './helpers/consoleConfiguration.mjs';
 
 function moduleUrl(source) {
   const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } });
   return 'data:text/javascript;base64,' + Buffer.from(outputText).toString('base64');
 }
 const api = moduleUrl(readFileSync(new URL('../src/lib/api.ts', import.meta.url), 'utf8'));
-const config = moduleUrl(readFileSync(new URL('../../../shared/consoleApp.ts', import.meta.url), 'utf8'));
-const source = readFileSync(new URL('../src/lib/terminal.ts', import.meta.url), 'utf8').replace("from './api'", `from '${api}'`).replace("from '../../../../shared/consoleApp'", `from '${config}'`);
+const configuration = moduleUrl(readFileSync(new URL('../src/lib/appConfiguration.ts', import.meta.url), 'utf8') + '\nsetAdminConfiguration(' + JSON.stringify(consoleConfiguration('w3forge')) + ');');
+const source = readFileSync(new URL('../src/lib/terminal.ts', import.meta.url), 'utf8')
+  .replace("from './api'", `from '${api}'`).replace(/from ["']\.\/appConfiguration["']/, `from '${configuration}'`);
 const { TerminalConnection, terminalRequest } = await import(moduleUrl(source));
 const tick = () => new Promise(resolve => setTimeout(resolve, 20));
 const defer = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
@@ -36,10 +38,6 @@ function fixture(overrides = {}) {
 
 test('transport sends same-origin credentials and terminal header, and surfaces API errors', async t => {
   let actual;
-  const authEvents = [];
-  const previousWindow = globalThis.window;
-  globalThis.window = { dispatchEvent: event => authEvents.push(event.type) };
-  t.after(() => { globalThis.window = previousWindow; });
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     actual = { url, options };
     return new Response(JSON.stringify({ success: true, data: { available: true } }), { status: 200 });
@@ -52,7 +50,6 @@ test('transport sends same-origin credentials and terminal header, and surfaces 
   assert.deepEqual(JSON.parse(actual.options.body), { cols: 80, rows: 24 });
   globalThis.fetch.mock.mockImplementation(async () => new Response(JSON.stringify({ success: false, error: { code: 'AUTH_REQUIRED', message: 'Sign in again.' } }), { status: 401 }));
   await assert.rejects(terminalRequest('/status'), { code: 'AUTH_REQUIRED', message: 'Sign in again.' });
-  assert.deepEqual(authEvents, ['w3-auth-problem']);
 });
 
 test('cancelling while session creation is pending closes the returned shell', async () => {

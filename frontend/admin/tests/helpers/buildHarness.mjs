@@ -18,11 +18,12 @@ import { mkdirSync, existsSync, rmSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'vite';
 import react from '@vitejs/plugin-react';
+import { consoleConfiguration, consoleConfigurationPlugin } from './consoleConfiguration.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const defaultAppRoot = path.resolve(here, '..', '..');
 
-export async function buildHarness(entryName = 'appHarness', { appRoot = defaultAppRoot } = {}) {
+export async function buildHarness(entryName = 'appHarness', { appRoot = defaultAppRoot, configuration = consoleConfiguration('w3forge') } = {}) {
   const entry = path.join(appRoot, 'tests', 'harness', `${entryName}.tsx`);
   if (!existsSync(entry)) throw new Error(`harness entry not found: ${entry}`);
   // Output lives inside the workspace (git-ignored) so Node can resolve the
@@ -37,7 +38,7 @@ export async function buildHarness(entryName = 'appHarness', { appRoot = default
     logLevel: 'silent',
     root: appRoot,
     mode: 'test',
-    plugins: [react()],
+    plugins: [react(), consoleConfigurationPlugin(configuration)],
     resolve: {
       alias: {
         '@': path.resolve(appRoot, 'src'),

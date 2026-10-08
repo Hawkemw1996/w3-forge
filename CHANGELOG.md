@@ -1,3 +1,12 @@
+## v0.4.2: Shared Admin Console source (unreleased)
+
+- Consume the private `Hawkemw1996/w3-admin-console` at the same immutable pin as BuildCost and Books. Do not publish generated private implementation in this public repository.
+- Preserve the Forge product/authentication entry point and app-owned Core session, database, service, configuration and operator scripts. Bind the canonical script inventory to Forge's `scripts/admin` folder.
+- Remove Settings and Production Readiness frontend pages; retain the legacy readiness API and audit history.
+- Preserve Forge's accessibility, fail-closed policy, Git-origin binding, safe subprocess environment, filesystem containment and terminal protections in the common implementation.
+- Add shared-source staging, verified source packaging and private-source CI wiring. Replace app-local approved source hashes with the actual upstream manifest check while retaining operator-script provenance checks.
+- Restore the common W3 browser icon. See `docs/SHARED_ADMIN_CONSOLE_v0.4.2.md` for bootstrap, verification and owner-controlled host acceptance.
+
 ## v0.4.1 — Per-app console readiness
 
 - Keep each app’s own GitHub repository and reject mismatched workspace origins or stale connection results.

@@ -23,6 +23,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'vite';
+import { consoleConfiguration } from './helpers/consoleConfiguration.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..', '..', '..');
@@ -31,6 +32,8 @@ const registryDist = path.join(repoRoot, 'backend', 'dist', 'console', 'controls
 
 // --- load the frontend module under test (TS -> ESM in memory) --------------
 const vite = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
+const config = await vite.ssrLoadModule('/src/lib/appConfiguration.ts');
+config.setAdminConfiguration(consoleConfiguration('w3forge'));
 const ui = await vite.ssrLoadModule('/src/pages/controls/uiSections.ts');
 test.after(() => vite.close());
 
@@ -41,7 +44,7 @@ test.after(() => vite.close());
 function registryIdsFromSource() {
   const src = readFileSync(registrySource, 'utf8');
   const ids = [];
-  for (const m of src.matchAll(/^ {4}id: '([a-z0-9-]+)',$/gm)) ids.push(m[1]);
+  for (const m of src.matchAll(/^ {4}id: (?:appText\()?['"]([a-z0-9-]+)['"]\)?,$/gm)) ids.push(m[1].replaceAll('w3books', 'w3forge'));
   return ids;
 }
 

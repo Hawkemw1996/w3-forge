@@ -1,14 +1,16 @@
 {
   "name": "w3-forge-backend",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "db:migrate": "node dist/db/migrateCli.js"
+    "db:migrate": "node dist/db/migrateCli.js",
+    "prebuild": "node ../scripts/admin-console.cjs sync",
+    "pretest": "npm run build"
   },
   "dependencies": {
     "express": "^4.21.1",

@@ -52,7 +52,7 @@ function setup() {
 describe('active canonical console integration boundary', () => {
   it('requires Core sign-in for every complete console route and unknown paths', async () => {
     const f = setup();
-    for (const endpoint of ['/overview', '/version', '/system/status', '/console-config', '/logs/categories',
+    for (const endpoint of ['/overview', '/version', '/system/status', '/console-config', '/configuration', '/console/source', '/logs/categories',
       '/logs/recent', '/packages/staged', '/packages/installed-versions', '/backups', '/files/roots',
       '/git/status', '/git/tags', '/git/commits', '/git/branches-dev', '/dashboard/layout', '/controls',
       '/controls/scripts/audit', '/controls/lock', '/terminal/status', '/production-readiness', '/audit-events', '/unknown']) {
@@ -60,7 +60,7 @@ describe('active canonical console integration boundary', () => {
       expect(response.status, endpoint).toBe(401);
       expect(response.body.error.code).toBe('AUTH_REQUIRED');
     }
-    for (const endpoint of ['/git/check-remote', '/git/fetch-tags', '/controls/restore-w3forge/run',
+    for (const endpoint of ['/git/check-remote', '/git/fetch-tags', '/console/source/check', '/console/source/update', '/controls/restore-w3forge/run',
       '/controls/pipeline-create-tag/run', '/dashboard/layout/reset', '/terminal/sessions', '/production-mode/enable']) {
       expect((await request(f.app).post('/api/admin' + endpoint).send({})).status, endpoint).toBe(401);
     }

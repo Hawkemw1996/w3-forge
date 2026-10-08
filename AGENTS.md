@@ -1,3 +1,7 @@
+# Shared Admin Console integration approval
+
+The owner approved `dev/v0.4.2` for the shared Admin Console integration. W3 Core stays separate. Preserve the existing app-owned auth, database, backup formats and operational scripts. Common console files are generated from `admin-console.lock.json`; edit them only in `Hawkemw1996/w3-admin-console`. Pipeline integration and the shared dependency are approved; main, tags, production packages, migrations and deployments remain owner-only.
+
 # AGENTS.md — Universal AI Agent Operating Rules
 
 This document is the **universal AI-agent governance standard** for the W3

@@ -15,6 +15,9 @@ export function makeForgeTree(opts: { allowedScripts?: string[] } = {}): string 
   fs.mkdirSync(path.join(root, 'logs', 'admin'), { recursive: true });
   fs.mkdirSync(path.join(root, 'docs', 'reports'), { recursive: true });
   fs.writeFileSync(path.join(root, 'VERSION'), '0.4.0\n');
+  // Source identity is part of a complete shared-console installation. Keep the
+  // real immutable pin even when all host paths and executables are fixtures.
+  fs.copyFileSync(path.resolve(__dirname, '../../admin-console.lock.json'), path.join(root, 'admin-console.lock.json'));
 
   const allowedScripts = opts.allowedScripts ?? [
     'w3-app-config-validate.sh',

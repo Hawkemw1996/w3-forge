@@ -29,3 +29,23 @@ node_modules/
 # Non-secret configuration example and disposable UI test output.
 !.env.example
 frontend/admin/.test-harness/
+
+# Shared Admin Console source is materialized from the immutable lock.
+.w3-admin-console/
+.console-source/
+/backend/src/console/**
+!/backend/src/console/index.ts
+!/backend/src/console/routes/
+!/backend/src/console/routes/productionReadinessRoutes.ts
+/frontend/admin/src/**
+!/frontend/admin/src/PublicApp.tsx
+!/frontend/admin/src/lib/
+!/frontend/admin/src/lib/appInfo.ts
+!/frontend/admin/src/lib/authApi.ts
+!/frontend/admin/src/lib/authSession.ts
+!/frontend/admin/src/pages/
+!/frontend/admin/src/pages/AuthPages.tsx
+!/frontend/admin/src/vite-env.d.ts
+!/frontend/admin/src/entry.tsx
+!/frontend/admin/src/forgeMain.tsx
+/frontend/shared/**

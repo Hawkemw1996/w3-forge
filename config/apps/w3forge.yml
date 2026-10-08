@@ -1,10 +1,10 @@
 # Shared BuildCost admin contract; only Forge identity and installation paths differ.
 app_id: w3forge
 name: W3 Forge
-version: 0.4.1
+version: 0.4.2
 repo:
   url: https://github.com/Hawkemw1996/w3-forge.git
-  default_dev_branch: dev/v0.4.1
+  default_dev_branch: dev/v0.4.2
   allowed_branch_pattern: ^dev/v[0-9]+\.[0-9]+\.[0-9]+$
   blocked_branches:
     - main

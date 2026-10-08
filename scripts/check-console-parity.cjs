@@ -6,7 +6,10 @@ const crypto = require('node:crypto');
 const root = path.resolve(__dirname, '..');
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).digest('hex');
 let count = 0;
-for (const file of ['frontend/admin/console-provenance.json', 'backend/console-provenance.json', 'scripts/admin/console-provenance.json']) {
+const shared = require('./admin-console.cjs').verify(root);
+// The old frontend/backend provenance files are historical snapshots. Current
+// code is verified against the single upstream commit/manifest instead.
+for (const file of ['scripts/admin/console-provenance.json']) {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
   for (const entry of manifest.files) {
     const target = path.resolve(root, entry.target);
@@ -15,4 +18,4 @@ for (const file of ['frontend/admin/console-provenance.json', 'backend/console-p
     count++;
   }
 }
-console.log('Verified ' + count + ' recorded shared-console source files (LF-normalized SHA-256).');
+console.log('Verified ' + shared.files + ' upstream shared-console files at ' + shared.revision + ' and ' + count + ' app-owned operator scripts.');

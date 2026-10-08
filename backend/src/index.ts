@@ -98,6 +98,9 @@ function main(): void {
   discoveryTimer.unref();
 
   const adminDist = path.join(FORGE_ROOT, 'frontend', 'admin', 'dist');
+  app.get('/admin/sign-in', (_req, res) => res.redirect(302, '/forge/login?next=/admin'));
+  app.get('/admin/access-denied', (_req, res) => res.redirect(302, '/forge/access-denied?area=admin'));
+  app.get('/admin/core-unavailable', (_req, res) => res.redirect(302, '/forge/core-unavailable?next=/admin'));
   if (fs.existsSync(adminDist)) {
     app.use('/admin', express.static(adminDist));
     // SPA fallback — any /admin/* not matching a file returns index.html.

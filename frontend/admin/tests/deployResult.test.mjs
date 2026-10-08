@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildHarness } from './helpers/buildHarness.mjs';
 import { installMiniDom, fire, textOf, queryAll } from './helpers/miniDom.mjs';
+import { consoleConfiguration } from './helpers/consoleConfiguration.mjs';
 
 const dom = installMiniDom();
 const React = (await import('react')).default;
@@ -12,7 +13,9 @@ const { act } = React;
 let harness, root;
 before(async () => {
   harness = await buildHarness('pipelineOverridesHarness', {
-    appRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+    appRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
+    // Older compatibility path plus the separate current durable-result suite.
+    configuration: { ...consoleConfiguration('w3forge'), durableOperations: false }
   });
 });
 const originalFetch = globalThis.fetch;

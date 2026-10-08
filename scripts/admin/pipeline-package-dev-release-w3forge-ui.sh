@@ -150,19 +150,19 @@ pp_info "output-path : $OUT_PATH (v0.5.38 canonical layout)"
 
 START=$(date +%s)
 
-# Build the tarball via `git archive` so the output reflects the tree the
-# branch points at and excludes ignored files cleanly. Output goes to a
+# Archive the committed app tree plus checksum-verified pinned console source.
+# No private repository access is needed on the deployment target. Output goes to a
 # temp file first; we rename on success so a partial tarball never appears.
 TMP_PATH="${OUT_PATH}.partial.$$"
 trap 'rm -f "$TMP_PATH" 2>/dev/null || true' EXIT
 
 # v0.5.38: inner tarball root is now the stable w3forge/ (was w3forge-${VERSION}/).
 set +e
-pp_git archive --format=tar.gz --prefix="w3forge/" --output="$TMP_PATH" HEAD
+node "$PP_DEPLOY_DIR/scripts/admin-console.cjs" archive --root "$PP_DEPLOY_DIR" --prefix "w3forge/" --output "$TMP_PATH"
 RC=$?
 set -e
 if [[ $RC -ne 0 ]]; then
-  pp_emit_failure "git archive failed (rc=$RC)" \
+  pp_emit_failure "Verified shared-console source archive failed (rc=$RC)" \
     "branch=${BRANCH}" "version=${VERSION}" "head=${HEAD}" \
     "duration_seconds=$(( $(date +%s) - START ))"
   if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi

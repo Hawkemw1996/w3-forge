@@ -3,7 +3,7 @@ import express from 'express';
 import request from 'supertest';
 import { makeForgeTree } from './setup';
 import { createCoreFixture } from './coreFixture';
-import { TerminalSessionManager, type TerminalIdentity } from '../src/admin/terminal/sessionManager';
+import { TerminalSessionManager, type TerminalIdentity } from '../src/console/terminal/sessionManager';
 import { fakeTerminal } from './terminalFixture';
 import { envelopeErrorHandler } from '../src/admin/envelope';
 process.env.W3_FORGE_ROOT = makeForgeTree();

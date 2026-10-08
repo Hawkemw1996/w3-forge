@@ -6,19 +6,19 @@ import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { readFileSync } from 'node:fs';
+import { consoleConfiguration } from './helpers/consoleConfiguration.mjs';
 
 const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: 'custom' });
 const load = file => server.ssrLoadModule('/src/' + file);
+const config = await load('lib/appConfiguration.ts');
+config.setAdminConfiguration(consoleConfiguration('w3forge', '0.4.2'));
 const { AdminLayout } = await load('components/AdminLayout.tsx');
 const { AdminAuthGate } = await load('components/AdminAuthGate.tsx');
 const { GitHubPage } = await load('pages/GitHubPage.tsx');
 const { DashboardPage } = await load('pages/DashboardPage.tsx');
-const { ProductionReadinessPage } = await load('pages/ProductionReadinessPage.tsx');
-const { SettingsPage } = await load('pages/SettingsPage.tsx');
 const { PackagesPage } = await load('pages/PackagesPage.tsx');
 const { BackupsPage } = await load('pages/BackupsPage.tsx');
 const { AccessDeniedPage, CoreUnavailablePage, LoginPage, safeNext } = await load('pages/AuthPages.tsx');
-const config = await server.ssrLoadModule('../../shared/consoleApp.ts');
 const { loadConsoleConfiguration } = await load('bootstrap.ts');
 const { adminGet, adminPost, adminPut } = await load('lib/api.ts');
 test.after(() => server.close());
@@ -48,10 +48,11 @@ const readiness = { system: { version: '0.4.1', gitCommit: '1234567', environmen
 test('the console retains every canonical navigation item and product/account footer', () => {
   const html = render(el(AdminLayout, {}, 'PAGE_CONTENT'));
   for (const text of ['W3 Forge', 'v0.4.1', 'Development build', 'Signed in as operator', 'Sign out', 'PAGE_CONTENT', 'w3-sidebar', 'md:sticky', 'sticky top-0', 'href="/forge"']) assert.ok(html.includes(text), text);
-  const labels = ['Dashboard', 'System Status', 'Logs', 'Packages', 'Backups', 'File Browser', 'GitHub / Releases', 'Terminal', 'Controls', 'Production Readiness', 'Settings'];
+  const labels = ['Dashboard', 'System Status', 'Logs', 'Packages', 'Backups', 'File Browser', 'GitHub / Releases', 'Terminal', 'Controls'];
   const indices = labels.map(label => html.indexOf('>' + label + '</span>'));
   assert.ok(indices.every((value, index) => value >= 0 && (!index || value > indices[index - 1])));
   assert.doesNotMatch(html, /Core-managed|Engineering console|role="dialog"/);
+  assert.doesNotMatch(html, /Production Readiness|>Settings<|href="\/settings"|href="\/production-readiness"/);
 });
 test('unapproved installations cannot render protected content or password fields', () => {
   const html = render(el(AdminAuthGate, {}, 'PRIVATE_CONTENT'), { auth: { ...status, authenticated: false, loginAvailable: false, user: null } });
@@ -68,7 +69,7 @@ test('missing encryption or unavailable Core uses the shared unavailable redirec
 test('all operational routes use the canonical gate and route recovery boundary', () => {
   const app = readFileSync('src/App.tsx', 'utf8');
   assert.match(app, /<AdminAuthGate>/); assert.match(app, /<RouteErrorBoundary>/);
-  for (const route of ['files', 'controls', 'terminal', 'github', 'packages', 'backups', 'production-readiness']) assert.ok(app.includes('path="/' + route + '"'));
+  for (const route of ['files', 'controls', 'terminal', 'github', 'packages', 'backups']) assert.ok(app.includes('path="/' + route + '"'));
   assert.match(app, /lazy\(\(\) => import\('\.\/pages\/TerminalPage'\)/);
 });
 test('GitHub exposes the complete release workflow, source inventory, and histories', () => {
@@ -90,25 +91,17 @@ test('dashboard failure shows error rather than fabricated operational data', ()
   const html = render(el(DashboardPage), { errors: [[['admin', 'dashboard', 'layout'], new Error('Layout unavailable')]] });
   assert.match(html, /Layout unavailable/); assert.doesNotMatch(html, /All monitored checks are clear/);
 });
-test('readiness uses canonical checks and the gated production cutover workflow', () => {
-  const html = render(el(ProductionReadinessPage), { values: [[['admin', 'production-readiness'], readiness]] });
-  for (const text of ['Production Readiness Checklist', 'Database unavailable', 'Backup Health', 'Production Cutover Record']) assert.ok(html.includes(text), text);
-  assert.match(html, /disabled=""/);
-  assert.match(readFileSync('src/pages/ProductionReadinessPage.tsx', 'utf8'), /adminPost\('\/production-cutover'/);
-});
-test('readiness failures are visible instead of approving cutover', () => {
-  const html = render(el(ProductionReadinessPage), { errors: [[['admin', 'production-readiness'], new Error('Readiness unavailable')]] });
-  assert.match(html, /Readiness unavailable/); assert.doesNotMatch(html, /All Checks Pass/);
-});
-test('settings preserve the complete canonical policy cards and reference copy', () => {
-  const html = render(el(SettingsPage), { values: [[['admin', 'files', 'roots'], { roots: [{ id: 'runtime', path: '/srv/forge', label: 'Runtime', exists: true }], forbidden: [] }]] });
-  for (const text of ['Settings', 'Internal Only', 'No Public Exposure', 'Uploads Disabled', 'Write Actions Disabled', 'Package Standard', 'Allowed File Roots', 'Backup Policy', '/srv/forge', 'localStorage']) assert.ok(html.includes(text), text);
-  assert.doesNotMatch(html, /Forge Chat|n8n|not that a service is reachable|type="password"/);
-});
-test('settings preserves the canonical allowlist loading presentation', () => {
-  const html = render(el(SettingsPage));
-  assert.match(html, /Settings/); assert.match(html, /Allowed File Roots/); assert.match(html, /Loading Allowlist/);
-});
+for (const [route, page] of [['production-readiness', 'ProductionReadinessPage'], ['settings', 'SettingsPage']]) {
+  test(route + ' is retired from routing without retaining an importable fork', () => {
+    assert.doesNotMatch(readFileSync('src/App.tsx', 'utf8'), new RegExp('path="/' + route + '"|' + page));
+    assert.throws(() => readFileSync('src/pages/' + page + '.tsx'), { code: 'ENOENT' });
+  });
+  test(route + ' is not exposed from the navigation or its error state', () => {
+    const html = render(el(AdminLayout, {}, 'CONTENT'), { route: '/' + route });
+    assert.doesNotMatch(html, new RegExp('href="/' + route + '"'));
+    assert.match(html, /CONTENT/);
+  });
+}
 test('packages retain the reference staged/installed table and mobile-card presentation', () => {
   const html = render(el(PackagesPage), { values: [[['admin', 'packages', 'staged'], packages], [['admin', 'packages', 'installed'], packages]] });
   for (const text of ['W3 Forge', 'w3forge-v0.4.1.tar.gz', 'Staged Packages', 'Installed Packages', 'table-dark', 'mobile-cards']) assert.ok(html.includes(text), text);
@@ -140,15 +133,15 @@ test('app configuration owns identity, paths and package validation without chan
   assert.equal(config.consoleText('W3 BuildCost /opt/w3buildcost-backups w3buildcost.tar.gz buildcost:admin'), 'W3 Forge /opt/backups/w3forge w3forge.tar.gz forge:admin');
   assert.equal(new RegExp(config.consolePattern('^w3buildcost-v\\d+\\.\\d+\\.\\d+\\.tar\\.gz$')).test('w3forge-v0.4.1.tar.gz'), true);
   assert.equal(new RegExp(config.consolePattern('^w3buildcost-v\\d+\\.\\d+\\.\\d+\\.tar\\.gz$')).test('w3buildcost-v0.4.1.tar.gz'), false);
-  assert.throws(() => config.configureConsole({}), /incomplete/);
+  assert.throws(() => config.setAdminConfiguration({}), /incomplete/i);
 });
 test('configuration bootstrap blocks operational rendering for a failed or malformed response', async t => {
   t.mock.method(globalThis, 'fetch', async () => new Response(JSON.stringify({ success: false }), { status: 500 }));
   await assert.rejects(loadConsoleConfiguration());
   globalThis.fetch.mock.mockImplementation(async () => new Response(JSON.stringify({ success: true, data: {} }), { status: 200 }));
-  await assert.rejects(loadConsoleConfiguration(), /incomplete/);
+  await assert.rejects(loadConsoleConfiguration(), /incomplete/i);
   globalThis.fetch.mock.mockImplementation(async () => new Response('{}', { status: 401 }));
-  await loadConsoleConfiguration();
+  await assert.rejects(loadConsoleConfiguration(), { status: 401 });
 });
 test('admin transport preserves structured refusal details and same-origin mutation contracts', async t => {
   const calls = [];
