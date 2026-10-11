@@ -1,6 +1,7 @@
 ## v0.4.2: Shared Admin Console source (unreleased)
 
-- Consume the private `Hawkemw1996/w3-admin-console` at the same immutable pin as BuildCost and Books. Do not publish generated private implementation in this public repository.
+- Upgrade the private `Hawkemw1996/w3-admin-console` dependency to v0.2.0 at immutable commit `af16fb7535a0e848eea35e5f5e2e2b2e8a90a5fa`, retaining API contract 1 and verifying all 118 upstream files. Do not publish generated private implementation in this public repository.
+- Adopt shared system-status diagnostics, PostgreSQL version reporting, Recent Errors filtering and full log downloads.
 - Preserve the Forge product/authentication entry point and app-owned Core session, database, service, configuration and operator scripts. Bind the canonical script inventory to Forge's `scripts/admin` folder.
 - Remove Settings and Production Readiness frontend pages; retain the legacy readiness API and audit history.
 - Preserve Forge's accessibility, fail-closed policy, Git-origin binding, safe subprocess environment, filesystem containment and terminal protections in the common implementation.

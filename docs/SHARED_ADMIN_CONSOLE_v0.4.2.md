@@ -4,9 +4,9 @@ This development integration is based on `5a82e49f3048650cb71fc2fb372827ac3c5bd7
 
 ## Source contract
 
-- **Repository:** [W3 Admin Console](https://github.com/Hawkemw1996/w3-admin-console), private, approved `dev/v0.1.0`.
-- **Pin:** `104e6494ab388eeae8f46593f2695c02d2e303eb`, version 0.1.0, API contract 1. The authoritative checksum and destination mapping are in `admin-console.lock.json`.
-- **Common implementation:** 113 files, consisting of 44 backend, 57 frontend and 12 shared-UI files. All three apps consume the same exact bytes, not identity-normalized forks.
+- **Repository:** [W3 Admin Console](https://github.com/Hawkemw1996/w3-admin-console), private, approved `dev/v0.2.0`.
+- **Pin:** `af16fb7535a0e848eea35e5f5e2e2b2e8a90a5fa`, version 0.2.0, API contract 1. The authoritative checksum and destination mapping are in `admin-console.lock.json`.
+- **Common implementation:** 118 files, consisting of 48 backend, 58 frontend and 12 shared-UI files. Forge consumes the exact upstream bytes; each app adopts its own reviewed immutable pin.
 - **App boundary:** `backend/src/adminConsoleAdapter.ts` supplies product identity, current installation paths, terminal authorization, database and optional backup bindings. Existing auth and same-origin/network guards remain in the app composition.
 - **Navigation:** Dashboard, System Status, Logs, Packages, Backups, File Browser, GitHub / Releases, Terminal and Controls. Settings and Production Readiness frontend pages/routes are removed. Compatibility backend endpoints and historical records are retained.
 

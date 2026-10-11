@@ -98,8 +98,12 @@ beforeAll(async () => {
     (await import('../src/console/routes/systemRoutes')).buildAdminSystemRoutes
   ];
   for (const factory of factories) app.use('/api/admin', factory());
-  app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) =>
-    res.status(500).json({ success: false, error: { message: error.message } }));
+  // Preserve route error statuses, as the production shared router does.
+  const consoleErrors: express.ErrorRequestHandler = (error, _req, res, _next) => {
+    const status = Number.isInteger(error?.status) && error.status >= 400 && error.status <= 599 ? error.status : 500;
+    res.status(status).json({ success: false, error: { message: error.message } });
+  };
+  app.use(consoleErrors);
 });
 
 beforeEach(() => {

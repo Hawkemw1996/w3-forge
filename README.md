@@ -8,7 +8,7 @@ Forge’s engineering agents stay inside approved development branches. The shar
 
 ## Current Version
 
-v0.4.1 — complete shared BuildCost admin console and Core app access (unreleased, `dev/v0.4.1`)
+v0.4.2 — shared Admin Console v0.2.0 and Core app access (unreleased, `dev/v0.4.2`)
 
 
 See [Core connection and console parity](docs/CORE_CONNECTION_v0.4.1.md) for required configuration and owner pairing. Sign-in now requires Core v0.12.16 and a Forge app admin assignment.
