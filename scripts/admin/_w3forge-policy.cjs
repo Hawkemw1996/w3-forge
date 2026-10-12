@@ -59,7 +59,7 @@ function configuration(config, script, root, input = process.env) {
   variables.W3LOG_ROOT = variables.W3_LOG_ROOT;
   variables.W3_BACKUP_DIR = variables.W3_BACKUPS_DIR;
   for (const [key, sub, configured] of [['W3_INSTALLED_DIR', 'installed', paths.installed_packages || paths.packages_installed], ['W3_DEV_UPDATE_DIR', 'dev'], ['W3_MAIN_UPDATE_DIR', 'main']]) variables[key] = ownedPath(input[key] || configured || path.join(variables.W3_UPDATE_DIR, sub), key);
-  variables.W3_SERVICE_NAME = input.W3_SERVICE_NAME || config.service?.name || 'w3forge-admin.service';
+  variables.W3_SERVICE_NAME = input.W3_SERVICE_NAME || config.service?.name || 'w3forge.service';
   if (!/^w3forge(?:-admin)?(?:\.service)?$/.test(variables.W3_SERVICE_NAME)) throw new Error('Refusing another app service.');
   variables.W3_SERVICE_PORT = String(input.W3_SERVICE_PORT || config.service?.port || config.admin_console?.listen_port || 8765);
   if (!/^\d{1,5}$/.test(variables.W3_SERVICE_PORT) || Number(variables.W3_SERVICE_PORT) < 1 || Number(variables.W3_SERVICE_PORT) > 65535) throw new Error('Invalid service port.');

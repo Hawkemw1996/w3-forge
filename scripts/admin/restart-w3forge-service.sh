@@ -41,7 +41,7 @@ fi
 if declare -F w3log_init >/dev/null 2>&1; then w3log_init "service"; fi
 
 # --- Config ----------------------------------------------------------------
-SERVICE_NAME="${W3_SERVICE_NAME:-w3forge-admin.service}"
+SERVICE_NAME="${W3_SERVICE_NAME:-w3forge.service}"
 HEALTH_URL="${W3_HEALTH_URL:-http://localhost:8765/health}"
 VERSION_URL="${W3_VERSION_URL:-http://localhost:8765/version}"
 HEALTH_TIMEOUT_SECONDS="${W3_HEALTH_TIMEOUT:-30}"

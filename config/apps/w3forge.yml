@@ -19,7 +19,7 @@ paths:
   installed_packages: /opt/w3forge-update-packages/installed
   workspaces: /opt/w3forge-deploy
 service:
-  name: w3forge-admin.service
+  name: w3forge.service
   port: 8765
   health_url: http://127.0.0.1:8765/health
   version_url: http://127.0.0.1:8765/version

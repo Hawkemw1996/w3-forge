@@ -10,6 +10,8 @@ Forge’s engineering agents stay inside approved development branches. The shar
 
 v0.4.2 — shared Admin Console v0.2.0 and Core app access (unreleased, `dev/v0.4.2`)
 
+The standard unit is `w3forge.service`, using the owner-approved root operational model. Existing `w3forge-admin.service` installations require the [service transition](docs/SERVICE_STANDARD_v0.4.2.md).
+
 
 See [Core connection and console parity](docs/CORE_CONNECTION_v0.4.1.md) for required configuration and owner pairing. Sign-in now requires Core v0.12.16 and a Forge app admin assignment.
 

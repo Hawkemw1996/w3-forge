@@ -35,7 +35,8 @@ beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'forge-canonical-'));
   for (const [envKey, relative] of Object.entries({
     W3_APP_DIR: 'runtime', W3_DEPLOY_DIR: 'deploy', W3_SCRIPTS_DIR: 'scripts',
-    W3_LOG_ROOT: 'logs', W3_BACKUPS_DIR: 'backups', W3_UPDATE_DIR: 'packages',
+    W3_LOG_ROOT: 'logs', W3_BACKUPS_DIR: 'backups', W3_BACKUP_DIR: 'backups', W3_UPDATE_DIR: 'packages',
+    W3_DEV_UPDATE_DIR: 'packages/dev', W3_MAIN_UPDATE_DIR: 'packages/main',
     W3_INSTALLED_DIR: 'packages/installed', W3_DATA_DIR: 'data', ADMIN_LOG_DIR: 'logs/admin'
   })) {
     locations[envKey] = path.join(root, relative);
@@ -72,7 +73,7 @@ beforeAll(async () => {
     paths: { runtime: locations.W3_APP_DIR, deploy: locations.W3_DEPLOY_DIR, scripts: locations.W3_SCRIPTS_DIR,
       logs: locations.W3_LOG_ROOT, backups: locations.W3_BACKUPS_DIR, update_packages: locations.W3_UPDATE_DIR,
       installed_packages: locations.W3_INSTALLED_DIR },
-    service: { name: 'w3forge-admin.service', port: 8765, health_url: 'http://127.0.0.1:8765/health', version_url: 'http://127.0.0.1:8765/version' },
+    service: { name: 'w3forge.service', port: 8765, health_url: 'http://127.0.0.1:8765/health', version_url: 'http://127.0.0.1:8765/version' },
     authority: { may_deploy: true, may_package: true, may_tag_release: false, may_modify_production_data: false, requires_user_release_gate: true },
     admin_console: { role: 'master', preserve_ui: true, preserve_github_validation_tab: true, preserve_controls_tab: true, preserve_file_browser_tab: true },
     controls: { mode: 'legacy-compatible', registry_migration_status: 'controls_registry_foundation', app_id: 'w3forge', allow_legacy_w3forge_controls: true },
@@ -227,7 +228,7 @@ describe('canonical Forge console contract and target isolation', () => {
   it('never invents database health or machine capacity when measurements fail', async () => {
     const data = (await request(app).get('/api/admin/system/status').expect(200)).body.data;
     expect(data.status).toBe('degraded');
-    expect(data.service).toBe('w3forge-admin.service');
+    expect(data.service).toBe('w3forge.service');
     expect(data.diskUsage.rootVolume.available).toBe(false);
     expect(data.memory.process.rssBytes).toBeGreaterThan(0);
   });
@@ -331,7 +332,7 @@ describe('canonical Forge console contract and target isolation', () => {
     expect(env.W3_REPO_URL).toBe('https://github.com/Hawkemw1996/w3-forge');
     expect(env.W3_SCRIPTS_DIR).toBe(locations.W3_SCRIPTS_DIR);
     expect(env.W3LOG_ROOT).toBe(locations.W3_LOG_ROOT);
-    expect(env.W3_SERVICE_NAME).toBe('w3forge-admin.service');
+    expect(env.W3_SERVICE_NAME).toBe('w3forge.service');
     expect(env).not.toHaveProperty('CORE_APP_CLIENT_SECRET');
     expect(Object.keys(env).some(key => /PASSWORD|TOKEN|SECRET/.test(key))).toBe(false);
   });

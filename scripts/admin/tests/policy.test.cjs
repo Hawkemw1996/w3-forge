@@ -9,7 +9,7 @@ const scripts = path.resolve(__dirname, '..');
 const root = path.resolve(scripts, '../..');
 const expected = 'hawkemw1996/w3-forge';
 const ownUrl = 'https://github.com/Hawkemw1996/w3-forge.git';
-const config = () => ({ app_id: 'w3forge', repo: { url: ownUrl }, controls: { allow_legacy_w3forge_controls: true }, github_workflow: { allow_release_pipeline: true }, authority: { may_tag_release: false, may_modify_production_data: false }, service: { name: 'w3forge-admin.service', port: 8765 } });
+const config = () => ({ app_id: 'w3forge', repo: { url: ownUrl }, controls: { allow_legacy_w3forge_controls: true }, github_workflow: { allow_release_pipeline: true }, authority: { may_tag_release: false, may_modify_production_data: false }, service: { name: 'w3forge.service', port: 8765 } });
 function bashPath() {
   if (process.env.W3_TEST_BASH) return process.env.W3_TEST_BASH;
   if (process.platform === 'win32') return path.resolve(path.dirname(process.execPath), '../../native/git/usr/bin/sh.exe');
@@ -82,7 +82,7 @@ test('entrypoints load policy first, installations include guards/migrations, an
 });
 test('runtime layout preflight refuses the currently mismatched checkout service before mutation', () => {
   const body = 'source "$W3_TEST_POLICY"\nsystemctl() { case "$*" in *WorkingDirectory*) echo /tmp/forge-checkout;; *ExecStart*) echo /tmp/forge-checkout/backend/dist/index.js;; esac; }\nw3forge_require_runtime_layout\n';
-  const result = spawnSync(bashPath(), ['-s'], { input: body, encoding: 'utf8', windowsHide: true, env: { ...process.env, W3_TEST_POLICY: path.join(scripts, '_w3forge-policy.sh').replaceAll('\\', '/'), W3_APP_DIR: '/tmp/forge-runtime', W3_SERVICE_NAME: 'w3forge-admin.service' } });
+  const result = spawnSync(bashPath(), ['-s'], { input: body, encoding: 'utf8', windowsHide: true, env: { ...process.env, W3_TEST_POLICY: path.join(scripts, '_w3forge-policy.sh').replaceAll('\\', '/'), W3_APP_DIR: '/tmp/forge-runtime', W3_SERVICE_NAME: 'w3forge.service' } });
   assert.equal(result.status, 3, result.stderr);
   assert.match(result.stderr, /Service runtime layout differs/);
 });

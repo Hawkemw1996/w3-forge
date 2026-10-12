@@ -63,7 +63,7 @@ export const env = {
   port: Number(process.env.ADMIN_LISTEN_PORT || process.env.PORT || 8765),
   appId: 'w3forge',
   appName: process.env.APP_NAME || 'W3 Forge',
-  serviceName: 'w3forge-admin.service',
+  serviceName: 'w3forge.service',
 
   appVersion: resolveAppVersion(),
 

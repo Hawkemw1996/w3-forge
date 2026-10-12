@@ -1,5 +1,7 @@
 # W3 Forge common admin console — implementation and owner activation
 
+The historical activation commands below describe the former `w3forge-admin.service` installation. For v0.4.2 service naming and the approved root operational model, use [SERVICE_STANDARD_v0.4.2.md](SERVICE_STANDARD_v0.4.2.md) instead.
+
 Status: development implementation prepared; no live deployment, service privilege change, database provisioning, migration, backup, restore, tag or package operation has been performed by this work.
 
 ## Common implementation and configuration boundary

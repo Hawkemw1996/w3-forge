@@ -15,6 +15,8 @@ process.env.W3_FORGE_ROOT = root;
 process.env.W3_FORGE_ACTIVE_APP = 'w3forge';
 process.env.ADMIN_ALLOWED_IPS = '*';
 process.env.W3_BACKUPS_DIR = path.join(root, 'backups');
+// The pipeline exports this higher-priority alias; keep it inside the fixture too.
+process.env.W3_BACKUP_DIR = process.env.W3_BACKUPS_DIR;
 fs.mkdirSync(process.env.W3_BACKUPS_DIR, { recursive: true });
 fs.writeFileSync(path.join(process.env.W3_BACKUPS_DIR, 'w3forge-backup.tar.gz'), 'test-backup');
 let buildRoutes: typeof import('../src/console/routes/productionReadinessRoutes').buildProductionReadinessRoutes;

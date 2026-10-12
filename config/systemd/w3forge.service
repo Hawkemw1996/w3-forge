@@ -5,14 +5,17 @@ After=network-online.target
 
 [Service]
 Type=simple
-# Stage and build /opt/w3forge before installing this unit; see docs/ADMIN_CONSOLE_PARITY.md.
-User=forgeadmin
-Group=forgeadmin
+# Owner-approved reference privilege model: authenticated Forge admins can open
+# a root terminal and run confirmed host operations. No unrestricted sudo grant.
+# Stage and build /opt/w3forge before installing; see docs/SERVICE_STANDARD_v0.4.2.md.
+User=root
+Group=root
 WorkingDirectory=/opt/w3forge
 Environment=W3_FORGE_ROOT=/opt/w3forge
 Environment=W3_FORGE_ACTIVE_APP=w3forge
 Environment=NODE_ENV=production
-# Required, root-owned 0600 file; systemd reads it before dropping to forgeadmin.
+Environment=ADMIN_TERMINAL_ENABLED=true
+# Required, root-owned 0600 file, read by systemd.
 EnvironmentFile=/etc/w3forge/admin.env
 ExecStart=/usr/bin/bash /opt/w3forge/scripts/w3-admin-console.sh --app w3forge --foreground
 Restart=on-failure

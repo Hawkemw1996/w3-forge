@@ -1,5 +1,8 @@
 ## v0.4.2: Shared Admin Console source (unreleased)
 
+- Standardize the application, shared UI bindings, systemd template and operator scripts on `w3forge.service`. The owner-approved service template runs as root with terminal access enabled, matching the reference operational privilege model while retaining Core authorization and per-action safeguards.
+- Isolate test backup/package paths from pipeline environment overrides; preserve all existing assertions.
+- See `docs/SERVICE_STANDARD_v0.4.2.md` for the host transition and rollback procedure. Renaming a template does not rename an installed service.
 - Upgrade the private `Hawkemw1996/w3-admin-console` dependency to v0.2.0 at immutable commit `af16fb7535a0e848eea35e5f5e2e2b2e8a90a5fa`, retaining API contract 1 and verifying all 118 upstream files. Do not publish generated private implementation in this public repository.
 - Adopt shared system-status diagnostics, PostgreSQL version reporting, Recent Errors filtering and full log downloads.
 - Preserve the Forge product/authentication entry point and app-owned Core session, database, service, configuration and operator scripts. Bind the canonical script inventory to Forge's `scripts/admin` folder.

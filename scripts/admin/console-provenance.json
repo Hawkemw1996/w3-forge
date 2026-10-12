@@ -42,8 +42,8 @@
       "source": "scripts/deploy-w3buildcost-noninteractive.sh",
       "target": "scripts/admin/deploy-w3forge-noninteractive.sh",
       "sourceSha256": "5bbe677e16ed6d7bcc93cbad7c0c35643ee6fc0a952df890373d18c231c32991",
-      "sha256": "064f842858ca459191e743dd38d8983ade7d5746793f1e0b1917e9f48b9763b4",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "2feecf36861238740c7ef6aa095b404a105222a7db1ffd4a3fe77e6124c73b10",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/deploy-w3buildcost-ui.sh",
@@ -56,15 +56,15 @@
       "source": "scripts/deploy-w3buildcost.sh",
       "target": "scripts/admin/deploy-w3forge.sh",
       "sourceSha256": "6e9f2043ac0ee96247c461a89b6e527447d2b3d0e867e162be4f209bc8591c61",
-      "sha256": "00f5002ba655c656cb81d59a9181365daf6655a14da0cc78f6324748a4661324",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "67d5a3dda7fde06dd403cf93724315e978acdaa5840498ec0860c9cfbf252561",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/doctor-w3buildcost.sh",
       "target": "scripts/admin/doctor-w3forge.sh",
       "sourceSha256": "02c47ac844452519c8c1c7b93d36dcee79cb1828f7c632abccf75e03873570f5",
-      "sha256": "39b03aace3078290afa67e36fe4076bcceed488a3f2756c697170fcf95f443ae",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "a832b20a662cefb729825fd4be32a14a3e09b8a7be72775e23108384fa5e9a8c",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/install-server-scripts.sh",
@@ -252,8 +252,8 @@
       "source": "scripts/restart-w3buildcost-service.sh",
       "target": "scripts/admin/restart-w3forge-service.sh",
       "sourceSha256": "1abdaad7f2c675ad249e17c2993c67f08d163eb86901fb9c34b7867dc6029e56",
-      "sha256": "0aafe8f4a3683c9ce4b6f0751c7cad2db023eae9deb58945f91c46aa81578980",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "17dc9f99e72491f4b79243c1ffedfa2266631a6be36b69e1cd35d2291d9d04b6",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/restore-test-w3buildcost-ui.sh",
@@ -280,8 +280,8 @@
       "source": "scripts/restore-w3buildcost.sh",
       "target": "scripts/admin/restore-w3forge.sh",
       "sourceSha256": "e412bacdb2d0112779c3a8ffb629723710b7b5426cb06c29145ccda726b6a3e6",
-      "sha256": "4c79facaa32450ed046c2d882508e6e8dda7ff5ec8211531b021c6663d153f85",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "8e4b391ecee220b8f176b0586f8f7339fcb6490849b7e2d13d13dba8460617ea",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/review-w3buildcost-branch.sh",
@@ -294,22 +294,22 @@
       "source": "scripts/rollback-w3buildcost-stable.sh",
       "target": "scripts/admin/rollback-w3forge-stable.sh",
       "sourceSha256": "47802eca33529d9a2e0cc82cfd6271765b8376ec3a41611e63a91a15f0fedfee",
-      "sha256": "92c81b48adb463cb4c9e022b714ae698782b3dd8adcdac2279d92fccacee71ca",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "1649bb7ec4b0c3e41703a086a6f4527d8f35db87caaaf0bc5f6938e1a2b01845",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/smoke-test-w3buildcost.sh",
       "target": "scripts/admin/smoke-test-w3forge.sh",
       "sourceSha256": "d83a104375f03d20e530f0337cc87c1571d8991f04d9a7b4c196baa4aee4788c",
-      "sha256": "f466838da1868728659149c3d9b3274f828bf9945483149397edcf554c7f3eca",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "2ff4060f8e34ad5ec9f4450ddbca317adfe13cd0babd54ec8ff214f992987882",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/status-w3buildcost.sh",
       "target": "scripts/admin/status-w3forge.sh",
       "sourceSha256": "6729c87321d727838fa837b86584d1d3b9c917a64fe2c9c19fb2fa111bff30ff",
-      "sha256": "2e93fceb83c42941aec87d02773f787c8a6bd6298b9ff413eda9f7e6394298d4",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "385f18f837ee2cc6ab7f91b7cbe631f814117e6a7fde1b7f00269ca86eb5a5dd",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.2: standardize the own-app service target as w3forge.service."
     },
     {
       "source": "scripts/verify-w3buildcost-db.sh",

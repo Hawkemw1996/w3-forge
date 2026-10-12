@@ -67,7 +67,7 @@ if declare -F w3log_init >/dev/null 2>&1; then w3log_init "release-candidate"; f
 
 # --- Config ----------------------------------------------------------------
 BASE_URL="${W3_BASE_URL:-http://localhost:8765}"
-SERVICE_NAME="${W3_SERVICE_NAME:-w3forge-admin.service}"
+SERVICE_NAME="${W3_SERVICE_NAME:-w3forge.service}"
 TIMEOUT="${W3_CURL_TIMEOUT:-5}"
 EXPECT_VERSION=""
 EXPECT_BUCKETS=""

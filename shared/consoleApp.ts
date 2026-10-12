@@ -8,7 +8,7 @@ export interface ConsoleAppConfig {
 }
 export const consoleApp: ConsoleAppConfig = {
   id: 'w3forge', name: 'W3 Forge', permissionPrefix: 'forge', productBase: '/forge',
-  repositoryUrl: null, packageStem: 'w3forge', serviceName: 'w3forge-admin.service', databaseName: 'w3forge',
+  repositoryUrl: null, packageStem: 'w3forge', serviceName: 'w3forge.service', databaseName: 'w3forge',
   paths: { runtime: '/opt/w3forge', deploy: '/opt/w3forge-deploy', packages: '/opt/w3forge-update-packages',
     backups: '/opt/backups/w3forge', logs: '/opt/logs/w3forge', scripts: '/opt/w3forge-scripts', restoreTest: '/opt/w3forge-restore-test' },
   legacyBackupCutoff: null, terminalTarget: 'host'
