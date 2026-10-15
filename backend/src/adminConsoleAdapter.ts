@@ -6,10 +6,19 @@ export { env, repoRoot } from './config/env';
 export { pool } from './db/pool';
 export { AppError } from './types/api';
 const base='/opt/w3forge',packages=process.env.W3_UPDATE_DIR?.trim()||base+'-update-packages';
+// Optional non-secret host bindings; enabled only after explicit owner provisioning.
+// Object spread remains compatible with the current pin until reviewed adoption.
+const testHostBindings=process.env.W3_TEST_INSTALLATION_ID?{testDevelopment:{
+  buildUser:process.env.W3_TEST_BUILD_USER||'',productionUser:process.env.W3_TEST_PRODUCTION_USER||'',
+  snapshotRoot:process.env.W3_TEST_SNAPSHOT_ROOT||'',cacheRoot:process.env.W3_TEST_CACHE_ROOT||'',
+  installationId:process.env.W3_TEST_INSTALLATION_ID,npmCli:process.env.W3_TEST_NPM_CLI||'',
+  cacheEpoch:process.env.W3_TEST_CACHE_EPOCH||'1'
+}}:{};
 export const installation:ConsoleInstallation={
+  ...testHostBindings,
   consumer:'w3forge',
   id:'w3forge',name:env.appName,basePath:'/forge',permissionPrefix:'forge',adminPermission:'forge:admin',
-  repository:'https://github.com/Hawkemw1996/w3-forge.git',branch:'dev/v0.4.2',
+  repository:'https://github.com/Hawkemw1996/w3-forge.git',branch:'dev/v0.4.3',
   service:env.serviceName,port:env.port,databaseName:env.databaseName,envFile:process.env.W3_ENV_FILE||path.join(repoRoot,'.env'),
   gitKeyFile:process.env.APP_GIT_SSH_KEY_FILE||'',timeZone:process.env.APP_TIME_ZONE||'America/Chicago',
   terminalTarget:'host',durableOperations:true,legacyDeploymentResults:'/var/log/w3forge',

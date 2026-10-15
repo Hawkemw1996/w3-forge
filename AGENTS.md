@@ -1,3 +1,11 @@
+# Test Dev Branch integration approval (v0.4.3)
+
+The owner approved full Shared Admin Console v0.3.0 worker/progress/cache and
+consumer wrapper integration on 2026-10-14 and selected dev/v0.4.3.
+Preserve every existing test and app policy check. Public host/bootstrap helpers
+are separately reviewed operator code; never execute development code as root.
+No automatic console pin update, production data/configuration edit or deployment.
+
 # Shared Admin Console integration approval
 
 The owner approved `dev/v0.4.2` for the shared Admin Console integration. W3 Core stays separate. Preserve the existing app-owned auth, database, backup formats and operational scripts. Common console files are generated from `admin-console.lock.json`; edit them only in `Hawkemw1996/w3-admin-console`. Pipeline integration and the shared dependency are approved; main, tags, production packages, migrations and deployments remain owner-only.

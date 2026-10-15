@@ -1,5 +1,9 @@
 ## v0.4.2: Shared Admin Console source (unreleased)
 
+## 0.4.3
+
+- Prepare isolated Test Dev Branch execution through the common v0.3.0 worker, installation-scoped npm cache and measured progress. Console pin adoption and host provisioning remain owner-reviewed.
+
 - Standardize the application, shared UI bindings, systemd template and operator scripts on `w3forge.service`. The owner-approved service template runs as root with terminal access enabled, matching the reference operational privilege model while retaining Core authorization and per-action safeguards.
 - Isolate test backup/package paths from pipeline environment overrides; preserve all existing assertions.
 - See `docs/SERVICE_STANDARD_v0.4.2.md` for the host transition and rollback procedure. Renaming a template does not rename an installed service.

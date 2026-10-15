@@ -7,16 +7,10 @@ w3forge_guard_script "${BASH_SOURCE[0]##*/}" "$@"
 #
 # W3 Core v0.5.29 — Release Pipeline UI wrapper: Test Dev Branch.
 #
-# MEDIUM-risk. Runs the project's test + lint commands against the
-# currently checked-out dev branch in /opt/w3forge-deploy. Writes
-# node_modules under the deploy checkout. Never touches /opt/w3forge
-# (runtime), the database, or the systemd service.
-#
-# Steps (sequential, fail-fast):
-#   1. Verify current branch matches dev/vX.Y.Z; refuse main.
-#   2. `npm ci` (or `npm install` if no lockfile) — backend and frontend.
-#   3. `npm run lint` (root, ignored if absent).
-#   4. `npm test` (root) with CI=1.
+# MEDIUM-risk. Tests an exact, credential-free development snapshot as a
+# separate build account. Uses one deterministic workspace install and a
+# persistent installation-scoped npm content cache. Existing policy, branch,
+# confirmation and logging checks run before the trusted supervisor.
 #
 # Argv:
 #   --yes --request-id <id> [--source ui|api|cli]
@@ -75,77 +69,11 @@ pp_info "request-id : $PP_REQUEST_ID"
 pp_info "source     : $PP_SOURCE_TAG"
 pp_info "branch     : $BRANCH @ $HEAD"
 
-START=$(date +%s)
-INSTALL_OK="false"; LINT_OK="false"; TEST_OK="false"
-
-run_install() {
-  local dir="$1"
-  [[ -f "$dir/package.json" ]] || { pp_info "no package.json in $dir; skipping install"; return 0; }
-  pp_info "installing dependencies in $dir"
-  if [[ -f "$dir/package-lock.json" ]]; then
-    ( cd "$dir" && CI=1 timeout 600s npm ci --no-audit --no-fund </dev/null )
-  else
-    ( cd "$dir" && CI=1 timeout 600s npm install --no-audit --no-fund </dev/null )
-  fi
-}
-
-# --- install (root + backend + frontend) ---
+# The separately installed supervisor verifies source, drops privilege and delegates
+# to the manifest-verified common worker. No install/test runs in this checkout.
 set +e
-run_install "$PP_DEPLOY_DIR"
-INSTALL_RC=$?
+/usr/bin/node "$SCRIPT_DIR/test-dev-host.cjs" w3forge "$PP_REQUEST_ID"
+TEST_HOST_RC=$?
 set -e
-if [[ $INSTALL_RC -eq 0 ]]; then INSTALL_OK="true"; else
-  pp_warn "install step failed (rc=$INSTALL_RC)"
-  pp_emit_failure "npm install failed" "branch=${BRANCH}" "head=${HEAD}" \
-    "install_ok=false" "lint_ok=false" "test_ok=false" \
-    "duration_seconds=$(( $(date +%s) - START ))"
-  if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi
-  exit 1
-fi
-
-# --- lint (root; allowed to be missing) ---
-if [[ -f "$PP_DEPLOY_DIR/package.json" ]] && grep -q '"lint"' "$PP_DEPLOY_DIR/package.json" 2>/dev/null; then
-  set +e
-  ( cd "$PP_DEPLOY_DIR" && CI=1 timeout 300s npm run lint --silent </dev/null )
-  LINT_RC=$?
-  set -e
-  if [[ $LINT_RC -eq 0 ]]; then LINT_OK="true"; else
-    pp_warn "lint failed (rc=$LINT_RC)"
-    pp_emit_failure "npm run lint failed" "branch=${BRANCH}" "head=${HEAD}" \
-      "install_ok=true" "lint_ok=false" "test_ok=false" \
-      "duration_seconds=$(( $(date +%s) - START ))"
-    if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi
-    exit 1
-  fi
-else
-  pp_info "no lint script; skipping"
-  LINT_OK="true"
-fi
-
-# --- test (root) ---
-if [[ -f "$PP_DEPLOY_DIR/package.json" ]] && grep -q '"test"' "$PP_DEPLOY_DIR/package.json" 2>/dev/null; then
-  set +e
-  ( cd "$PP_DEPLOY_DIR" && CI=1 timeout 600s npm test --silent </dev/null )
-  TEST_RC=$?
-  set -e
-  if [[ $TEST_RC -eq 0 ]]; then TEST_OK="true"; else
-    pp_warn "tests failed (rc=$TEST_RC)"
-    pp_emit_failure "npm test failed" "branch=${BRANCH}" "head=${HEAD}" \
-      "install_ok=true" "lint_ok=true" "test_ok=false" \
-      "duration_seconds=$(( $(date +%s) - START ))"
-    if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi
-    exit 1
-  fi
-else
-  pp_info "no test script; skipping"
-  TEST_OK="true"
-fi
-
-DURATION=$(( $(date +%s) - START ))
-pp_ok "test pass: install/lint/test all green (${DURATION}s)"
-pp_emit_success "branch=${BRANCH}" "head=${HEAD}" \
-  "install_ok=${INSTALL_OK}" "lint_ok=${LINT_OK}" "test_ok=${TEST_OK}" \
-  "duration_seconds=${DURATION}"
-
 if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi
-exit 0
+exit "$TEST_HOST_RC"

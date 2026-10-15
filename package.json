@@ -1,14 +1,14 @@
 {
   "name": "w3forge",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "workspaces": [
     "backend",
     "frontend/admin"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm run test --workspaces --if-present && node --test scripts/admin/tests/*.test.cjs && npm run parity:check && node --test scripts/test-admin-console.cjs",
+    "test": "npm run test --workspaces --if-present && node --test scripts/admin/tests/*.test.cjs && npm run parity:check && node --test scripts/test-admin-console.cjs && node --test scripts/test-test-dev-integration.cjs",
     "typecheck": "npm run typecheck --workspace frontend/admin && npm run build --workspace backend",
     "db:migrate": "npm run db:migrate --workspace backend",
     "start": "node backend/dist/index.js",

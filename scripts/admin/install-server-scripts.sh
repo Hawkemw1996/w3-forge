@@ -262,6 +262,10 @@ install -m 755 "$SOURCE_DIR/pipeline-fetch-tags-w3forge-ui.sh"       "$TARGET_DI
 install -m 755 "$SOURCE_DIR/pipeline-pull-latest-w3forge-ui.sh"      "$TARGET_DIR/pipeline-pull-latest-w3forge-ui.sh"
 install -m 755 "$SOURCE_DIR/pipeline-checkout-dev-branch-w3forge-ui.sh" "$TARGET_DIR/pipeline-checkout-dev-branch-w3forge-ui.sh"
 install -m 755 "$SOURCE_DIR/pipeline-push-dev-branch-w3forge-ui.sh"  "$TARGET_DIR/pipeline-push-dev-branch-w3forge-ui.sh"
+# Separately reviewed trusted test supervisor; a source pin does not update these.
+install -m 644 -o root -g root "$SOURCE_DIR/../admin-console.cjs" "$TARGET_DIR/admin-console.cjs"
+install -m 644 -o root -g root "$SOURCE_DIR/test-dev-host.cjs" "$TARGET_DIR/test-dev-host.cjs"
+install -m 644 -o root -g root "$SOURCE_DIR/test-dev-snapshot.cjs" "$TARGET_DIR/test-dev-snapshot.cjs"
 install -m 755 "$SOURCE_DIR/pipeline-test-dev-branch-w3forge-ui.sh"  "$TARGET_DIR/pipeline-test-dev-branch-w3forge-ui.sh"
 install -m 755 "$SOURCE_DIR/pipeline-package-dev-release-w3forge-ui.sh" "$TARGET_DIR/pipeline-package-dev-release-w3forge-ui.sh"
 install -m 755 "$SOURCE_DIR/pipeline-verify-dev-package-w3forge-ui.sh"  "$TARGET_DIR/pipeline-verify-dev-package-w3forge-ui.sh"
