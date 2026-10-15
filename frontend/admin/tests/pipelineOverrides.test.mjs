@@ -3,11 +3,15 @@
 import test, { before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildHarness } from './helpers/buildHarness.mjs';
 import { installMiniDom, fire, textOf, query, queryAll } from './helpers/miniDom.mjs';
 
 const adminRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// Current and preview pins have different optional Test Dev protocol versions.
+const [consoleMajor, consoleMinor] = JSON.parse(readFileSync(path.resolve(adminRoot, '../../admin-console.lock.json'), 'utf8')).version.split('.').map(Number);
+const testProgressEnabled = consoleMajor > 0 || consoleMinor >= 3;
 const dom = installMiniDom();
 // Supply the native input capabilities needed by React's real change-event plugin.
 // Keep these additions local to this test process, without changing the shared shim.
@@ -73,7 +77,7 @@ function installFetch() {
     if (method === 'POST') {
       requests.push({ url, body: JSON.parse(init.body) });
       assert.match(url, /^\/api\/admin\/controls\/pipeline-[a-z-]+\/run$/);
-      return json({ controlId: url.split('/')[4], accepted: true, reason: 'Mocked execution only', runStatus: nextRunStatus });
+      return json({ controlId: url.split('/')[4], requestId: JSON.parse(init.body).requestId, accepted: true, reason: 'Mocked execution only', runStatus: nextRunStatus });
     }
     if (url === '/api/admin/git/branches-dev') {
       return json({ ok: true, branches: BRANCHES.map((name) => ({ name, sha: 'a'.repeat(40) })), count: 2, status: 'list_ok' });
@@ -213,7 +217,10 @@ test('controls without an override expose no checkbox and receive no override pa
   await setChecked(inputOption(), true);
   await renderCard({ control: TEST });
   assert.equal(queryAll(dom.root, 'input[type="checkbox"]').length, 0);
-  assert.deepEqual(await run(), { inputs: {}, confirmations: {} });
+  const { requestId, ...unchangedInputs } = await run();
+  if (testProgressEnabled) assert.match(requestId, /^req_[a-f0-9]{32}$/);
+  else assert.equal(requestId, undefined, 'legacy pin retains its original request payload');
+  assert.deepEqual(unchangedInputs, { inputs: {}, confirmations: {} });
 });
 
 test('changing the guided workflow branch resets both package and secondary pull overrides', async () => {
