@@ -343,9 +343,9 @@
       "source": "tools/test-dev-host.cjs",
       "target": "scripts/admin/test-dev-host.cjs",
       "sourceRepository": "Hawkemw1996/w3-admin-console",
-      "sourceRevision": "90b09cf47e7bcc6fae12eab58b69293697dd510c",
-      "sourceSha256": "a2a50434a2d85d686f661aac0b869b0f7fc018cda87a14a00b1335eacad47d69",
-      "sha256": "a2a50434a2d85d686f661aac0b869b0f7fc018cda87a14a00b1335eacad47d69",
+      "sourceRevision": "2459468262ebbf111199aaef06ad3ab853d06a96",
+      "sourceSha256": "3965c18554b3972e6492aee2fd3c098679a7941da9a44dec72e1456ff81ab472",
+      "sha256": "3965c18554b3972e6492aee2fd3c098679a7941da9a44dec72e1456ff81ab472",
       "adaptation": "Exact reviewed common helper; operator installation is separate from source-pin adoption."
     },
     {

@@ -93,12 +93,15 @@ async function main(argv, env = process.env) {
   const { createDevelopmentSnapshot } = require('./test-dev-snapshot.cjs');
   let result, identity, operation, operationIdentity, child, cancelled = false, force;
   const stop = () => {
+    if (cancelled) return;
     cancelled = true;
     if (!child?.pid) return;
-    try { process.kill(-child.pid, 'SIGTERM'); } catch { /* Failure remains explicit. */ }
+    // runuser can create a new worker session. Cancel over its inherited pipe;
+    // signalling the runuser process group does not reliably reach that session.
+    try { child.stdin.end('cancel\n'); } catch { /* Failure remains explicit. */ }
     force ||= setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch {} }, 4000);
   };
-  process.once('SIGTERM', stop); process.once('SIGINT', stop);
+  process.on('SIGTERM', stop); process.on('SIGINT', stop);
   const outputLost = () => stop();
   process.stdout.on('error', outputLost); process.stderr.on('error', outputLost);
   let code = 1;
@@ -113,10 +116,11 @@ async function main(argv, env = process.env) {
     transfer(result.snapshot, build); fs.chownSync(operation, build.uid, build.gid);
     const fields = { snapshot: result.snapshot, 'snapshot-root': operation, 'cache-root': config.cacheRoot,
       consumer, installation: config.installation, 'request-id': requestId, head: result.head, branch: result.branch,
-      'npm-cli': config.npmCli, 'cache-epoch': config.cacheEpoch, 'owner-pid': config.ownerPid };
+      'npm-cli': config.npmCli, 'cache-epoch': config.cacheEpoch, 'owner-pid': config.ownerPid, 'supervisor-stdin': '1' };
     const args = ['--user', config.buildUser, '--', '/usr/bin/env', '-i', 'PATH=' + PATH, 'LANG=C.UTF-8', process.execPath, result.worker];
     for (const [key, value] of Object.entries(fields)) args.push('--' + key, value);
-    child = spawn('/usr/sbin/runuser', args, { detached: true, env: { PATH, LANG: 'C.UTF-8' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    child = spawn('/usr/sbin/runuser', args, { detached: true, env: { PATH, LANG: 'C.UTF-8' }, stdio: ['pipe', 'pipe', 'pipe'] });
+    child.stdin.on('error', stop);
     child.stdout.on('data', chunk => { if (!process.stdout.destroyed) process.stdout.write(chunk); });
     child.stderr.on('data', chunk => { if (!process.stderr.destroyed) process.stderr.write(chunk); });
     code = await new Promise((resolve, reject) => { child.once('error', reject); child.once('close', value => resolve(value === 0 ? 0 : 1)); });
