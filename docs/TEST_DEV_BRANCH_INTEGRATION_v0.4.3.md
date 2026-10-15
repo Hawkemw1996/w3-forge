@@ -31,10 +31,10 @@ The protected stable parent contains one private per-run envelope. After verifie
 
 ## Source integrity
 
-Common helper source reviewed at w3-admin-console commit 2459468262ebbf111199aaef06ad3ab853d06a96:
+Common helper source reviewed at w3-admin-console commit cbf990db49b40ad0c69d0b85b29f8f7f5e60c03d:
 
-- scripts/admin/test-dev-host.cjs SHA-256: 3965c18554b3972e6492aee2fd3c098679a7941da9a44dec72e1456ff81ab472
-- scripts/admin/test-dev-snapshot.cjs SHA-256: f62613479998731aa7fd36dc5c3d5da199bc7241729bd69f2c1d8730b29c198c
+- scripts/admin/test-dev-host.cjs SHA-256: 4215aba6342a79aacf6e8cd569e1bb0e7331dda9326e9c564671e5776b2c442f
+- scripts/admin/test-dev-snapshot.cjs SHA-256: 9e812438db80853bb75404cfdca312389b6fabbff4ea29bf942c0c40f58b6fcb
 
 Propagate common helper fixes deliberately to all three consumers. The public admin-console.cjs loader is retained; generated common frontend/backend files remain ignored and are not app-owned forks.
 

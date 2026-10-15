@@ -79,7 +79,7 @@ function failure(requestId, reason) {
 async function main(argv, env = process.env) {
   const [consumer, requestId] = argv;
   if (argv.length !== 2 || process.platform !== 'linux' || process.getuid() !== 0) fail('The trusted Linux host supervisor requires root and fixed consumer/request arguments.');
-  for (const file of [__filename, path.join(__dirname, 'admin-console.cjs'), path.join(__dirname, 'test-dev-snapshot.cjs'), process.execPath, '/usr/sbin/runuser', '/usr/bin/env', '/usr/bin/getent', '/usr/bin/id', '/usr/bin/test']) trustedFile(fs.realpathSync(file));
+  for (const file of [__filename, path.join(__dirname, 'admin-console.cjs'), path.join(__dirname, 'test-dev-snapshot.cjs'), process.execPath, '/usr/sbin/runuser', '/usr/bin/env', '/usr/bin/getent', '/usr/bin/id', '/usr/bin/test', '/usr/bin/git']) trustedFile(fs.realpathSync(file));
   const config = configuration(consumer, requestId, env), build = account(config.buildUser);
   trustedFile(config.npmCli); boundaries(config, build);
   const productionUid = Number(execFileSync('/usr/bin/id', ['-u', config.productionUser], { env: { PATH }, encoding: 'utf8' }).trim());
