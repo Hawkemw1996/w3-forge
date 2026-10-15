@@ -110,11 +110,38 @@ function databaseConfiguration(text, input = process.env) {
   return output;
 }
 
+function protectedStatus(st) {
+  return st.uid === 0 && !(st.mode & 0o022) && !st.isSymbolicLink() && (st.isDirectory() || st.isFile());
+}
+function trustedTestYaml(source, input = process.env) {
+  // Test Dev must not load JavaScript dependencies from the checkout as root.
+  // The already deployed, root-protected parser is operator runtime code.
+  const runtime = ownedPath(input.W3_APP_DIR || '/opt/w3forge', 'runtime');
+  if (runtime === source || runtime.startsWith(source + path.sep) || source.startsWith(runtime + path.sep)) throw new Error('Test policy requires a separate protected runtime parser.');
+  const packageRoot = path.join(runtime, 'node_modules', 'yaml');
+  if (fs.realpathSync(packageRoot) !== packageRoot) throw new Error('Linked runtime parser refused.');
+  for (let current = packageRoot;; current = path.dirname(current)) {
+    if (!protectedStatus(fs.lstatSync(current))) throw new Error('Test policy parser and its parents require protected root ownership.');
+    if (path.dirname(current) === current) break;
+  }
+  let count = 0;
+  function inspect(item) {
+    const st = fs.lstatSync(item);
+    if (++count > 10000 || !protectedStatus(st)) throw new Error('Unsafe runtime parser input refused.');
+    if (st.isDirectory()) for (const name of fs.readdirSync(item)) inspect(path.join(item, name));
+  }
+  inspect(packageRoot);
+  const runtimeRequire = createRequire(path.join(runtime, 'package.json'));
+  const entry = runtimeRequire.resolve('yaml');
+  if (!entry.startsWith(packageRoot + path.sep)) throw new Error('Runtime parser resolution escaped the protected package.');
+  return runtimeRequire('yaml');
+}
+
 function main() {
   const [script, suppliedRoot, mode, target] = process.argv.slice(2);
   const root = path.resolve(suppliedRoot || path.join(__dirname, '../..'));
   const req = createRequire(path.join(root, 'package.json'));
-  const YAML = req('yaml');
+  const YAML = script === 'pipeline-test-dev-branch-w3forge-ui.sh' && process.getuid?.() === 0 ? trustedTestYaml(root) : req('yaml');
   const configDir = process.env.W3_APP_CONFIG_DIR || path.join(root, 'config/apps');
   const config = YAML.parse(fs.readFileSync(path.join(configDir, 'w3forge.yml'), 'utf8'));
   const { variables, expected } = configuration(config, script, root);
@@ -127,7 +154,7 @@ function main() {
   checkRepository(mode === '--check-repository' ? ownedPath(target, 'repository') : variables.W3_DEPLOY_DIR, expected);
   if (mode !== '--check-repository') for (const [key, value] of Object.entries(variables)) process.stdout.write(key + '=' + value + '\n');
 }
-module.exports = { repositoryIdentity, checkRepository, configuration, databaseConfiguration };
+module.exports = { repositoryIdentity, checkRepository, configuration, databaseConfiguration, protectedStatus, trustedTestYaml };
 if (require.main === module) {
   try { main(); }
   catch (error) {

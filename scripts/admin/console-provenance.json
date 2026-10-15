@@ -70,8 +70,8 @@
       "source": "scripts/install-server-scripts.sh",
       "target": "scripts/admin/install-server-scripts.sh",
       "sourceSha256": "31708b323a4749ebea7887e1b441d216253ae53af2e401403b22f37cd656b78a",
-      "sha256": "ad05a9664dbce8b544f67976a32138c9405cbef68528a22ba8d78b2276c42dde",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "18eace91dc9034fdf57d601bc3bdea45e0a39cf07a6f4e56f0c6787700dc180a",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3 owner-approved Test Dev integration: separately installed common host/snapshot helpers and unprivileged complete test execution; existing gates retained."
     },
     {
       "source": "scripts/logs-w3buildcost.sh",
@@ -224,8 +224,8 @@
       "source": "scripts/pipeline-test-dev-branch-w3buildcost-ui.sh",
       "target": "scripts/admin/pipeline-test-dev-branch-w3forge-ui.sh",
       "sourceSha256": "5419808585ae66c7b4da63cb627f92e88ae3dccfcad802475c4a87b84a83094e",
-      "sha256": "5e06a7e4acd85ad3a3e423866e13676373471f92aef1d36e05e47c5a71c6b0e7",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "53022c65e75ae464c0663078f037243c74e37e892bde2fc5694505244d317943",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3 owner-approved Test Dev integration: separately installed common host/snapshot helpers and unprivileged complete test execution; existing gates retained."
     },
     {
       "source": "scripts/pipeline-verify-dev-package-w3buildcost-ui.sh",
@@ -338,6 +338,24 @@
       "sourceSha256": "462ceb28830de53ab129be49d6255145c117be560c4d5aec7a58bd62669ae33e",
       "sha256": "3847974f6a3dba7579a61032b4a606d67821a02a5e2a1d26557e4d5cae367340",
       "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+    },
+    {
+      "source": "tools/test-dev-host.cjs",
+      "target": "scripts/admin/test-dev-host.cjs",
+      "sourceRepository": "Hawkemw1996/w3-admin-console",
+      "sourceRevision": "90b09cf47e7bcc6fae12eab58b69293697dd510c",
+      "sourceSha256": "a2a50434a2d85d686f661aac0b869b0f7fc018cda87a14a00b1335eacad47d69",
+      "sha256": "a2a50434a2d85d686f661aac0b869b0f7fc018cda87a14a00b1335eacad47d69",
+      "adaptation": "Exact reviewed common helper; operator installation is separate from source-pin adoption."
+    },
+    {
+      "source": "tools/test-dev-snapshot.cjs",
+      "target": "scripts/admin/test-dev-snapshot.cjs",
+      "sourceRepository": "Hawkemw1996/w3-admin-console",
+      "sourceRevision": "90b09cf47e7bcc6fae12eab58b69293697dd510c",
+      "sourceSha256": "f62613479998731aa7fd36dc5c3d5da199bc7241729bd69f2c1d8730b29c198c",
+      "sha256": "f62613479998731aa7fd36dc5c3d5da199bc7241729bd69f2c1d8730b29c198c",
+      "adaptation": "Exact reviewed common helper; operator installation is separate from source-pin adoption."
     }
   ]
 }
