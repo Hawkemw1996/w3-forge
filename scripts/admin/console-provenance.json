@@ -224,8 +224,8 @@
       "source": "scripts/pipeline-test-dev-branch-w3buildcost-ui.sh",
       "target": "scripts/admin/pipeline-test-dev-branch-w3forge-ui.sh",
       "sourceSha256": "5419808585ae66c7b4da63cb627f92e88ae3dccfcad802475c4a87b84a83094e",
-      "sha256": "53022c65e75ae464c0663078f037243c74e37e892bde2fc5694505244d317943",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3 owner-approved Test Dev integration: separately installed common host/snapshot helpers and unprivileged complete test execution; existing gates retained."
+      "sha256": "c411c30d5e01fb34358f17a359ae3b5bed44f73a2cf3d6d76bb4e5f631e71e3a",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3 owner-approved Test Dev integration: separately installed common host/snapshot helpers and unprivileged complete test execution; existing gates retained. The wrapper execs the supervisor so cancellation completion includes its cleanup; the existing log path is printed before handoff."
     },
     {
       "source": "scripts/pipeline-verify-dev-package-w3buildcost-ui.sh",

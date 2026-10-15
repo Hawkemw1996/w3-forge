@@ -71,9 +71,7 @@ pp_info "branch     : $BRANCH @ $HEAD"
 
 # The separately installed supervisor verifies source, drops privilege and delegates
 # to the manifest-verified common worker. No install/test runs in this checkout.
-set +e
-/usr/bin/node "$SCRIPT_DIR/test-dev-host.cjs" w3forge "$PP_REQUEST_ID"
-TEST_HOST_RC=$?
-set -e
+# Publish the existing log path before replacing the shell. The caller then waits
+# for the trusted supervisor itself, including signal handling and final cleanup.
 if declare -F w3log_done >/dev/null 2>&1; then w3log_done; fi
-exit "$TEST_HOST_RC"
+exec /usr/bin/node "$SCRIPT_DIR/test-dev-host.cjs" w3forge "$PP_REQUEST_ID"
