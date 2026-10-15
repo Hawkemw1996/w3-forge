@@ -27,13 +27,13 @@ All prerequisites require owner review and installation; none was applied to a l
 
 Existing W3_ENV_FILE and W3_DATA_DIR bindings remain authoritative. The supervisor checks that the build account cannot read the protected environment or traverse production data. Every installed helper and its parents must be root-owned and not writable by other accounts. The existing installer copies the separately tracked helpers; a shared source-pin update never replaces these trusted executables implicitly.
 
-A leftover snapshot blocks the next run for operator recovery. Normal failure, timeout, cancellation and backend loss terminate the worker's process groups and attempt identity-checked cleanup. Forced supervisor SIGKILL, host failure, resource budgets and real filesystem/database ACLs require host acceptance; an isolated source test is not proof of production recovery. Keep any owner supervisor/cgroup protections in place. Do not delete a leftover based only on build-writable metadata.
+The protected stable parent contains one private per-run envelope. After verified snapshot creation, the build account owns its inner parent so it can remove its snapshot; the root supervisor checks and removes the outer envelope. A leftover envelope blocks the next run for operator recovery. Normal failure, timeout, cancellation and backend loss terminate the worker's process groups and attempt identity-checked cleanup. Forced supervisor SIGKILL, host failure, resource budgets and real filesystem/database ACLs require host acceptance; an isolated source test is not proof of production recovery. Keep any owner supervisor/cgroup protections in place. Do not delete a leftover based only on build-writable metadata.
 
 ## Source integrity
 
-Common helper source reviewed at w3-admin-console commit 05a04e8af8794411766b2e1b1cfbdd9171065abc:
+Common helper source reviewed at w3-admin-console commit 90b09cf47e7bcc6fae12eab58b69293697dd510c:
 
-- scripts/admin/test-dev-host.cjs SHA-256: dafe6b9fcaa32ddb212015f8cea25cb9c9cc9eef64de1a92e3e375714908066a
+- scripts/admin/test-dev-host.cjs SHA-256: a2a50434a2d85d686f661aac0b869b0f7fc018cda87a14a00b1335eacad47d69
 - scripts/admin/test-dev-snapshot.cjs SHA-256: f62613479998731aa7fd36dc5c3d5da199bc7241729bd69f2c1d8730b29c198c
 
 Propagate common helper fixes deliberately to all three consumers. The public admin-console.cjs loader is retained; generated common frontend/backend files remain ignored and are not app-owned forks.

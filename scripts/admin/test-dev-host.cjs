@@ -91,7 +91,7 @@ async function main(argv, env = process.env) {
   }
   // Bootstrap imports happen only after checking the installed trusted code.
   const { createDevelopmentSnapshot } = require('./test-dev-snapshot.cjs');
-  let result, identity, child, cancelled = false, force;
+  let result, identity, operation, operationIdentity, child, cancelled = false, force;
   const stop = () => {
     cancelled = true;
     if (!child?.pid) return;
@@ -103,11 +103,15 @@ async function main(argv, env = process.env) {
   process.stdout.on('error', outputLost); process.stderr.on('error', outputLost);
   let code = 1;
   try {
-    result = createDevelopmentSnapshot(config, event => process.stderr.write('===TEST-DEV-PROGRESS===' + JSON.stringify(event) + '\n'));
+    operation = fs.mkdtempSync(path.join(config.snapshotRoot, 'test-' + requestId + '-host-'));
+    fs.chmodSync(operation, 0o700); operationIdentity = fs.lstatSync(operation);
+    result = createDevelopmentSnapshot({ ...config, snapshotRoot: operation }, event => process.stderr.write('===TEST-DEV-PROGRESS===' + JSON.stringify(event) + '\n'));
     identity = fs.lstatSync(result.snapshot);
     if (cancelled) fail('Development validation interrupted before execution.');
-    transfer(result.snapshot, build);
-    const fields = { snapshot: result.snapshot, 'snapshot-root': config.snapshotRoot, 'cache-root': config.cacheRoot,
+    // The root-owned stable parent protects this operation envelope from rename.
+    // Its build-owned inner parent lets the worker remove its own snapshot.
+    transfer(result.snapshot, build); fs.chownSync(operation, build.uid, build.gid);
+    const fields = { snapshot: result.snapshot, 'snapshot-root': operation, 'cache-root': config.cacheRoot,
       consumer, installation: config.installation, 'request-id': requestId, head: result.head, branch: result.branch,
       'npm-cli': config.npmCli, 'cache-epoch': config.cacheEpoch, 'owner-pid': config.ownerPid };
     const args = ['--user', config.buildUser, '--', '/usr/bin/env', '-i', 'PATH=' + PATH, 'LANG=C.UTF-8', process.execPath, result.worker];
@@ -120,7 +124,8 @@ async function main(argv, env = process.env) {
   } finally {
     if (force) clearTimeout(force);
     process.removeListener('SIGTERM', stop); process.removeListener('SIGINT', stop);
-    if (result && identity) cleanup(result.snapshot, config.snapshotRoot, identity);
+    try { if (result && identity) cleanup(result.snapshot, operation, identity); }
+    finally { if (operation && operationIdentity) cleanup(operation, config.snapshotRoot, operationIdentity); }
   }
   if (code !== 0) failure(requestId, 'Isolated development validation failed or was interrupted; review the recorded stages.');
   return code;
