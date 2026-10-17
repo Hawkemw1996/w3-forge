@@ -6,6 +6,7 @@
 - Make /forge/ the main screen while preserving /admin/, existing Core auth, database state and owner-controlled release gates.
 - Prepare isolated Test Dev Branch execution through the common v0.3.0 worker, installation-scoped npm cache and measured progress. This release explicitly adopts the console pin; trusted helper installation and host provisioning remain owner-controlled.
 
+- Isolate canonical console tests from inherited script/log path aliases so the host pipeline uses disposable fixtures; retain every existing assertion.
 ## v0.4.2 — Shared Admin Console source
 
 - Standardize the application, shared UI bindings, systemd template and operator scripts on `w3forge.service`. The owner-approved service template runs as root with terminal access enabled, matching the reference operational privilege model while retaining Core authorization and per-action safeguards.

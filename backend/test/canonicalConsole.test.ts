@@ -34,8 +34,10 @@ async function saveConfig() {
 beforeAll(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'forge-canonical-'));
   for (const [envKey, relative] of Object.entries({
-    W3_APP_DIR: 'runtime', W3_DEPLOY_DIR: 'deploy', W3_SCRIPTS_DIR: 'scripts',
-    W3_LOG_ROOT: 'logs', W3_BACKUPS_DIR: 'backups', W3_BACKUP_DIR: 'backups', W3_UPDATE_DIR: 'packages',
+    // Higher-priority host aliases must also stay inside this disposable fixture.
+    W3_APP_DIR: 'runtime', W3_DEPLOY_DIR: 'deploy', W3_SCRIPT_DIR: 'scripts', W3_SCRIPTS_DIR: 'scripts',
+    W3_LOG_DIR: 'logs', W3_LOG_ROOT: 'logs', W3LOG_ROOT: 'logs',
+    W3_BACKUPS_DIR: 'backups', W3_BACKUP_DIR: 'backups', W3_UPDATE_DIR: 'packages',
     W3_DEV_UPDATE_DIR: 'packages/dev', W3_MAIN_UPDATE_DIR: 'packages/main',
     W3_INSTALLED_DIR: 'packages/installed', W3_DATA_DIR: 'data', ADMIN_LOG_DIR: 'logs/admin'
   })) {

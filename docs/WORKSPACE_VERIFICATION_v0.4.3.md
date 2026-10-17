@@ -52,3 +52,11 @@ The active Forge pipeline view uses the existing bounded in-process progress pro
 The upgraded privileged Test Dev Branch integration still requires the owner's reviewed helper installation and protected host provisioning described in docs/TEST_DEV_BRANCH_INTEGRATION_v0.4.3.md. Source verification does not perform that operational acceptance.
 
 See FORGE_WORKSPACE_v0.4.3.md for configuration, label registration, release and rollback details.
+
+## Host pipeline path-alias regression
+
+The owner pipeline at commit 76ea63a reported three failures in canonicalConsole.test.ts while all 105 frontend tests passed. The fixture set W3_SCRIPTS_DIR and W3_LOG_ROOT but inherited higher-priority W3_SCRIPT_DIR and W3_LOG_DIR from the running console. Controls resolved the host script directory and the recent-log route inspected the host log root.
+
+A disposable non-root container reproduced all three failures with injected script/log aliases and a synthetic pipeline log. Adding both aliases, plus the legacy W3LOG_ROOT alias, to the existing fixture setup made the same focused command pass all 22 tests. The existing vi.unstubAllEnvs cleanup restores the caller environment; no assertion, test, product path precedence or host configuration changed.
+
+The complete gate was then repeated with W3_SCRIPT_DIR=/opt/w3forge-scripts, W3_LOG_DIR=/opt/logs/w3forge and W3LOG_ROOT=/opt/logs/w3forge injected into a disposable Node 22.23.3 Bookworm container (non-root, no production mounts/credentials). Command: npm run typecheck && npm test && npm run build && npm run console:verify. Result: all 343 tests passed, plus type checks, build, parity and all 120 pinned console files. The deliberate pre-fix reproduction failed three of 22 focused tests; the fixed focused run passed 22 of 22.
