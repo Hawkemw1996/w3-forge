@@ -98,45 +98,29 @@ test('detached deployment records require the exact request, unit, numeric exit 
  write('status=success\nrequest_id='+request+'\nunit=w3core-deploy-req-contract\nexit_code=0\nfinished_at=2026-10-07T00:01:00Z\n');
  assert.equal(detachedResult(request),null);
 });
-test('the shared-source API rejects incomplete confirmation and reads no browser-selected path',async t=>{
+test('retired console source workflow is absent from installed source and router',()=>{
+ const router=fs.readFileSync(path.join(root,'backend/src',forge?'console':'admin','sharedRouter.ts'),'utf8');
+ assert.doesNotMatch(router,/buildConsoleSourceRoutes|console\/source/);
+ assert.equal(fs.existsSync(path.join(root,'backend/src',forge?'console':'admin','routes/consoleSourceRoutes.ts')),false);
+ assert.equal(fs.existsSync(path.join(root,'frontend/admin/src/pages/github/SharedConsolePanel.tsx')),false);
+});
+
+test('retired console endpoints return 404 through the guarded shared router',async t=>{
  const express=require('express'),app=express();
- const {buildConsoleSourceRoutes}=require(path.join(admin,'routes/consoleSourceRoutes'));
- app.use(express.json(),buildConsoleSourceRoutes());
+ const {buildSharedConsoleRouter}=require(path.join(admin,'sharedRouter'));
+ const guards=[];const guard=name=>(_req,_res,next)=>{guards.push(name);next();};
+ app.use(buildSharedConsoleRouter({startedAt:new Date().toISOString(),db:{},terminal:{identity:()=>({userId:'fixture-owner'})},
+  networkGuard:guard('network'),authorizeAdmin:guard('admin'),sameOrigin:guard('origin'),coreStatus:async()=>({}),auditEvents:async()=>[]}));
  const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
  t.after(()=>new Promise(resolve=>server.close(resolve)));
- const base='http://127.0.0.1:'+server.address().port;
- for(const body of [
-  {},{revision:'main',expected:'1'.repeat(40),confirmation:'UPDATE ADMIN CONSOLE'},
-  {revision:'2'.repeat(40),expected:'1'.repeat(40),confirmation:'wrong'},
-  {revision:'../../outside',expected:'1'.repeat(40),confirmation:'UPDATE ADMIN CONSOLE'}
- ]){
-  const response=await fetch(base+'/console/source/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  assert.equal(response.status,400);assert.equal((await response.json()).error.code,'INVALID_CONSOLE_UPDATE');
+ for(const [method,url] of [['GET','/console/source'],['POST','/console/source/check'],['POST','/console/source/update']]){
+  guards.length=0;
+  const response=await fetch('http://127.0.0.1:'+server.address().port+url,{method,headers:{'Content-Type':'application/json'},...(method==='POST'?{body:JSON.stringify({revision:'2'.repeat(40),expected:'1'.repeat(40),confirmation:'UPDATE ADMIN CONSOLE'})}:{})});
+  assert.equal(response.status,404);assert.equal((await response.json()).error.code,'NOT_FOUND');
+  assert.deepEqual(guards,['network','admin','origin']);
  }
 });
-test('staging another pin never relabels the running server as already updated',async t=>{
- const express=require('express'),app=express();
- const {repoRoot}=require(path.join(admin,'runtimeBridge'));
- const {buildConsoleSourceRoutes}=require(path.join(admin,'routes/consoleSourceRoutes'));
- const lockPath=path.join(repoRoot,'admin-console.lock.json');
- const originalRead=fs.readFileSync;
- const original=JSON.parse(originalRead(lockPath,'utf8'));
- app.use(buildConsoleSourceRoutes());
- const changed={...original,revision:'9'.repeat(40)};
- fs.writeFileSync(path.join(process.env.W3_DEPLOY_DIR,'admin-console.lock.json'),JSON.stringify(changed));
- fs.readFileSync=function(file,...args){
-  if(String(file)===lockPath)return args[0]==='utf8'?JSON.stringify(changed):Buffer.from(JSON.stringify(changed));
-  return originalRead.call(this,file,...args);
- };
- t.after(()=>{fs.readFileSync=originalRead;});
- const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
- t.after(()=>new Promise(resolve=>server.close(resolve)));
- const response=await fetch('http://127.0.0.1:'+server.address().port+'/console/source');
- assert.equal(response.status,200);
- const data=(await response.json()).data;
- assert.equal(data.installed.revision,original.revision,'running source is captured at server mount');
- assert.equal(data.checkout.revision,changed.revision,'development checkout reports the newly staged pin');
-});
+
 test('retired pages cannot reappear from an old app-local source copy',()=>{
  for(const file of ['SettingsPage.tsx','ProductionReadinessPage.tsx'])assert.equal(fs.existsSync(path.join(root,'frontend/admin/src/pages',file)),false);
  const app=fs.readFileSync(path.join(root,'frontend/admin/src/App.tsx'),'utf8');

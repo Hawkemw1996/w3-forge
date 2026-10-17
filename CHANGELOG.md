@@ -1,8 +1,12 @@
-## v0.4.2: Shared Admin Console source (unreleased)
+## v0.4.3 — Forge workspace (unreleased)
 
-## 0.4.3
+- Adopt shared Admin Console v0.3.1 at immutable commit 468e628ffaf43827c452d60371a8201c0125d3d8 through the verified loader; refresh the canonical consumer removal regressions for its retired manual update workflow.
+- Replace the product placeholder with installed-model selection, streaming Ollama chat, Stop/retry and tab-local conversation state. Prefer the existing qwen2.5-coder:14b when available.
+- Add a read-only, bounded inventory of labeled Codex test containers and active Forge pipeline progress; show unavailable/stale states explicitly. Register new Codex test containers through documented source labels.
+- Make /forge/ the main screen while preserving /admin/, existing Core auth, database state and owner-controlled release gates.
+- Prepare isolated Test Dev Branch execution through the common v0.3.0 worker, installation-scoped npm cache and measured progress. This release explicitly adopts the console pin; trusted helper installation and host provisioning remain owner-controlled.
 
-- Prepare isolated Test Dev Branch execution through the common v0.3.0 worker, installation-scoped npm cache and measured progress. Console pin adoption and host provisioning remain owner-reviewed.
+## v0.4.2 — Shared Admin Console source
 
 - Standardize the application, shared UI bindings, systemd template and operator scripts on `w3forge.service`. The owner-approved service template runs as root with terminal access enabled, matching the reference operational privilege model while retaining Core authorization and per-action safeguards.
 - Isolate test backup/package paths from pipeline environment overrides; preserve all existing assertions.

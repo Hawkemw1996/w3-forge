@@ -11,6 +11,7 @@ import { buildMaterialPricingRouter } from './materialPricing/routes';
 import { createCoreClient } from './auth/coreClient';
 import { createCoreAuth } from './auth/coreAuth';
 import { FORGE_ROOT, ACTIVE_APP, loadApp } from './admin/forgeConfig';
+import { buildWorkspaceRouter } from './workspace/routes';
 
 // =============================================================================
 // W3 Forge Admin Backend — v0.4.0 entry point.
@@ -88,6 +89,7 @@ function main(): void {
   app.use('/api/auth', auth.router);
   const terminal = createTerminalRuntime(auth);
   app.use('/api/admin', buildConsoleRouter(startedAt, { auth, core, terminal, db }));
+  app.use('/api/forge', buildWorkspaceRouter(auth));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
   app.get('/version', (_req, res) => res.json({ success: true, data: { version: readForgeVersion() } }));
   const announce = () => {
@@ -109,7 +111,7 @@ function main(): void {
     });
   }
 
-  app.get('/', (_req, res) => res.redirect(302, '/admin/'));
+  app.get('/', (_req, res) => res.redirect(302, '/forge/'));
 
   const server = app.listen(port, host, () => {
     console.log(`[w3-forge-admin] listening on http://${host}:${port}`);

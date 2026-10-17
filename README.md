@@ -8,7 +8,9 @@ Forge’s engineering agents stay inside approved development branches. The shar
 
 ## Current Version
 
-v0.4.2 — shared Admin Console v0.2.0 and Core app access (unreleased, `dev/v0.4.2`)
+v0.4.3 — Ollama chat workspace, Codex test environment visibility, and shared Admin Console v0.3.1 (unreleased, `dev/v0.4.3`)
+
+Open `/forge/` for chat and test environments, or `/admin/` for operations. See [workspace configuration and test registration](docs/FORGE_WORKSPACE_v0.4.3.md).
 
 The standard unit is `w3forge.service`, using the owner-approved root operational model. Existing `w3forge-admin.service` installations require the [service transition](docs/SERVICE_STANDARD_v0.4.2.md).
 

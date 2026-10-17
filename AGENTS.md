@@ -446,3 +446,14 @@ top of them.
 If a change appears to require violating any of the above, the agent
 must stop, document the impacted files and risks, propose a plan, and
 wait for explicit user approval per Section 5.
+
+
+# Codex test environment visibility
+
+New disposable Docker test environments started on the Forge test host must use
+both labels w3forge.managed-by=codex and w3forge.environment=test, plus app/branch
+and run metadata described in docs/FORGE_WORKSPACE_v0.4.3.md. Set w3forge.commit
+only for an exact committed source snapshot. Keep source disposable, run test
+code as a non-root user, and do not mount production data or credentials.
+The product dashboard reads these labels; unregistered/other-host environments
+are outside its inventory. Preserve the existing approved version/release gates.

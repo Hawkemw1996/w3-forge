@@ -2,10 +2,10 @@
   "schema": 1,
   "repository": "https://github.com/Hawkemw1996/w3-admin-console.git",
   "consumer": "w3forge",
-  "revision": "af16fb7535a0e848eea35e5f5e2e2b2e8a90a5fa",
-  "manifestSha256": "700fa91e6145a6279e4e118a7e5972f1b4e3a635f82de12aec6ee7e7786816e7",
+  "revision": "468e628ffaf43827c452d60371a8201c0125d3d8",
+  "manifestSha256": "15c6279a0f6306bdd11b538ba01bbae047254db1e623cf0fe88e2c5032713d85",
   "api": 1,
-  "version": "0.2.0",
+  "version": "0.3.1",
   "targets": {
     "backend": "backend/src/console",
     "frontend": "frontend/admin/src",

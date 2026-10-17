@@ -49,3 +49,9 @@ frontend/admin/.test-harness/
 !/frontend/admin/src/entry.tsx
 !/frontend/admin/src/forgeMain.tsx
 /frontend/shared/**
+
+# App-owned Forge workspace; never part of the generated shared console.
+!/frontend/admin/src/workspace/
+!/frontend/admin/src/workspace/ForgeWorkspace.tsx
+!/frontend/admin/src/workspace/chatStream.ts
+!/frontend/admin/src/workspace/workspace.css

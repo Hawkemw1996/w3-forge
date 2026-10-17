@@ -6,6 +6,7 @@ import { loadAuthStatus, useAuthStatus } from './lib/authSession';
 import { apiPost, errorMessages } from './lib/authApi';
 import { appPath } from '../../../shared/navigation';
 import { consoleApp } from '../../../shared/consoleApp';
+import ForgeWorkspace from './workspace/ForgeWorkspace';
 
 /** Product landing only; the common admin console remains mounted at /admin. */
 function ProductLanding() {
@@ -19,8 +20,9 @@ function ProductLanding() {
     try { await apiPost('/api/auth/logout', {}); window.location.replace(appPath('/login')); }
     catch (reason) { setError(errorMessages(reason).join(' ')); setBusy(false); }
   }
+  if (status?.authenticated && status.user?.permissions.includes('forge:admin')) return <ForgeWorkspace name={status.user.displayName || status.user.username} signOut={signOut} signingOut={busy} signOutError={error} />;
   return <AuthShell title={consoleApp.name} icon={<LayoutDashboard size={18} />}>
-    <p className="text-sm text-[var(--w3-text-muted)]">{status?.authenticated ? 'The application workspace is being prepared.' : 'Checking your W3 Core session…'}</p>
+    <p className="text-sm text-[var(--w3-text-muted)]">{status?.authenticated ? 'The Forge engineering workspace requires Forge administrator access. Ask the W3 Core owner to assign your account.' : 'Checking your W3 Core session…'}</p>
     {error && <p role="alert" className="text-xs text-[var(--status-danger)]">{error}</p>}
     {status?.authenticated && <div className="flex flex-wrap gap-2">
       {status.user?.permissions.includes(consoleApp.permissionPrefix + ':admin') && <a href="/admin/" className="btn btn-primary">Admin Console</a>}
