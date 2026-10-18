@@ -336,7 +336,8 @@ pp_emit_blocked() {
 # Status is one of: success | failed | blocked.
 # Standard keys (always emitted): status, request_id, source, channel,
 # version, package_path, verification, verification_reason, delegate,
-# delegate_exit_code, duration_seconds, log_path, reason.
+# duration_seconds, log_path, reason. delegate_exit_code is optional and is
+# emitted only when populated: an empty value is not a valid exit code.
 # Each is read from the caller's locals (PP_RES_*) if set; otherwise
 # empty. Extra key=value pairs follow.
 PP_RES_SOURCE=""
@@ -364,7 +365,9 @@ pp_emit_result() {
   echo "verification=${PP_RES_VERIFICATION}"
   echo "verification_reason=${PP_RES_VERIFICATION_REASON}"
   echo "delegate=${PP_RES_DELEGATE}"
-  echo "delegate_exit_code=${PP_RES_DELEGATE_EXIT_CODE}"
+  if [[ -n "${PP_RES_DELEGATE_EXIT_CODE:-}" ]]; then
+    echo "delegate_exit_code=${PP_RES_DELEGATE_EXIT_CODE}"
+  fi
   echo "duration_seconds=${PP_RES_DURATION_SECONDS}"
   echo "log_path=${PP_RES_LOG_PATH}"
   echo "reason=${reason}"

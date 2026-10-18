@@ -336,8 +336,8 @@
       "source": "scripts/_w3buildcost-pipeline-common.sh",
       "target": "scripts/admin/_w3forge-pipeline-common.sh",
       "sourceSha256": "462ceb28830de53ab129be49d6255145c117be560c4d5aec7a58bd62669ae33e",
-      "sha256": "3847974f6a3dba7579a61032b4a606d67821a02a5e2a1d26557e4d5cae367340",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "53d57918d65587fcbfef7490900b72c72f969aa6b802e96489c128b340d838a7",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3: omit an unused delegate exit code from canonical result trailers; populated codes remain verbatim for strict shared backend validation."
     },
     {
       "source": "tools/test-dev-host.cjs",
