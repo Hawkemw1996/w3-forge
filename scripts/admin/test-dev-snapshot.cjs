@@ -14,10 +14,11 @@ function canonical(dir) {
   if (fs.realpathSync(resolved) !== resolved || !fs.lstatSync(resolved).isDirectory()) fail('Snapshot roots must be regular canonical directories.');
   return resolved;
 }
+// Trust only the canonical, configured source for offline reads across the supervisor/source UID boundary.
 function git(root, args, input, binary = false) {
   const env = { PATH: process.platform === 'win32' ? process.env.PATH : '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', HOME: process.env.HOME, SystemRoot: process.env.SystemRoot,
     GIT_CONFIG_NOSYSTEM: '1', GIT_NO_REPLACE_OBJECTS: '1', GIT_NO_LAZY_FETCH: '1', GIT_ALLOW_PROTOCOL: '', GIT_CONFIG_GLOBAL: process.platform === 'win32' ? 'NUL' : '/dev/null', GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'Never' };
-  return execFileSync(process.platform === 'win32' ? 'git' : '/usr/bin/git', ['-C', root, '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=' + (process.platform === 'win32' ? 'NUL' : '/dev/null'), ...args], { env, encoding: binary ? undefined : 'utf8', input, stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024, timeout: 60000 });
+  return execFileSync(process.platform === 'win32' ? 'git' : '/usr/bin/git', ['-C', root, '-c', 'safe.directory=' + root, '-c', 'core.fsmonitor=false', '-c', 'core.hooksPath=' + (process.platform === 'win32' ? 'NUL' : '/dev/null'), ...args], { env, encoding: binary ? undefined : 'utf8', input, stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024, timeout: 60000 });
 }
 function inventory(root) {
   return [...new Set(git(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']).split('\0').filter(Boolean))].sort();

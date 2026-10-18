@@ -354,8 +354,8 @@
       "sourceRepository": "Hawkemw1996/w3-admin-console",
       "sourceRevision": "cbf990db49b40ad0c69d0b85b29f8f7f5e60c03d",
       "sourceSha256": "9e812438db80853bb75404cfdca312389b6fabbff4ea29bf942c0c40f58b6fcb",
-      "sha256": "9e812438db80853bb75404cfdca312389b6fabbff4ea29bf942c0c40f58b6fcb",
-      "adaptation": "Exact reviewed common helper; operator installation is separate from source-pin adoption."
+      "sha256": "a97a2c1857afe0dd1cb5c65b0b7a0226f035f45a9c6244fafe2eb158856a0f17",
+      "adaptation": "Owner-approved Test Dev host bootstrap: add per-command safe.directory for the canonical configured checkout during hardened offline Git inspection across distinct supervisor/source UIDs. No wildcard/global trust or source ownership change; all existing guards retained."
     }
   ]
 }

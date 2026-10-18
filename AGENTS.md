@@ -457,3 +457,7 @@ only for an exact committed source snapshot. Keep source disposable, run test
 code as a non-root user, and do not mount production data or credentials.
 The product dashboard reads these labels; unregistered/other-host environments
 are outside its inventory. Preserve the existing approved version/release gates.
+
+# Owner approval — Test Dev host setup
+
+On 2026-10-17 (America/Chicago), the owner explicitly approved provisioning the dedicated Forge build account, protected snapshot/cache roots, reviewed trusted Test Dev helpers and nonsecret bindings, and correcting the runtime YAML parser permission bits required by the existing guard. The checked host setup utility and temporary fixed launcher are scoped to this approval. Preserve all tests, source integrity, Core/auth/database behavior and the user-controlled application deployment/release gate. See docs/TEST_DEV_HOST_SETUP_v0.4.3.md for the exact operation, verification boundary and rollback.
