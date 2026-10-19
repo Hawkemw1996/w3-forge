@@ -36,6 +36,8 @@ w3forge_database_env() {
   local resolved line
   if ! resolved="$(node "$W3_POLICY_DIR/_w3forge-policy.cjs" "${0##*/}" "$W3_FORGE_ROOT" --database-env)"; then exit 3; fi
   while IFS= read -r line; do [[ -z "$line" ]] || export "$line"; done <<< "$resolved"
+  # libpq rejects a present empty SSL mode; preserve explicit nonempty modes.
+  if [[ -z "${PGSSLMODE:-}" ]]; then unset PGSSLMODE; fi
 }
 # Refuse foreign roots, traversal, links and special files before archive extraction.
 w3forge_verify_archive() {

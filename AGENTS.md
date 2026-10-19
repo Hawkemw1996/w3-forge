@@ -465,3 +465,7 @@ On 2026-10-17 (America/Chicago), the owner explicitly approved provisioning the 
 # Owner approval — detached deployment HOME repair
 
 On 2026-10-19 (America/Chicago), the owner explicitly approved adding the fixed HOME=/root environment binding to the detached deployment launcher on dev/v0.4.3 and preparing the backed-up installed launcher update. The clean-environment Git diagnostic failed without HOME and passed with HOME=/root. Preserve repository identity checks, exact existing Git trust configuration, deployment confirmations and owner-controlled deployment. This approval does not authorize automatic application deployment, service restart, database operations or unrelated detached-result changes.
+
+# Owner approval — local Forge database setup
+
+On 2026-10-19 (America/Chicago), the owner explicitly approved installing PostgreSQL 16 locally on the Forge VM, creating dedicated w3forge/w3forge_user database and role, backing up the protected environment and adding database credentials, correcting empty PGSSLMODE handling, and verifying the existing mandatory backup. Bind PostgreSQL only to loopback, preserve Core and other applications, keep credentials out of logs, and retain databases on rollback. Application deployment/restart and migrations remain owner-controlled. The owner mentioned future FIFO change-management ideas; no FIFO schema or queue implementation is authorized by this setup alone.
