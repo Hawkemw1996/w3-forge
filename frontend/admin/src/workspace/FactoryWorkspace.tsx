@@ -1,10 +1,9 @@
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, ArrowRight, Bell, Bot, CheckCircle2, ChevronRight, ClipboardList, Copy, Download, ExternalLink, FileText, FlaskConical, FolderKanban, LayoutDashboard, Menu, MessageSquare, Plus, RefreshCw, X } from 'lucide-react';
-import { W3SidebarBrand, W3SidebarFooter, W3SidebarNav } from '@shared/components';
+import { Activity, ArrowRight, Bell, Bot, CheckCircle2, ChevronRight, ClipboardList, Copy, Download, ShieldCheck, FileText, FlaskConical, FolderKanban, LayoutDashboard, Menu, MessageSquare, Plus, RefreshCw, X } from 'lucide-react';
+import { W3SidebarBrand, W3SidebarFooter, W3SidebarNav, runtimeSidebarStatus } from '@shared/components';
 import { ApiError, apiGet, apiPost, errorMessages } from '../lib/authApi';
-import { APP_VERSION } from '../lib/appInfo';
 import { appPath } from '../../../../shared/navigation';
 import { factoryStatusLabels, factoryStatuses, type FactoryNotification, type FactoryProject, type FactoryPrompt, type FactoryRequest, type FactoryRuleRevision, type FactoryRun, type FactorySnapshot, type ForgeService, type ForgeServices } from './factoryApi';
 import './factory-workspace.css';
@@ -53,6 +52,10 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
   const services = useQuery({ queryKey: ['forge-services'], queryFn: () => apiGet<ForgeServices>('/api/forge/services'), retry: false, refetchInterval: 30000 });
   const hardware = useQuery({ queryKey: ['forge-hardware'], queryFn: () => apiGet<HardwareInventory>('/api/forge/hardware'), retry: false, refetchInterval: 10000 });
   const models = useQuery({ queryKey: ['forge-models'], queryFn: () => apiGet<Models>('/api/forge/models'), retry: false });
+  const runtimeQuery = useQuery({ queryKey: ['admin', 'version'], queryFn: () => apiGet<{ version: string; nodeEnv?: string }>('/api/admin/version'), retry: false, refetchInterval: 60000 });
+  const runtime = runtimeQuery.isError ? undefined : runtimeQuery.data;
+  const runtimeVersion = runtime?.version ? 'v' + runtime.version.replace(/^v/, '') : undefined;
+  const runtimeStatus = runtimeSidebarStatus(runtime?.nodeEnv);
   const data = snapshot.isError ? undefined : snapshot.data;
   const inventory = environments.isError ? undefined : environments.data;
   const serviceData = services.isError ? undefined : services.data;
@@ -86,7 +89,7 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
       if (event.shiftKey && (document.activeElement === first || !drawerRef.current?.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && (document.activeElement === last || !drawerRef.current?.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
     };
-    const media = window.matchMedia('(min-width: 1001px)');
+    const media = window.matchMedia('(min-width: 768px)');
     const resize = () => { if (media.matches) setDrawer(false); };
     document.addEventListener('keydown', keydown); media.addEventListener('change', resize);
     return () => { main?.removeAttribute('inert'); document.body.style.overflow = previousOverflow; document.removeEventListener('keydown', keydown); media.removeEventListener('change', resize); menuRef.current?.focus(); };
@@ -99,23 +102,25 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
     finally { setBusy(false); }
   }
   function openRequest(id: string) { setSelectedRequest(id); navigate('requests'); }
-  const refresh = () => { setMutationError(''); void snapshot.refetch(); void environments.refetch(); void services.refetch(); void hardware.refetch(); };
+  const refresh = () => { setMutationError(''); void snapshot.refetch(); void environments.refetch(); void services.refetch(); void hardware.refetch(); void runtimeQuery.refetch(); };
   return <div className={`factory-workspace${drawer ? ' factory-drawer-open' : ''}`}>
     {drawer && <button className="factory-drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawer(false)} tabIndex={-1} />}
     <aside ref={drawerRef} className="factory-sidebar w3-sidebar" role={drawer ? 'dialog' : undefined} aria-modal={drawer || undefined} aria-label="W3 Forge navigation">
-      <button type="button" className="btn factory-close-navigation" onClick={() => setDrawer(false)} aria-label="Close navigation"><X size={18} /></button>
-      <W3SidebarBrand title="W3 Forge" subtitle="Software Factory" version={APP_VERSION} />
-      <W3SidebarNav items={items} sectionLabel="Engineering workspace" onNavigate={() => setDrawer(false)} />
-      <div className="factory-sidebar-process"><span className="factory-kicker">BUILT WITH A PROCESS</span><p>Plan. Build. Verify. Deliver.</p><span>Project rules follow every request.</span></div>
-      <W3SidebarFooter signedInAs={signedInAs} footerHref="/admin/" footerLabel="Admin Console" footerIcon={ExternalLink} onLogout={onSignOut} logoutPending={signingOut} version={APP_VERSION} />
+      <div className="factory-sidebar-desktop-brand"><W3SidebarBrand title="W3 Forge" subtitle="Software Factory" version={runtimeVersion} status={runtimeStatus} /></div>
+      <div className="factory-sidebar-mobile-brand"><W3SidebarBrand title="W3 Forge" subtitle="Software Factory" version={runtimeVersion} status={runtimeStatus} compact /><button type="button" className="btn btn-ghost" onClick={() => setDrawer(false)} aria-label="Close navigation"><X size={18} /></button></div>
+      <W3SidebarNav items={items} sectionLabel="W3 Forge" testId="sidebar-nav" onNavigate={() => setDrawer(false)} />
+      <W3SidebarFooter signedInAs={signedInAs} footerHref="/admin/" footerLabel="Admin Console" footerIcon={ShieldCheck} onLogout={onSignOut} logoutPending={signingOut} version={runtimeVersion} status={runtimeStatus} />
     </aside>
     <div className="factory-main" ref={mainRef}>
-      <header className="factory-topbar"><div className="factory-breadcrumb"><button ref={menuRef} type="button" className="btn factory-open-navigation" aria-label="Open navigation" aria-expanded={drawer} onClick={() => setDrawer(true)}><Menu size={18} /></button><span>W3 Forge</span><ChevronRight size={14} /><strong>{pageTitle}</strong></div>
-        <div className="factory-topbar-actions"><span className="factory-version">v{APP_VERSION}</span><Link className="factory-notification-link" to="updates" aria-label={`Updates, ${unread} unread`}><Bell size={18} />{unread > 0 && <span>{unread}</span>}</Link><button type="button" className="btn" disabled={snapshot.isFetching || busy} onClick={refresh}><RefreshCw size={14} /><span>Refresh</span></button></div></header>
+      <header className="factory-topbar">
+        <button ref={menuRef} type="button" className="btn factory-open-navigation" aria-label="Open navigation" aria-expanded={drawer} onClick={() => setDrawer(true)}><Menu size={18} /></button>
+        <div className="factory-topbar-title"><div className="factory-app-eyebrow">W3 Forge</div><div className="factory-active-page">{pageTitle}</div></div>
+        <div className="factory-topbar-actions">{runtimeVersion && <span className="badge badge-gold" data-testid="version-badge">{runtimeVersion}</span>}<Link className="factory-notification-link" to="updates" aria-label={'Updates, ' + unread + ' unread'}><Bell size={18} />{unread > 0 && <span>{unread}</span>}</Link><button type="button" className="btn" disabled={snapshot.isFetching || busy} onClick={refresh}><RefreshCw size={14} /><span>Refresh</span></button></div>
+      </header>
       <main id="factory-content" className="factory-content">
         {(signOutError || mutationError) && <div className="factory-alert factory-alert-error" role="alert">{signOutError || mutationError}</div>}
         {authenticationError && <div className="factory-alert factory-alert-error" role="alert">Your Forge access could not be verified. <a href={appPath('/login')}>Sign in again</a>.</div>}
-        <div className="factory-page-heading"><div><span className="factory-kicker">SOFTWARE FACTORY</span><h1>{pageTitle === 'Dashboard' ? 'Engineering overview' : pageTitle}</h1><p>{pageTitle === 'Dashboard' ? 'Every change starts with a project, follows its rules, and leaves a verified record.' : pageDescription(pageTitle)}</p></div>
+        <div className="factory-page-heading"><div><h1>{pageTitle === 'Dashboard' ? 'Engineering overview' : pageTitle}</h1><p>{pageTitle === 'Dashboard' ? 'Every change starts with a project, follows its rules, and leaves a verified record.' : pageDescription(pageTitle)}</p></div>
           {pageTitle === 'Dashboard' && <Link className="btn btn-primary" to="requests"><Plus size={16} /> New request</Link>}</div>
         <Routes>
           <Route index element={<><ErrorBox error={snapshot.error} />{snapshot.isPending && <p className="factory-muted" role="status">Loading the software factory…</p>}{data && <Dashboard snapshot={data} inventory={inventory} services={serviceData?.services} hardware={hardwareData} onRequest={openRequest} />}<ErrorBox error={environments.error} /><ErrorBox error={services.error} /><ErrorBox error={hardware.error} /></>} />

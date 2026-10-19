@@ -42,7 +42,7 @@ Run the integrated checks from the repository root:
 npm run typecheck && npm test && npm run build && npm run console:verify
 ```
 
-The complete gate passed in an isolated non-root Node 22.23.3 container: 401 tests passed (248 backend, 109 frontend, 28 operator-script, 12 console-integration, and 4 Test Dev integration tests). Typechecking, production builds, console parity, and all 120 pinned shared-console files passed verification at v0.3.1 revision `468e628ffaf43827c452d60371a8201c0125d3d8`.
+The complete gate passed in an isolated non-root Node 22.23.3 container: 402 tests passed (248 backend, 110 frontend, 28 operator-script, 12 console-integration, and 4 Test Dev integration tests). Typechecking, production builds, console parity, and all 120 pinned shared-console files passed verification at v0.3.1 revision `468e628ffaf43827c452d60371a8201c0125d3d8`.
 
 A separate Chrome workflow passed project creation, immutable rules v1/v2 prompt pinning, request intake, plan drafting, approvals, development/test/review receipts, update-ready notifications, hardware and service views, assistant draft persistence, and mobile navigation/focus/overflow checks with no page errors. Browser identity, hardware, containers, and model output were isolated fixtures; the workflow API used the real factory service and migrations in a disposable PGlite database. Native hardware discovery was also checked read-only as forgeadmin on the Forge VM.
 
@@ -64,3 +64,9 @@ The factory requires migration `002_software_factory.sql` through the existing m
 Release archives are built on Linux with explicit `tar.umask=0022` and protected staging permissions. This applies even when the caller or Git configuration permits group writes. Generated console files keep their verified contents while group/other write bits are removed from their staging copies. The caller umask and source files remain unchanged. Windows archive creation refuses before writing output because Windows can replace Unix archive modes.
 
 The Test Dev policy continues to require protected root ownership and no group/other write bits on the deployed YAML parser and every parent. On the inspected v0.4.3 host, only `/opt/w3forge` failed: it was `root:root` mode `0775`. The owner can correct that exact directory with `chmod g-w -- /opt/w3forge`, then retry Test Dev. No recursive ownership change, policy bypass, application restart, or database operation is needed. Historical packages and backups keep their original modes; this correction applies to newly prepared v0.4.4 packages.
+
+## Shared W3 product layout
+
+The engineering workspace uses the same shared sidebar shell as W3 Books and W3 BuildCost: a 240px desktop rail, the standard mobile drawer, shared branding/navigation/footer components, and runtime-derived version/environment badges. Only Forge branding and navigation items differ. Page content uses BuildCost typography and spacing: the same Inter/system sans stack, 20px page headings, 14px body content, 13px tables and controls, and shared card surfaces. Factory-specific styles are scoped to the main content so they cannot recolor navigation links or resize the shared footer. The owner packages and deploys this update from dev/v0.4.4.
+
+The sidebar/typography refinement passed browser checks against the final production assets for canonical navigation colors, page/card/table/control text sizes, shared footer styling, 240px desktop/tablet rail, 288px/85vw mobile drawer, Escape/focus restoration, and unavailable runtime metadata. The full project/request/rules/approval/test/review/notification workflow also passed with no page errors in the isolated fixture.

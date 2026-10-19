@@ -14,6 +14,8 @@ const base = { host: 'forge-test-host', observedAt: '2026-10-16T04:00:00Z', avai
 function render(data = base, error = null, pathname = '/environments', options = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } } });
   client.setQueryData(['forge-models'], models);
+  if (options.runtime !== null) client.setQueryData(['admin', 'version'], options.runtime ?? { app: 'w3forge', version: '0.4.4', nodeEnv: 'production' });
+  if (options.runtimeError) client.getQueryCache().find({ queryKey: ['admin', 'version'] }).setState({ status: 'error', fetchStatus: 'idle', error: options.runtimeError });
   client.setQueryData(['forge-environments'], data);
   client.setQueryData(['forge-factory'], options.factory ?? { projects: [], requests: [], runs: [], notifications: [], metrics: { queued: 0, active: 0, testing: 0, ready: 0, blocked: 0 }, observedAt: base.observedAt });
   client.setQueryData(['forge-services'], options.services ?? { observedAt: base.observedAt, services: [] });
@@ -114,4 +116,16 @@ test('a failed factory refresh hides cached queue records and current-looking me
   const html = render(base, null, '/', { factory, factoryError: new Error('Factory refresh unavailable') });
   assert.match(html, /Factory refresh unavailable/);
   assert.doesNotMatch(html, /Cached private work item|Queued requests/);
+});
+
+
+test('sidebar runtime badges use observed metadata and hide unavailable or unknown status', () => {
+  const production = render(base, null, '/', { runtime: { app: 'w3forge', version: '0.4.4', nodeEnv: 'production' } });
+  assert.match(production, /Production/); assert.match(production, /v0\.4\.4/);
+  const development = render(base, null, '/', { runtime: { app: 'w3forge', version: '0.4.4', nodeEnv: 'development' } });
+  assert.match(development, /Development build/); assert.doesNotMatch(development, /Production/);
+  for (const options of [{ runtime: null }, { runtime: { app: 'w3forge', version: '0.4.4', nodeEnv: 'unknown' } }, { runtimeError: new Error('Version observation unavailable') }]) {
+    const html = render(base, null, '/', options);
+    assert.doesNotMatch(html, /Production|Development build|Test environment<\//);
+  }
 });

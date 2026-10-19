@@ -473,3 +473,7 @@ On 2026-10-19 (America/Chicago), the owner explicitly approved installing Postgr
 # Owner scope — Software Factory v0.4.4
 
 On 2026-10-19 (America/Chicago), the owner requested the shared W3 application layout, Projects with versioned prompt rules, a FIFO feature-request process, test-environment and AI-service visibility, and update notifications, then selected v0.4.4 after the proposed durable PostgreSQL project/rules/request/run/notification schema was presented. This approves that app-owned source and forward-migration scope on dev/v0.4.4. Keep existing Core access boundaries and console pin; no new dependencies or live schema/application operations. Vendor names must not imply a connected worker, manual receipts must be labeled, and production deployment remains owner initiated.
+
+# Owner visual standard — Software Factory v0.4.4
+
+The owner requires W3 Forge to match the W3 Books/BuildCost left sidebar layout and theme exactly, apart from Forge branding and app navigation items. Reuse the pinned shared W3Sidebar components and primitives without app-wide selector overrides or extra sidebar marketing panels. Use BuildCost typography, text sizes, spacing and surface styles throughout the engineering workspace. Keep the 240px desktop rail and standard responsive drawer, runtime-derived badges, signed-in footer, Admin Console link and Sign out. These refinements remain in dev/v0.4.4; the owner will package and deploy.
