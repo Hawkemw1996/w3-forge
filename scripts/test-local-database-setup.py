@@ -119,5 +119,108 @@ class DatabaseSetupTests(unittest.TestCase):
             write.assert_not_called()
 
 
+
+class LoopbackQuotingTests(unittest.TestCase):
+    BAD = b"# fixture\r\nlisten_addresses = 127.0.0.1\t# local only\r\nport = 5432\r\n"
+    TARGET = setup.CONFIG / 'postgresql.conf'
+    BACKUP = setup.BASE / 'postgresql.conf.unquoted.before'
+
+    def fixture(self, content=None):
+        content = self.BAD if content is None else content
+        state = {'server_configured': True, 'cluster': {'uid': 123}, 'files': {
+            str(self.TARGET): {'installed_sha': setup.digest(content), 'mode': 0o644,
+                               'uid': 123, 'gid': 123}}}
+        return state, {self.TARGET: content}
+
+    def repairs(self, state, files, *, interrupt=False, stopped_error=None):
+        from contextlib import ExitStack
+        stack = ExitStack()
+        def write(target, content, *metadata):
+            files[target] = content
+            if interrupt and target == self.TARGET:
+                raise OSError('fixture interruption after replacement')
+        stack.enter_context(patch.object(Path, 'exists', lambda target: target in files))
+        stack.enter_context(patch.object(setup, 'read_regular', side_effect=lambda target, owners=(0,): files[target]))
+        stack.enter_context(patch.object(setup, 'save_state'))
+        stopped = stack.enter_context(patch.object(setup, 'require_stopped_cluster', side_effect=stopped_error))
+        writes = stack.enter_context(patch.object(setup, 'atomic', side_effect=write))
+        return stack, stopped, writes
+
+    def test_quoting_preserves_unrelated_bytes_comments_and_newlines(self):
+        expected = self.BAD.replace(b'127.0.0.1', b"'127.0.0.1'")
+        self.assertEqual(setup.quote_loopback_address(self.BAD), expected)
+        self.assertEqual(setup.quote_loopback_address(expected), expected)
+
+    def test_unknown_or_duplicate_address_settings_are_refused(self):
+        for content in (b'port = 5432\n', b'listen_addresses = 0.0.0.0\n',
+                        self.BAD + b"listen_addresses = '127.0.0.1'\n"):
+            with self.subTest(content=content), self.assertRaises(RuntimeError):
+                setup.quote_loopback_address(content)
+
+    def test_saved_configured_cluster_gets_only_the_recorded_quoting_repair(self):
+        state, files = self.fixture()
+        context, stopped, writes = self.repairs(state, files)
+        with context:
+            setup.repair_loopback_quoting(state)
+        expected = setup.quote_loopback_address(self.BAD)
+        self.assertEqual(files[self.TARGET], expected)
+        self.assertEqual(files[self.BACKUP], self.BAD)
+        self.assertEqual(state['files'][str(self.TARGET)]['installed_sha'], setup.digest(expected))
+        self.assertEqual(state['loopback_quote_repair']['before_sha'], setup.digest(self.BAD))
+        writes.assert_any_call(self.TARGET, expected, 0o644, 123, 123)
+        stopped.assert_called()
+
+    def test_interruption_after_replacement_resumes_without_another_config_write(self):
+        state, files = self.fixture()
+        context, _, _ = self.repairs(state, files, interrupt=True)
+        with context, self.assertRaises(OSError):
+            setup.repair_loopback_quoting(state)
+        self.assertEqual(state['files'][str(self.TARGET)]['installed_sha'], setup.digest(self.BAD))
+        context, stopped, writes = self.repairs(state, files)
+        with context:
+            setup.repair_loopback_quoting(state)
+        writes.assert_not_called()
+        stopped.assert_not_called()
+        self.assertEqual(state['files'][str(self.TARGET)]['installed_sha'], setup.digest(files[self.TARGET]))
+
+    def test_already_quoted_configuration_is_unchanged(self):
+        state, files = self.fixture(setup.quote_loopback_address(self.BAD))
+        context, stopped, writes = self.repairs(state, files)
+        with context:
+            setup.repair_loopback_quoting(state)
+        writes.assert_not_called()
+        stopped.assert_not_called()
+
+    def test_external_drift_is_refused_before_and_after_a_repair(self):
+        for completed in (False, True):
+            state, files = self.fixture()
+            if completed:
+                context, _, _ = self.repairs(state, files)
+                with context:
+                    setup.repair_loopback_quoting(state)
+            files[self.TARGET] += b'# external edit\n'
+            context, _, writes = self.repairs(state, files)
+            with self.subTest(completed=completed), context, self.assertRaises(RuntimeError):
+                setup.repair_loopback_quoting(state)
+            writes.assert_not_called()
+
+    def test_changed_repair_backup_is_refused(self):
+        state, files = self.fixture()
+        context, _, _ = self.repairs(state, files)
+        with context:
+            setup.repair_loopback_quoting(state)
+        files[self.BACKUP] += b'# external edit\n'
+        context, _, writes = self.repairs(state, files)
+        with context, self.assertRaises(RuntimeError):
+            setup.repair_loopback_quoting(state)
+        writes.assert_not_called()
+
+    def test_running_cluster_is_refused_before_any_repair_write(self):
+        state, files = self.fixture()
+        context, _, writes = self.repairs(state, files, stopped_error=RuntimeError('fixture cluster running'))
+        with context, self.assertRaises(RuntimeError):
+            setup.repair_loopback_quoting(state)
+        writes.assert_not_called()
+
 if __name__ == '__main__':
     unittest.main()

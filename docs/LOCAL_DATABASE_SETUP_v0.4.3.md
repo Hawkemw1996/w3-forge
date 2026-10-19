@@ -4,11 +4,13 @@ Owner approval: 2026-10-19 (America/Chicago). Scope: PostgreSQL 16 on the Forge 
 
 ## Confirmed host state and changes
 
+The first owner run installed PostgreSQL 16 and prepared the new cluster, then stopped before role/database creation: the native PgCommon writer treated the dotted IPv4 address as numeric and wrote an unquoted listen_addresses value. PostgreSQL rejected that syntax. The app remained active with the same PID/start time. The updated command below resumes the recorded setup; it does not reinstall the server or discard the recovery directory.
+
 Forge is running v0.4.2 with PID 1210 and its original start time. Both the service and the backup helper use /etc/w3forge/admin.env. The backup resolved 127.0.0.1:5432/w3forge; no PostgreSQL server/listener/cluster is present. The owner installed PostgreSQL client 16.15. Repository and package verification pass after the approved detached HOME repair.
 
 The operator shell helper exported empty PGSSLMODE, which libpq rejects before connecting. scripts/admin/_w3forge-policy.sh now unsets that variable only when empty after database bindings are exported. All nonempty values, including invalid values and whitespace, remain unchanged. This does not select or weaken an explicit SSL policy. The app-owned helper was not part of the inherited console provenance inventory; the reviewed source/operator SHA is pinned directly in the setup utility. The immutable previous Test Dev bootstrap bundle is unchanged.
 
-Changed files: AGENTS.md; scripts/admin/_w3forge-policy.sh; scripts/admin/tests/database-environment.test.cjs; scripts/bootstrap-local-database-w3forge.py; scripts/test-local-database-setup.py; this guide. Shared generated source, npm dependencies, Core authentication, existing application migrations and deployment gates are unchanged.
+Changed files: AGENTS.md; scripts/admin/_w3forge-policy.sh; scripts/admin/tests/database-environment.test.cjs; scripts/bootstrap-local-database-w3forge.py; scripts/test-local-database-setup.py; scripts/test-local-database-config.py; this guide. Shared generated source, npm dependencies, Core authentication, existing application migrations and deployment gates are unchanged.
 
 ## Reviewed operator behavior
 
@@ -18,7 +20,7 @@ It records recovery state under root-only /var/lib/w3forge-test/local-database-v
 
 Before installing postgresql-16 with --no-install-recommends and --no-upgrade, it verifies the installed PostgreSQL maintainer helper SHA ded9ea805f2dab3f3bcce35965d78622be15ac31565ec6a547db67a943ea3cad. The actual Ubuntu helper creates a cluster without --start, then uses invoke-rc.d for startup. A temporary root-owned policy-rc.d denies service startup during package installation; an existing startup policy causes refusal. NEEDRESTART_MODE=l prevents automatic unrelated service restarts. Only this utility's exact temporary startup policy is removed afterward; an interrupted package operation keeps the protection until it has finished and setup is rerun.
 
-Only the newly created 16/main cluster is configured and started. It listens on 127.0.0.1:5432, uses peer administration for postgres over the Unix socket and SCRAM authentication for the dedicated application database/user. It verifies cluster identity, role restrictions, database ownership, server major, actual connection identity and loopback-only listening. No application service restart, deployment or migration runs.
+Only the newly created 16/main cluster is configured and started. Before startup, a narrow quoting repair accepts only the exact recorded configuration hash and a single approved 127.0.0.1 address assignment. It preserves all other bytes, ownership and modes, saves the malformed configuration separately and journals both hashes so interruption after replacement can resume safely. Unknown values, duplicate assignments, drift, a listener or a postmaster PID prevent a repair. Existing server_configured receipts are handled without clearing them. PostgreSQL itself then parses the complete real configuration with -C before any start. Protected diagnostics are retained as postgres-config-check.log and postgres-start.log in the recovery directory. It listens on 127.0.0.1:5432, uses peer administration for postgres over the Unix socket and SCRAM authentication for the dedicated application database/user. It verifies cluster identity, role restrictions, database ownership, server major, actual connection identity and loopback-only listening. No application service restart, deployment or migration runs.
 
 The protected environment and installed shell helper are backed up before changes. Only the five explicit FORGE_DATABASE host/port/name/user/password bindings are added or updated; conflicting existing values block setup. Every other environment byte is preserved. The shell helper update is limited to the reviewed old/new hashes (c549221bf31570cc3e8e92dca9e06597f436e125dc86acaa5cb0c6bf720e6717 -> 420c4f33dfad83788e01934b4e1b03c7a053e02d08cf1183f8417ea67f0eb0d0).
 
@@ -29,8 +31,8 @@ After connecting successfully, it runs the unchanged installed backup workflow, 
 The staged files contain reviewed public code only. Use the existing Forge root Bash terminal to copy the utility into a protected root location, verify that copy, then run it:
 
 ```bash
-install -o root -g root -m 0700 /home/forgeadmin/w3forge-database-setup/420c4f33dfad/w3forge-database-setup.py /root/w3forge-database-setup.py &&
-printf 'f97891e65ab9014c85d45a2d431ba46f32d03ee4af173dfa332dae861b4fb130  /root/w3forge-database-setup.py\n' | sha256sum -c - &&
+install -o root -g root -m 0700 /home/forgeadmin/w3forge-database-setup/listen-quoting-fix-v1/w3forge-database-setup.py /root/w3forge-database-setup.py &&
+printf '1b7d2dea5de7dfc6dcab41ad0671fda40e3b47391b5b004222e62ae504e1184a  /root/w3forge-database-setup.py\n' | sha256sum -c - &&
 python3 /root/w3forge-database-setup.py --apply
 ```
 
@@ -48,16 +50,17 @@ Rollback first verifies the app service has not changed, both installed hashes a
 
 ## Validation
 
-Passed: 358 application tests, type checking, build, parity and pinned 120-file console verification. The eight new shell-boundary cases exercise the actual helper, including inherited/configured empty values and preservation of explicit/invalid values.
+Previously passed and unchanged by the operator-only startup follow-up: 358 application tests, type checking, build, parity and pinned 120-file console verification. The eight new shell-boundary cases exercise the actual helper, including inherited/configured empty values and preservation of explicit/invalid values.
 
 ```sh
 npm run typecheck && npm test && npm run build && npm run console:verify
 ```
 
-Passed: 13 independent pure operator tests on Windows and Linux as nonroot users, including config-byte preservation, duplicate handling, idempotence, conflict refusal, secret format/role restrictions, listener parsing, atomic-install recovery, drift refusal and rollback refusal after service changes. Operator syntax and nonroot --apply refusal also passed.
+Passed: 21 pure operator tests on Windows and Linux as nonroot users, including the original 13 cases plus exact quoting, byte preservation, duplicate/unknown-address refusal, saved configured-state repair, interruption after replacement, idempotence, drift/backup-integrity checks and running-cluster refusal. A separate native regression passed on the Forge host as forgeadmin: the installed pg_conftool reproduces the invalid configuration, the PostgreSQL 16 parser rejects it, then the repaired configuration parses to the expected address, numeric port and SCRAM value. This test uses only private temporary files and postgres -C; it never starts a server. Operator syntax and the previous nonroot --apply refusal passed.
 
 ```sh
 python3 scripts/test-local-database-setup.py
+python3 scripts/test-local-database-config.py # Linux, nonroot, installed PostgreSQL 16 tools
 python3 -c 'import ast,pathlib; ast.parse(pathlib.Path("scripts/bootstrap-local-database-w3forge.py").read_text())'
 ```
 

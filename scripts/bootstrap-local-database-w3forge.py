@@ -288,6 +288,66 @@ def install_server(state):
     save_state(state)
 
 
+def quote_loopback_address(content):
+    """Correct only the known PgCommon dotted-number quoting defect."""
+    active = re.findall(rb'(?m)^[ \t]*listen_addresses[ \t]*=', content)
+    pattern = re.compile(
+        rb"(?m)^([ \t]*listen_addresses[ \t]*=[ \t]*)"
+        rb"(127[.]0[.]0[.]1|'127[.]0[.]0[.]1')"
+        rb"([ \t]*(?:#[^\r\n]*)?)(\r?\n|$)")
+    matches = list(pattern.finditer(content))
+    if len(active) != 1 or len(matches) != 1:
+        fail('Expected exactly one approved loopback listen_addresses setting.')
+    match = matches[0]
+    replacement = match[1] + b"'127.0.0.1'" + match[3] + match[4]
+    return content[:match.start()] + replacement + content[match.end():]
+
+
+def require_stopped_cluster():
+    if listeners() or (DATA / 'postmaster.pid').exists():
+        fail('Cluster must be stopped before the loopback quoting repair.')
+
+
+def repair_loopback_quoting(state):
+    target = CONFIG / 'postgresql.conf'
+    record = state['files'][str(target)]
+    content = read_regular(target, (0, state['cluster']['uid']))
+    current_sha = digest(content)
+    receipt = state.get('loopback_quote_repair')
+    backup = BASE / 'postgresql.conf.unquoted.before'
+    if receipt:
+        original = read_regular(backup)
+        candidate = quote_loopback_address(original)
+        if (digest(original) != receipt['before_sha']
+                or digest(candidate) != receipt['after_sha']
+                or receipt['before_sha'] == receipt['after_sha']):
+            fail('Loopback quoting recovery record failed its integrity check.')
+        allowed = (receipt['before_sha'], receipt['after_sha'])
+        if current_sha not in allowed or record['installed_sha'] not in allowed:
+            fail('Cluster configuration changed outside the recorded quoting repair.')
+    else:
+        if current_sha != record['installed_sha']:
+            fail('Cluster configuration changed outside this setup.')
+        candidate = quote_loopback_address(content)
+        if candidate == content:
+            return
+        require_stopped_cluster()
+        if backup.exists():
+            if read_regular(backup) != content:
+                fail('Existing quoting repair backup differs from this configuration.')
+        else:
+            atomic(backup, content)
+        receipt = {'before_sha': current_sha, 'after_sha': digest(candidate)}
+        state['loopback_quote_repair'] = receipt
+        save_state(state)
+    if current_sha != receipt['after_sha']:
+        require_stopped_cluster()
+        print('[setup] Correcting only the recorded loopback address string quoting.', flush=True)
+        atomic(target, candidate, record['mode'], record['uid'], record['gid'])
+    record['installed_sha'] = receipt['after_sha']
+    save_state(state)
+
+
 def configure_server(state):
     pg = state['cluster']
     protected(DATA, (0, pg['uid']))
@@ -316,12 +376,23 @@ def configure_server(state):
         atomic(CONFIG / 'pg_hba.conf', HBA, 0o640, pg['uid'], pg['gid'])
         state['server_configured'] = True
         save_state(state)
+    # PgCommon treats a dotted IPv4 address as numeric; quote it before parsing.
+    hba_record = state['files'][str(CONFIG / 'pg_hba.conf')]
+    if digest(read_regular(CONFIG / 'pg_hba.conf', (0, pg['uid']))) != hba_record['installed_sha']:
+        fail('Recorded cluster authentication configuration changed outside this setup.')
+    repair_loopback_quoting(state)
     for name in ('postgresql.conf', 'pg_hba.conf'):
         record = state['files'][str(CONFIG / name)]
         if digest(read_regular(CONFIG / name, (0, pg['uid']))) != record['installed_sha']:
             fail('Recorded cluster configuration changed outside this setup.')
+    # Parse the entire real configuration without starting a database process.
+    parsed = native(['runuser', '-u', 'postgres', '--', '/usr/lib/postgresql/16/bin/postgres',
+                     '-D', str(DATA), '-c', 'config_file=' + str(CONFIG / 'postgresql.conf'),
+                     '-C', 'listen_addresses'], log=BASE / 'postgres-config-check.log')
+    if parsed != HOST:
+        fail('PostgreSQL parsed an unexpected listen address.')
     print('[setup] Starting only the new loopback PostgreSQL cluster.', flush=True)
-    native(['pg_ctlcluster', '16', 'main', 'start']) if not listeners() else None
+    native(['pg_ctlcluster', '16', 'main', 'start'], log=BASE / 'postgres-start.log') if not listeners() else None
     if listeners() != [HOST + ':' + PORT]:
         fail('PostgreSQL is not listening exclusively on the approved loopback address.')
     if admin_sql('SHOW listen_addresses;') != HOST or not admin_sql('SHOW server_version_num;').startswith('16'):
