@@ -168,8 +168,8 @@
       "source": "scripts/pipeline-deploy-dev-package-w3buildcost-ui.sh",
       "target": "scripts/admin/pipeline-deploy-dev-package-w3forge-ui.sh",
       "sourceSha256": "22c7c5d5fa767f6c88d5263bc0cd282be31a774339a49f1d6df30986c1a8f307",
-      "sha256": "16260b32042debbe108585f7e07068833d6a14c4d42b0f4bfa3e65c9c77f3478",
-      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations."
+      "sha256": "3871aeb0063e3f59b6c5f0e04f3093d3ee402653053c4acd2447dfb46a4cc274",
+      "adaptation": "Own installation config/repository/database, root workspace build, service layout preflight and canonical operation confirmations. v0.4.3 owner-approved detached deployment repair: explicitly set HOME=/root so the root worker reads its existing Git trust configuration; origin/effective URL checks and all deployment gates are unchanged."
     },
     {
       "source": "scripts/pipeline-fetch-tags-w3buildcost-ui.sh",

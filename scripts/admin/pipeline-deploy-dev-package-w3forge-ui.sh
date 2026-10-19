@@ -336,6 +336,7 @@ systemd-run \
   --property="StandardOutput=append:${LOG_PATH}" \
   --property="StandardError=append:${LOG_PATH}" \
   --property="ExecStopPost=${EXEC_STOP_POST}" \
+  --setenv="HOME=/root" \
   --setenv="W3_REQUEST_ID=${PP_REQUEST_ID}" \
   --setenv="W3_SOURCE=${PP_SOURCE_TAG}" \
   -- "$DELEGATE" "${DELEGATE_ARGS[@]}" </dev/null

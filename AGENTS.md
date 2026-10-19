@@ -461,3 +461,7 @@ are outside its inventory. Preserve the existing approved version/release gates.
 # Owner approval — Test Dev host setup
 
 On 2026-10-17 (America/Chicago), the owner explicitly approved provisioning the dedicated Forge build account, protected snapshot/cache roots, reviewed trusted Test Dev helpers and nonsecret bindings, and correcting the runtime YAML parser permission bits required by the existing guard. The checked host setup utility and temporary fixed launcher are scoped to this approval. Preserve all tests, source integrity, Core/auth/database behavior and the user-controlled application deployment/release gate. See docs/TEST_DEV_HOST_SETUP_v0.4.3.md for the exact operation, verification boundary and rollback.
+
+# Owner approval — detached deployment HOME repair
+
+On 2026-10-19 (America/Chicago), the owner explicitly approved adding the fixed HOME=/root environment binding to the detached deployment launcher on dev/v0.4.3 and preparing the backed-up installed launcher update. The clean-environment Git diagnostic failed without HOME and passed with HOME=/root. Preserve repository identity checks, exact existing Git trust configuration, deployment confirmations and owner-controlled deployment. This approval does not authorize automatic application deployment, service restart, database operations or unrelated detached-result changes.
