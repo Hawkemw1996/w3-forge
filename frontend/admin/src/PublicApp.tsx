@@ -33,6 +33,6 @@ function ProductLanding() {
 }
 export default function PublicApp() {
   return <Routes><Route path="/login" element={<LoginPage />} /><Route path="/access-denied" element={<AccessDeniedPage />} />
-    <Route path="/core-unavailable" element={<CoreUnavailablePage />} /><Route path="/" element={<ProductLanding />} />
-    <Route path="*" element={<Navigate to="/" replace />} /></Routes>;
+    <Route path="/core-unavailable" element={<CoreUnavailablePage />} /><Route path="/*" element={<ProductLanding />} />
+    </Routes>;
 }

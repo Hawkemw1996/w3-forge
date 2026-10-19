@@ -55,3 +55,13 @@ frontend/admin/.test-harness/
 !/frontend/admin/src/workspace/ForgeWorkspace.tsx
 !/frontend/admin/src/workspace/chatStream.ts
 !/frontend/admin/src/workspace/workspace.css
+
+!/frontend/admin/src/workspace/ForgeAssistant.tsx
+!/frontend/admin/src/workspace/assistant.css
+!/frontend/admin/src/workspace/FactoryWorkspace.tsx
+!/frontend/admin/src/workspace/factoryApi.ts
+!/frontend/admin/src/workspace/factory-workspace.css
+
+!/frontend/admin/src/workspace/FactoryHardware.tsx
+
+!/frontend/admin/src/workspace/factory-hardware.css

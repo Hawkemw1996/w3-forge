@@ -1,7 +1,7 @@
 {
   "name": "w3forge",
   "private": true,
-  "version": "0.4.3",
+  "version": "0.4.4",
   "workspaces": [
     "backend",
     "frontend/admin"

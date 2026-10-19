@@ -8,9 +8,14 @@ import { snapshotCurrent } from '../console/controls/actionLock';
 import { testDevResult } from '../console/testDev/progress';
 import { createOllama, validateMessages } from './ollama';
 import { createEnvironmentReader } from './environments';
+import { createServiceInventory } from './services';
+import { createHardwareReader } from './hardware';
+import { buildFactoryRouter } from '../factory/routes';
+import type { Database } from '../db/database';
 
 export function buildWorkspaceRouter(auth: CoreAuth, options: {
   ollama?: ReturnType<typeof createOllama>; environments?: ReturnType<typeof createEnvironmentReader>;
+  db?: Database; services?: ReturnType<typeof createServiceInventory>; hardware?: ReturnType<typeof createHardwareReader>;
 } = {}) {
   const router = Router(), ollama = options.ollama ?? createOllama(), environments = options.environments ?? createEnvironmentReader();
   let generating = false;
@@ -18,6 +23,29 @@ export function buildWorkspaceRouter(auth: CoreAuth, options: {
   // Reuse the existing access boundary unchanged. Operational metadata/chat are app-admin only.
   router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   router.use(adminGuard, auth.requireAdmin, auth.sameOrigin, json({ limit: '64kb' }));
+  const services = options.services ?? createServiceInventory({ ollama, environments });
+  const hardware = options.hardware ?? createHardwareReader();
+  router.get('/services', async (_req, res, next) => { try { respond.ok(res, await services()); } catch (error) { next(error); } });
+  router.get('/hardware', async (_req, res, next) => { try { respond.ok(res, await hardware()); } catch (error) { next(error); } });
+  if (options.db) router.use('/factory', buildFactoryRouter(options.db, {
+    draftPlan: async (model, prompt) => {
+      if (generating) throw new AdminError(429, 'MODEL_BUSY', 'A model response is already running. Try again shortly.');
+      if (prompt.length > 32000) throw new AdminError(400, 'PLAN_CONTEXT_TOO_LONG', 'Shorten the project rules or request before drafting.');
+      generating = true;
+      const controller = new AbortController();
+      const deadline = setTimeout(() => controller.abort(), 120000);
+      try {
+        const available = await ollama.inventory(controller.signal);
+        if (!available.models.some(item => item.name === model)) throw new AdminError(400, 'MODEL_NOT_INSTALLED', 'Choose a model installed on Forge.');
+        let result = '';
+        await ollama.chat(model, [{ role: 'user', content: prompt }], controller.signal, async ({ delta }) => {
+          result += delta;
+          if (result.length > 10000) throw new AdminError(502, 'PLAN_TOO_LONG', 'The draft exceeded the plan limit. Ask for a shorter plan.');
+        });
+        return result;
+      } finally { controller.abort(); clearTimeout(deadline); generating = false; }
+    }
+  }));
   router.get('/models', async (_req, res, next) => { try { respond.ok(res, await ollama.inventory()); } catch (error) { next(error); } });
   router.get('/environments', async (_req, res, next) => {
     try {

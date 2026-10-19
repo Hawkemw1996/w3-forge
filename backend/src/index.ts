@@ -89,7 +89,7 @@ function main(): void {
   app.use('/api/auth', auth.router);
   const terminal = createTerminalRuntime(auth);
   app.use('/api/admin', buildConsoleRouter(startedAt, { auth, core, terminal, db }));
-  app.use('/api/forge', buildWorkspaceRouter(auth));
+  app.use('/api/forge', buildWorkspaceRouter(auth, { db }));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
   app.get('/version', (_req, res) => res.json({ success: true, data: { version: readForgeVersion() } }));
   const announce = () => {

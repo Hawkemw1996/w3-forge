@@ -469,3 +469,7 @@ On 2026-10-19 (America/Chicago), the owner explicitly approved adding the fixed 
 # Owner approval — local Forge database setup
 
 On 2026-10-19 (America/Chicago), the owner explicitly approved installing PostgreSQL 16 locally on the Forge VM, creating dedicated w3forge/w3forge_user database and role, backing up the protected environment and adding database credentials, correcting empty PGSSLMODE handling, and verifying the existing mandatory backup. Bind PostgreSQL only to loopback, preserve Core and other applications, keep credentials out of logs, and retain databases on rollback. Application deployment/restart and migrations remain owner-controlled. The owner mentioned future FIFO change-management ideas; no FIFO schema or queue implementation is authorized by this setup alone.
+
+# Owner scope — Software Factory v0.4.4
+
+On 2026-10-19 (America/Chicago), the owner requested the shared W3 application layout, Projects with versioned prompt rules, a FIFO feature-request process, test-environment and AI-service visibility, and update notifications, then selected v0.4.4 after the proposed durable PostgreSQL project/rules/request/run/notification schema was presented. This approves that app-owned source and forward-migration scope on dev/v0.4.4. Keep existing Core access boundaries and console pin; no new dependencies or live schema/application operations. Vendor names must not imply a connected worker, manual receipts must be labeled, and production deployment remains owner initiated.
