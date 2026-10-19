@@ -150,3 +150,38 @@ test('the package wrapper passes the supported archive CLI arguments without run
  assert.deepEqual(argv,[path.join(fixtureRoot,'scripts/admin-console.cjs'),'archive','--root',fixtureRoot,'--prefix',pkg.name+'/','--output',output]);
  assert.equal(fs.existsSync(output),false);
 });
+test('release archives protect tracked and generated paths even with a permissive caller umask',()=>{
+ const output=path.join(temp,'protected-permissions.tar.gz');
+ if(process.platform==='win32'){
+  assert.throws(()=>loader.main(['archive','--root',root,'--prefix',pkg.name+'/','--output',output]),/Run release packaging on Linux/);
+  assert.equal(fs.existsSync(output),false);return;
+ }
+ const fixture=path.join(temp,'archive-permissions-source'),extract=path.join(temp,'archive-permissions-extracted');
+ fs.mkdirSync(fixture);fs.mkdirSync(extract);
+ const generated='backend/src/console/archive-fixture.ts',body=Buffer.from('export const fixture = true;\n');
+ const manifestBytes=Buffer.from(JSON.stringify({schema:1,api:1,version:'0.3.1',files:[{group:'backend',path:'archive-fixture.ts',sha256:loader.sha256(body),bytes:body.length}]}));
+ const lock={schema:1,repository:'https://github.com/Hawkemw1996/w3-admin-console.git',consumer:'w3forge',revision:'1'.repeat(40),manifestSha256:loader.sha256(manifestBytes),api:1,version:'0.3.1',targets:{backend:'backend/src/console',frontend:'frontend/admin/src',shared:'frontend/shared'}};
+ const lockBytes=Buffer.from(JSON.stringify(lock));
+ fs.writeFileSync(path.join(fixture,'package.json'),JSON.stringify({name:'w3forge',version:'0.0.0'}));
+ fs.writeFileSync(path.join(fixture,'admin-console.lock.json'),lockBytes);
+ fs.writeFileSync(path.join(fixture,'.gitignore'),'.w3-admin-console/\nbackend/src/console/\n');
+ fs.mkdirSync(path.join(fixture,'tracked/nested'),{recursive:true});fs.writeFileSync(path.join(fixture,'tracked/nested/source.txt'),'tracked source\n');
+ fs.mkdirSync(path.dirname(path.join(fixture,generated)),{recursive:true});fs.writeFileSync(path.join(fixture,generated),body);
+ fs.mkdirSync(path.join(fixture,'.w3-admin-console'));fs.writeFileSync(path.join(fixture,'.w3-admin-console/manifest.json'),manifestBytes);fs.writeFileSync(path.join(fixture,'.w3-admin-console/receipt.json'),lockBytes);
+ // A copied materialization may itself be group writable; the staging copy
+ // must be protected without changing this source or its verified content.
+ for(const file of [generated,'.w3-admin-console/manifest.json','.w3-admin-console/receipt.json'])fs.chmodSync(path.join(fixture,file),0o666);
+ const git=args=>execFileSync('git',args,{cwd:fixture,stdio:'pipe'});
+ git(['init','--quiet']);git(['config','tar.umask','0000']);git(['add','.']);git(['-c','user.name=Archive fixture','-c','user.email=archive-fixture@w3.invalid','-c','commit.gpgsign=false','commit','--quiet','-m','Synthetic archive fixture']);
+ const previous=process.umask(0o000);
+ try{
+  const result=loader.main(['archive','--root',fixture,'--prefix','w3forge/','--output',output]);
+  assert.equal(result.verified,true);assert.equal(process.umask(),0o000,'packaging must restore its caller umask');
+  execFileSync('tar',['-xf',output,'-C',extract],{stdio:'pipe'});
+  for(const relative of ['','tracked','tracked/nested','tracked/nested/source.txt','backend','backend/src','backend/src/console',generated,'.w3-admin-console','.w3-admin-console/manifest.json','.w3-admin-console/receipt.json']){
+   const st=fs.lstatSync(path.join(extract,'w3forge',relative));assert.equal(st.mode&0o022,0,'archive path must not be group/other writable: '+relative);
+  }
+  assert.equal(fs.readFileSync(path.join(extract,'w3forge',generated),'utf8'),body.toString());
+  assert.equal(fs.statSync(path.join(fixture,generated)).mode&0o777,0o666,'source permissions must remain unchanged');
+ }finally{process.umask(previous);}
+});

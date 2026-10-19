@@ -42,7 +42,7 @@ Run the integrated checks from the repository root:
 npm run typecheck && npm test && npm run build && npm run console:verify
 ```
 
-The complete gate passed in an isolated non-root Node 22.23.3 container: 400 tests passed (248 backend, 109 frontend, 28 operator-script, 11 console-integration, and 4 Test Dev integration tests). Typechecking, production builds, console parity, and all 120 pinned shared-console files passed verification at v0.3.1 revision `468e628ffaf43827c452d60371a8201c0125d3d8`.
+The complete gate passed in an isolated non-root Node 22.23.3 container: 401 tests passed (248 backend, 109 frontend, 28 operator-script, 12 console-integration, and 4 Test Dev integration tests). Typechecking, production builds, console parity, and all 120 pinned shared-console files passed verification at v0.3.1 revision `468e628ffaf43827c452d60371a8201c0125d3d8`.
 
 A separate Chrome workflow passed project creation, immutable rules v1/v2 prompt pinning, request intake, plan drafting, approvals, development/test/review receipts, update-ready notifications, hardware and service views, assistant draft persistence, and mobile navigation/focus/overflow checks with no page errors. Browser identity, hardware, containers, and model output were isolated fixtures; the workflow API used the real factory service and migrations in a disposable PGlite database. Native hardware discovery was also checked read-only as forgeadmin on the Forge VM.
 
@@ -58,3 +58,9 @@ All endpoints retain the existing app-admin and same-origin boundary and return 
 - `/api/forge/hardware`: read-only hardware inventory with observation time and independent unavailable states.
 
 The factory requires migration `002_software_factory.sql` through the existing migration runner. Before an owner deploy, use the existing package verification and mandatory backup workflow. An old application package can coexist with the retained additive factory tables; do not edit released migration checksums or delete the factory data during an application rollback.
+
+## Protected release permissions
+
+Release archives are built on Linux with explicit `tar.umask=0022` and protected staging permissions. This applies even when the caller or Git configuration permits group writes. Generated console files keep their verified contents while group/other write bits are removed from their staging copies. The caller umask and source files remain unchanged. Windows archive creation refuses before writing output because Windows can replace Unix archive modes.
+
+The Test Dev policy continues to require protected root ownership and no group/other write bits on the deployed YAML parser and every parent. On the inspected v0.4.3 host, only `/opt/w3forge` failed: it was `root:root` mode `0775`. The owner can correct that exact directory with `chmod g-w -- /opt/w3forge`, then retry Test Dev. No recursive ownership change, policy bypass, application restart, or database operation is needed. Historical packages and backups keep their original modes; this correction applies to newly prepared v0.4.4 packages.

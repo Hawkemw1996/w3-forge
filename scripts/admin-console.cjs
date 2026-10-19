@@ -211,29 +211,33 @@ function update(root,{revision,expected,source}) {
   });
 }
 function archive(root,{output,prefix}) {
+  if(process.platform==='win32')fail('Run release packaging on Linux to preserve protected deployment permissions. Windows may replace Unix archive modes.');
   if(!output||!prefix||!/^[a-z0-9_-]+\/$/.test(prefix))fail('Archive requires an output and safe app prefix.');
   const lock=readLock(root),result=verify(root,lock);
   if(git(root,['status','--porcelain']).toString().trim())fail('A package requires a clean app checkout.');
   const manifest=readManifest(fs.readFileSync(metadata(root)),lock);
-  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'w3-console-archive-'));
+  const priorUmask=process.umask();let temp;
   try {
+    process.umask(priorUmask|0o022);
+    temp=fs.mkdtempSync(path.join(os.tmpdir(),'w3-console-archive-'));
     const sourceTar=path.join(temp,'source.tar'),stage=path.join(temp,'stage');
     fs.mkdirSync(stage);
-    git(root,['archive','--format=tar','--prefix='+prefix,'--output='+sourceTar,'HEAD']);
+    git(root,['-c','tar.umask=0022','archive','--format=tar','--prefix='+prefix,'--output='+sourceTar,'HEAD']);
     execFileSync('tar',['-xf',sourceTar,'-C',stage],{stdio:'pipe'});
     const app=path.join(stage,prefix);
+    const copy=(source,target)=>{fs.copyFileSync(source,target);fs.chmodSync(target,fs.statSync(target).mode&0o777&~0o022);};
     for(const file of manifest.files) {
       const relative=lock.targets[file.group]+'/'+file.path;
       const target=secureTarget(app,relative);fs.mkdirSync(path.dirname(target),{recursive:true});
-      fs.copyFileSync(secureTarget(root,relative),target);
+      copy(secureTarget(root,relative),target);
     }
-    const meta=metadata(app);fs.mkdirSync(path.dirname(meta),{recursive:true});fs.copyFileSync(metadata(root),meta);
-    fs.copyFileSync(receipt(root),receipt(app));
+    const meta=metadata(app);fs.mkdirSync(path.dirname(meta),{recursive:true});copy(metadata(root),meta);
+    copy(receipt(root),receipt(app));
     verify(app);
     // The calling app pipeline chooses a temporary output and performs its existing atomic promotion.
     execFileSync('tar',['-czf',path.resolve(output),'-C',stage,prefix.slice(0,-1)],{stdio:'pipe'});
     return {...result,archive:output};
-  }finally{fs.rmSync(temp,{recursive:true,force:true});}
+  }finally{process.umask(priorUmask);if(temp)fs.rmSync(temp,{recursive:true,force:true});}
 }
 function snapshot(root,{destination}) {
   if(!destination)fail('Snapshot requires a destination with the app files already copied.');
