@@ -1,3 +1,12 @@
+# Changelog
+
+## v0.4.5 — AI account connections
+
+- Replace placeholder Codex/Claude cards with real non-root CLI installation and sign-in checks.
+- Add bounded, owner-triggered model connection tests with timestamps and safe failure reporting.
+- Keep Codex test-container observations distinct from account connectivity; exclude deferred Perplexity/Grok cards.
+- Preserve Core authorization, factory workflow, database schema, console pin and the owner-operated deployment pipeline.
+
 ## v0.4.3 — Forge workspace (unreleased)
 
 - Adopt shared Admin Console v0.3.1 at immutable commit 468e628ffaf43827c452d60371a8201c0125d3d8 through the verified loader; refresh the canonical consumer removal regressions for its retired manual update workflow.

@@ -8,7 +8,9 @@ Forge’s engineering agents stay inside approved development branches. The shar
 
 ## Current Version
 
-v0.4.3 — Ollama chat workspace, Codex test environment visibility, and shared Admin Console v0.3.1 (unreleased, `dev/v0.4.3`)
+v0.4.5 — Codex and Claude account connections and manual model-access tests (unreleased, dev/v0.4.5)
+
+See [AI connections and verification](docs/AI_CONNECTIONS_v0.4.5.md).
 
 Open `/forge/` for chat and test environments, or `/admin/` for operations. See [workspace configuration and test registration](docs/FORGE_WORKSPACE_v0.4.3.md).
 

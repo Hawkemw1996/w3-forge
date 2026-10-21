@@ -37,7 +37,7 @@ describe('workspace service inventory', () => {
       lastSeenAt: observedAt,
       activeTasks: null,
     });
-    expect(result.services.find((service) => service.id === 'codex')).toMatchObject({
+    expect(result.services.find((service) => service.id === 'codex-tests')).toMatchObject({
       status: 'observed',
       models: [],
       capabilities: ['test_environment_observation'],
@@ -64,7 +64,7 @@ describe('workspace service inventory', () => {
       activeTasks: null,
       message: expect.stringContaining('no models are installed'),
     });
-    expect(result.services.find((service) => service.id === 'codex')).toMatchObject({
+    expect(result.services.find((service) => service.id === 'codex-tests')).toMatchObject({
       status: 'not_configured',
       capabilities: [],
       lastSeenAt: null,
@@ -80,7 +80,7 @@ describe('workspace service inventory', () => {
     environments.mockResolvedValue({ available: false, observedAt, environments: [], message: 'private internal failure' });
     const result = await read();
     expect(result.services.find((service) => service.id === 'ollama')?.status).toBe('available');
-    expect(result.services.find((service) => service.id === 'codex')).toMatchObject({
+    expect(result.services.find((service) => service.id === 'codex-tests')).toMatchObject({
       status: 'unavailable',
       activeTasks: null,
       lastSeenAt: null,
@@ -93,7 +93,7 @@ describe('workspace service inventory', () => {
     const { inventory, read } = readers();
     inventory.mockRejectedValue(new Error('http://private-service:11434 secret-token=do-not-disclose'));
     const result = await read();
-    expect(result.services.find((service) => service.id === 'codex')?.status).toBe('observed');
+    expect(result.services.find((service) => service.id === 'codex-tests')?.status).toBe('observed');
     expect(result.services.find((service) => service.id === 'ollama')).toMatchObject({
       status: 'unavailable',
       activeTasks: null,
@@ -110,31 +110,23 @@ describe('workspace service inventory', () => {
     inventory.mockImplementation(() => { throw new Error('private sync failure'); });
     const result = await read();
     expect(environments).toHaveBeenCalledOnce();
-    expect(result.services.find((service) => service.id === 'codex')?.activeTasks).toBe(1);
+    expect(result.services.find((service) => service.id === 'codex-tests')?.activeTasks).toBe(1);
     expect(JSON.stringify(result)).not.toContain('private sync failure');
   });
 
-  it('reports missing Codex activity without claiming an adapter and leaves external vendors unconfigured', async () => {
+  it('keeps test observations separate from the two selected account connections', async () => {
     const { environments, read } = readers();
     environments.mockResolvedValue({ available: true, observedAt, environments: [] });
     const result = await read();
-    expect(result.services.find((service) => service.id === 'codex')).toMatchObject({
+    expect(result.services.find((service) => service.id === 'codex-tests')).toMatchObject({
       status: 'not_configured',
       activeTasks: 0,
       lastSeenAt: null,
       message: expect.stringContaining('No coding-agent adapter is configured'),
     });
-    for (const id of ['perplexity', 'grok', 'claude']) {
-      expect(result.services.find((service) => service.id === id)).toMatchObject({
-        status: 'not_configured',
-        capabilities: [],
-        models: [],
-        lastSeenAt: null,
-        activeTasks: null,
-        message: expect.stringContaining('protected server-side adapter'),
-      });
-    }
-    expect(result.services).toHaveLength(5);
+    expect(result.services.map(service => service.id)).toEqual(['ollama', 'codex', 'claude', 'codex-tests']);
+    for (const id of ['codex', 'claude']) expect(result.services.find(service => service.id === id)?.status).not.toBe('observed');
+    expect(result.services).toHaveLength(4);
   });
 
   it('reports both independent reader failures as unavailable with unknown task counts', async () => {
@@ -142,7 +134,7 @@ describe('workspace service inventory', () => {
     inventory.mockRejectedValue(new Error('secret local failure'));
     environments.mockRejectedValue(new Error('secret container failure'));
     const result = await read();
-    for (const id of ['ollama', 'codex']) {
+    for (const id of ['ollama', 'codex-tests']) {
       expect(result.services.find((service) => service.id === id)).toMatchObject({
         status: 'unavailable',
         capabilities: [],

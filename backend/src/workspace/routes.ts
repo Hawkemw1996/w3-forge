@@ -1,3 +1,4 @@
+import { createProviderConnections } from './providerConnections';
 import { Router, json } from 'express';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
@@ -15,6 +16,7 @@ import type { Database } from '../db/database';
 
 export function buildWorkspaceRouter(auth: CoreAuth, options: {
   ollama?: ReturnType<typeof createOllama>; environments?: ReturnType<typeof createEnvironmentReader>;
+  connections?: ReturnType<typeof createProviderConnections>;
   db?: Database; services?: ReturnType<typeof createServiceInventory>; hardware?: ReturnType<typeof createHardwareReader>;
 } = {}) {
   const router = Router(), ollama = options.ollama ?? createOllama(), environments = options.environments ?? createEnvironmentReader();
@@ -23,9 +25,17 @@ export function buildWorkspaceRouter(auth: CoreAuth, options: {
   // Reuse the existing access boundary unchanged. Operational metadata/chat are app-admin only.
   router.use((_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   router.use(adminGuard, auth.requireAdmin, auth.sameOrigin, json({ limit: '64kb' }));
-  const services = options.services ?? createServiceInventory({ ollama, environments });
+  const connections = options.connections ?? createProviderConnections();
+  const services = options.services ?? createServiceInventory({ ollama, environments, connections });
   const hardware = options.hardware ?? createHardwareReader();
   router.get('/services', async (_req, res, next) => { try { respond.ok(res, await services()); } catch (error) { next(error); } });
+  router.post('/services/:provider/test', async (req, res, next) => {
+    try {
+      if (req.params.provider !== 'codex' && req.params.provider !== 'claude') throw new AdminError(400, 'INVALID_AI_PROVIDER', 'Choose Codex or Claude.');
+      if (!req.body || Array.isArray(req.body) || typeof req.body !== 'object' || Object.keys(req.body).length) throw new AdminError(400, 'INVALID_AI_TEST', 'Connection tests do not accept prompts or settings.');
+      respond.ok(res, await connections.test(req.params.provider));
+    } catch (error) { next(error); }
+  });
   router.get('/hardware', async (_req, res, next) => { try { respond.ok(res, await hardware()); } catch (error) { next(error); } });
   if (options.db) router.use('/factory', buildFactoryRouter(options.db, {
     draftPlan: async (model, prompt) => {

@@ -1,3 +1,4 @@
+import { createProviderConnections, type ProviderConnection } from './providerConnections';
 import type { createEnvironmentReader } from './environments';
 import type { createOllama } from './ollama';
 
@@ -10,6 +11,7 @@ export interface ServiceStatus {
   models: string[];
   lastSeenAt: string | null;
   activeTasks: number | null;
+  connection?: ProviderConnection;
 }
 
 export interface ServiceInventory {
@@ -21,15 +23,18 @@ export function createServiceInventory(options: {
   ollama: Pick<ReturnType<typeof createOllama>, 'inventory'>;
   environments: ReturnType<typeof createEnvironmentReader>;
   now?: () => Date;
+  connections?: ReturnType<typeof createProviderConnections>;
 }): () => Promise<ServiceInventory> {
   const now = options.now ?? (() => new Date());
+  const connections = options.connections ?? createProviderConnections();
 
   return async () => {
     // Each existing reader has its own timeout. A failed source must not hide
     // evidence returned by the other source, including synchronous failures.
-    const [ollama, environments] = await Promise.allSettled([
+    const [ollama, environments, accounts] = await Promise.allSettled([
       Promise.resolve().then(() => options.ollama.inventory()),
       Promise.resolve().then(() => options.environments()),
+      Promise.resolve().then(() => connections.inventory()),
     ]);
     const observedAt = now().toISOString();
 
@@ -58,8 +63,8 @@ export function createServiceInventory(options: {
     }
 
     let codex: ServiceStatus = {
-      id: 'codex',
-      name: 'Codex',
+      id: 'codex-tests',
+      name: 'Codex test environments',
       status: 'unavailable',
       message: 'Codex test-environment observations are unavailable. A connected coding agent has not been established.',
       capabilities: [],
@@ -84,21 +89,15 @@ export function createServiceInventory(options: {
       };
     }
 
-    const external: ServiceStatus[] = [
-      { id: 'perplexity', name: 'Perplexity' },
-      { id: 'grok', name: 'Grok' },
-      { id: 'claude', name: 'Claude' },
-    ].map(({ id, name }) => ({
-      id,
-      name,
-      status: 'not_configured',
-      message: `No ${name} adapter is configured. Configure a protected server-side adapter to connect this service.`,
-      capabilities: [],
-      models: [],
-      lastSeenAt: null,
-      activeTasks: null,
-    }));
+    const providers: ServiceStatus[] = accounts.status === 'fulfilled' ? accounts.value.map(connection => ({
+      id: connection.id, name: connection.name,
+      status: connection.state === 'signed_in' ? 'available' : connection.state === 'not_installed' || connection.state === 'signed_out' ? 'not_configured' : 'unavailable',
+      message: connection.message, capabilities: connection.state === 'signed_in' ? ['account_sign_in', 'manual_connection_test'] : [],
+      models: [], lastSeenAt: connection.checkedAt, activeTasks: null, connection,
+    })) : ['codex', 'claude'].map(id => ({ id, name: id === 'codex' ? 'Codex' : 'Claude', status: 'unavailable',
+      message: 'Account checks are unavailable.', capabilities: [], models: [], lastSeenAt: null, activeTasks: null }));
 
-    return { observedAt, services: [local, codex, ...external] };
+    return { observedAt, services: [local, ...providers, codex] };
+
   };
 }

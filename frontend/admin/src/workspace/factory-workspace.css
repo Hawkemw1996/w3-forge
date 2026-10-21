@@ -19,3 +19,10 @@
 @media(max-width:639px){.factory-app-eyebrow{display:none}.factory-active-page{font-size:16px}}
 
 .factory-open-navigation{padding:4px 8px!important}
+
+.factory-workspace .factory-provider-card .factory-details { margin-top: 8px; }
+.factory-workspace .factory-provider-test { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--w3-border); font-size: 14px; line-height: 1.5; }
+.factory-workspace .factory-provider-test p { margin: 8px 0; font-size: 14px; line-height: 1.5; }
+.factory-workspace .factory-provider-test strong { font-size: 14px; font-weight: 600; }
+.factory-workspace .factory-provider-test small { font-size: 12px; }
+.factory-workspace .factory-provider-test .btn { margin-top: 8px; }

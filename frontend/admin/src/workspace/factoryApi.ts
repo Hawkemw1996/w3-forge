@@ -29,9 +29,16 @@ export interface FactorySnapshot {
 export interface FactoryPrompt {
   prompt: string; checksum: string; rulesVersion: number; rulesChecksum: string; requestRevision: number; requestId: string;
 }
+export interface ProviderConnection {
+  id: 'codex' | 'claude'; name: string; state: 'not_installed' | 'signed_out' | 'signed_in' | 'unavailable';
+  account: string; version: string | null; authMethod: 'chatgpt' | 'claude_subscription' | 'api_key' | 'other' | 'unknown';
+  checkedAt: string; message: string;
+  test: { status: 'passed' | 'failed'; checkedAt: string; message: string } | null;
+}
 export interface ForgeService {
   id: string; name: string; status: 'available' | 'unavailable' | 'not_configured' | 'observed';
   message: string; capabilities: string[]; models: string[]; lastSeenAt: string | null; activeTasks: number | null;
+  connection?: ProviderConnection;
 }
 export interface ForgeServices { observedAt: string; services: ForgeService[] }
 
