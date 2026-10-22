@@ -1,0 +1,11 @@
+import {describe,it,expect} from 'vitest';
+import express from 'express';
+import request from 'supertest';
+import type {Database} from '../src/db/database';
+import {buildWorkspaceRouter} from '../src/workspace/routes';
+import {createCoreFixture} from './coreFixture';
+function fixture(){const core=createCoreFixture();let queries=0;const db:Database={query:async()=>{queries++;throw Error('private database secret');},transaction:async()=>{queries++;throw Error('private database secret');},ping:async()=>false};const app=express().use('/api/auth',core.auth.router).use('/api/forge',buildWorkspaceRouter(core.auth,{db}));return{...core,app,agent:request.agent(app),queries:()=>queries};}
+describe('execution API access and input boundary',()=>{
+ it('requires current Core admin authorization and same origin before storage',async()=>{const f=fixture();expect((await request(f.app).get('/api/forge/execution/status')).status).toBe(401);await f.login(f.agent);f.state.role='viewer';expect((await f.agent.get('/api/forge/execution/requests/request/jobs')).status).toBe(403);f.state.role='admin';expect((await f.agent.post('/api/forge/execution/requests/request/start').set('Origin','https://other.test').send({expectedRevision:1})).status).toBe(403);f.state.revoked=true;expect((await f.agent.get('/api/forge/execution/status')).status).toBe(401);expect(f.queries()).toBe(0);});
+ it('accepts only revision actions, reports missing setup and hides internal worker APIs',async()=>{const f=fixture();await f.login(f.agent);const status=await f.agent.get('/api/forge/execution/status');expect(status.body.data).toMatchObject({available:false,maxCorrections:2});expect((await f.agent.post('/api/forge/execution/requests/request/start').send({expectedRevision:1,command:'unapproved'})).status).toBe(400);expect((await f.agent.post('/api/forge/execution/requests/request/start').send({expectedRevision:1})).status).toBe(503);expect(f.queries()).toBe(0);const unavailable=await f.agent.get('/api/forge/execution/requests/request/jobs');expect(unavailable.status).toBe(503);expect(unavailable.text).not.toContain('private database secret');expect((await f.agent.post('/api/forge/execution/jobs/job/reconcile').send({expectedRevision:1})).status).toBe(404);});
+});

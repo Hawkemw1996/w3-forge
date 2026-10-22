@@ -1,3 +1,4 @@
+import {configuredExecutionEngine} from './execution/bootstrap';
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -30,7 +31,7 @@ function readForgeVersion(): string {
   }
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
 
   let cfg;
@@ -89,7 +90,8 @@ function main(): void {
   app.use('/api/auth', auth.router);
   const terminal = createTerminalRuntime(auth);
   app.use('/api/admin', buildConsoleRouter(startedAt, { auth, core, terminal, db }));
-  app.use('/api/forge', buildWorkspaceRouter(auth, { db }));
+  const execution = await configuredExecutionEngine(db); execution.start();
+  app.use('/api/forge', buildWorkspaceRouter(auth, { db, execution }));
   app.get('/health', (_req, res) => res.json({ success: true, data: { app: 'w3forge', version: readForgeVersion() } }));
   app.get('/version', (_req, res) => res.json({ success: true, data: { version: readForgeVersion() } }));
   const announce = () => {
@@ -120,8 +122,8 @@ function main(): void {
   const shutdown = () => {
     terminal.manager.shutdown();
     clearInterval(discoveryTimer);
-    server.close(() => { void pool.end().finally(() => process.exit(0)); });
-    const deadline = setTimeout(() => process.exit(0), 5_000);
+    server.close(() => { void execution.stop().finally(() => pool.end()).finally(() => process.exit(0)); });
+    const deadline = setTimeout(() => process.exit(0), 30_000);
     deadline.unref();
   };
   process.once('SIGTERM', shutdown);
@@ -129,4 +131,4 @@ function main(): void {
   process.once('exit', () => terminal.manager.shutdown());
 }
 
-main();
+void main().catch(() => { console.error('[w3-forge-admin] Startup failed.'); process.exit(1); });

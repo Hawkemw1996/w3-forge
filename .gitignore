@@ -70,3 +70,6 @@ frontend/admin/.test-harness/
 
 !/frontend/admin/src/workspace/Agents.tsx
 !/frontend/admin/src/workspace/agents.css
+
+!/frontend/admin/src/workspace/ExecutionPanel.tsx
+!/frontend/admin/src/workspace/execution.css

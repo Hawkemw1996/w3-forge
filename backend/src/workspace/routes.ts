@@ -1,3 +1,6 @@
+import {buildExecutionRouter} from '../execution/routes';
+import {ExecutionEngine} from '../execution/engine';
+import {ExecutionStore} from '../execution/store';
 import { createProviderConnections } from './providerConnections';
 import { Router, json } from 'express';
 import { once } from 'node:events';
@@ -18,7 +21,7 @@ import type { Database } from '../db/database';
 export function buildWorkspaceRouter(auth: CoreAuth, options: {
   ollama?: ReturnType<typeof createOllama>; environments?: ReturnType<typeof createEnvironmentReader>;
   connections?: ReturnType<typeof createProviderConnections>;
-  db?: Database; services?: ReturnType<typeof createServiceInventory>; hardware?: ReturnType<typeof createHardwareReader>;
+  execution?: ExecutionEngine; db?: Database; services?: ReturnType<typeof createServiceInventory>; hardware?: ReturnType<typeof createHardwareReader>;
 } = {}) {
   const router = Router(), ollama = options.ollama ?? createOllama(), environments = options.environments ?? createEnvironmentReader();
   let generating = false;
@@ -45,6 +48,7 @@ export function buildWorkspaceRouter(auth: CoreAuth, options: {
       if (!inventory.models.some(item => item.name === model)) throw new AdminError(400, 'MODEL_NOT_INSTALLED', 'Choose a model installed on Forge, or use the provider default.');
     }
   }));
+  if (options.db) router.use('/execution', buildExecutionRouter(options.execution ?? new ExecutionEngine(new ExecutionStore(options.db))));
   if (options.db) router.use('/factory', buildFactoryRouter(options.db, {
     draftPlan: async (model, prompt) => {
       if (generating) throw new AdminError(429, 'MODEL_BUSY', 'A model response is already running. Try again shortly.');

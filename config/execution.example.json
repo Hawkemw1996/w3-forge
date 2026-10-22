@@ -1,0 +1,19 @@
+{
+  "workspaceRoot": "/var/lib/w3forge/execution",
+  "repositories": [
+    {
+      "repositoryUrl": "https://github.com/hawkemw1996/w3-forge",
+      "sourcePath": "/opt/w3forge-deploy",
+      "branch": "dev/v0.4.7",
+      "testImage": "node:22.23.3-bookworm",
+      "npmCachePath": "/var/cache/w3forge-execution/npm",
+      "checks": [
+        "typecheck",
+        "test",
+        "build"
+      ]
+    }
+  ],
+  "providerTimeoutMs": 600000,
+  "testTimeoutMs": 1200000
+}

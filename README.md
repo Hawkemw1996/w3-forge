@@ -8,9 +8,9 @@ Forge’s engineering agents stay inside approved development branches. The shar
 
 ## Current Version
 
-v0.4.6 — versioned agent profiles, independent model assignments, and separate AI Connections (unreleased, dev/v0.4.6)
+v0.4.7 — durable profile-driven factory execution with specification approval, isolated checks and bounded corrections (unreleased, dev/v0.4.7)
 
-See [agent profiles and model assignments](docs/AGENT_PROFILES_v0.4.6.md) and [AI connections and verification](docs/AI_CONNECTIONS_v0.4.5.md).
+See [factory execution and operator activation](docs/factory-execution.md), [agent profiles and model assignments](docs/AGENT_PROFILES_v0.4.6.md) and [AI connections and verification](docs/AI_CONNECTIONS_v0.4.5.md).
 
 Open `/forge/` for chat and test environments, or `/admin/` for operations. See [workspace configuration and test registration](docs/FORGE_WORKSPACE_v0.4.3.md).
 

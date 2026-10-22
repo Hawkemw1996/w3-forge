@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.7 — Factory execution (unreleased)
+
+- Add durable, revision-checked execution jobs with frozen request/rules/profile/model snapshots and append-only evidence.
+- Coordinate specification writing, owner approval, brokered development, exact-commit container checks and four independent reviews; limit corrections to two.
+- Add Start, specification approval, cancellation, retry, progress, profile snapshots, execution history and candidate diff download in Requests.
+- Fence stale workers and late results, verify process/container cleanup, retain blocked work, and prevent manual transitions from controlling an automated request.
+- Require protected repository bindings and offline test dependencies; keep native provider tools disabled and project code inside disposable non-root containers.
+- Keep visual work blocked for actual browser verification and preserve owner-controlled publication, packaging and deployment. Existing seven profiles remain unchanged.
+
 ## v0.4.6 — Agent profiles
 
 - Split Agents and AI Connections in the factory navigation while preserving provider status and manual connection tests.
