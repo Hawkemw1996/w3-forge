@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.6 — Agent profiles
+
+- Split Agents and AI Connections in the factory navigation while preserving provider status and manual connection tests.
+- Add persistent agent identities, immutable Markdown profile revisions, optimistic concurrency, independent model assignments, and retained deletion history.
+- Populate seven unique role profiles at v0.1.0: Orchestrator, Specification Writer, Developer, Code Reviewer, Security Reviewer, UI Reviewer, and UX Reviewer.
+- Add profile creation, duplication, editing, safe preview, Markdown download, revision history, enable/disable and deletion controls.
+- Ship an additive forward migration with initial profile data; deployment and live migration remain owner operated. No worker dispatch or automatic release behavior is enabled.
+
+
 ## v0.4.5 — AI account connections
 
 - Replace placeholder Codex/Claude cards with real non-root CLI installation and sign-in checks.

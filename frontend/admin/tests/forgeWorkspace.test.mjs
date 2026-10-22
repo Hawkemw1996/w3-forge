@@ -82,7 +82,7 @@ test('factory dashboard uses the W3 shell and shows the observed work queue with
     runs: [], notifications: [], metrics: { queued: 0, active: 1, testing: 0, ready: 0, blocked: 0 }, observedAt: base.observedAt
   };
   const html = render(base, null, '/', { factory });
-  for (const value of ['Software Factory', 'Projects', 'Agents &amp; AI', 'Forge hardware', 'Work in progress', 'Preserve project rules in prompts', 'W3 Example']) assert.ok(html.includes(value), value);
+  for (const value of ['Software Factory', 'Projects', 'Agents', 'AI Connections', 'Forge hardware', 'Work in progress', 'Preserve project rules in prompts', 'W3 Example']) assert.ok(html.includes(value), value);
   assert.ok(html.includes('w3-sidebar'));
   assert.doesNotMatch(html, /All tests passed|Automated development complete/);
 });
@@ -92,7 +92,7 @@ test('unconfigured AI services and observed test activity never imply a connecte
     { id: 'codex', name: 'Codex', status: 'observed', message: 'A registered test environment is running. A coding-agent connection has not been verified.', capabilities: ['test_environment_observation'], models: [], lastSeenAt: base.observedAt, activeTasks: 1 },
     ...['Perplexity','Grok','Claude'].map(name => ({ id: name.toLowerCase(), name, status: 'not_configured', message: 'No worker adapter has been configured.', capabilities: [], models: [], lastSeenAt: null, activeTasks: null }))
   ] };
-  const html = render(base, null, '/agents', { services });
+  const html = render(base, null, '/ai-connections', { services });
   for (const value of ['Codex', 'Perplexity', 'Grok', 'Claude', 'Setup needed', 'Test activity observed', 'coding-agent connection has not been verified']) assert.ok(html.includes(value), value);
   assert.doesNotMatch(html, /Claude connected|Grok connected|Perplexity connected/);
 });

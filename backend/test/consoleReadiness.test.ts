@@ -65,7 +65,7 @@ describe('canonical readiness routes with real PostgreSQL semantics', () => {
     const response = await f.get('production-readiness');
     expect(response.status).toBe(200);
     const data = response.body.data;
-    expect(data).toMatchObject({ migration_version: '002_software_factory.sql', production_data_mode: false, all_checks_pass: true, pass_count: 9, total_checks: 9, cutover_record: null,
+    expect(data).toMatchObject({ migration_version: '003_agent_profiles.sql', production_data_mode: false, all_checks_pass: true, pass_count: 9, total_checks: 9, cutover_record: null,
       backup: { exists: true, filename: 'w3forge-backup.tar.gz', size_bytes: 11, health: 'green' } });
     expect(data.checks.map((check: { key: string }) => check.key)).toEqual(['database_connected', 'migrations_applied', 'required_tables', 'history_protection', 'audit_logging', 'backup_exists', 'backup_age', 'core_reachable', 'core_registration']);
     expect(data.checks.find((check: { key: string }) => check.key === 'required_tables')).toMatchObject({ pass: true, detail: '4 required tables present' });

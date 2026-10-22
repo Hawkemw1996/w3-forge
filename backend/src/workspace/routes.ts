@@ -11,6 +11,7 @@ import { createOllama, validateMessages } from './ollama';
 import { createEnvironmentReader } from './environments';
 import { createServiceInventory } from './services';
 import { createHardwareReader } from './hardware';
+import { buildAgentRouter } from '../agents/routes';
 import { buildFactoryRouter } from '../factory/routes';
 import type { Database } from '../db/database';
 
@@ -37,6 +38,13 @@ export function buildWorkspaceRouter(auth: CoreAuth, options: {
     } catch (error) { next(error); }
   });
   router.get('/hardware', async (_req, res, next) => { try { respond.ok(res, await hardware()); } catch (error) { next(error); } });
+  if (options.db) router.use('/agents', buildAgentRouter(options.db, {
+    validateModel: async (provider, model) => {
+      if (provider !== 'ollama' || model === null) return;
+      const inventory = await ollama.inventory();
+      if (!inventory.models.some(item => item.name === model)) throw new AdminError(400, 'MODEL_NOT_INSTALLED', 'Choose a model installed on Forge, or use the provider default.');
+    }
+  }));
   if (options.db) router.use('/factory', buildFactoryRouter(options.db, {
     draftPlan: async (model, prompt) => {
       if (generating) throw new AdminError(429, 'MODEL_BUSY', 'A model response is already running. Try again shortly.');

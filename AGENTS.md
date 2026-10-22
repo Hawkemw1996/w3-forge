@@ -477,3 +477,7 @@ On 2026-10-19 (America/Chicago), the owner requested the shared W3 application l
 # Owner visual standard — Software Factory v0.4.4
 
 The owner requires W3 Forge to match the W3 Books/BuildCost left sidebar layout and theme exactly, apart from Forge branding and app navigation items. Reuse the pinned shared W3Sidebar components and primitives without app-wide selector overrides or extra sidebar marketing panels. Use BuildCost typography, text sizes, spacing and surface styles throughout the engineering workspace. Keep the 240px desktop rail and standard responsive drawer, runtime-derived badges, signed-in footer, Admin Console link and Sign out. These refinements remain in dev/v0.4.4; the owner will package and deploy.
+
+# Owner scope — Agent profiles v0.4.6
+
+On 2026-10-21 (America/Chicago), the owner selected v0.4.6 after reviewing the scope for separate Agents and AI Connections pages, durable agent identities and immutable Markdown profile revisions, independent provider/model assignments, profile management, and seven complete unique v0.1.0 initial profiles. This approves the related app-owned source, additive forward migration, initial profile data, and verification on dev/v0.4.6. Preserve existing authentication and administrator access boundaries, dependency versions, console pin, and owner release gate. Do not run live migrations or deploy. Profiles cannot grant tool permissions, and this scope does not enable factory workers or automatic dispatch.

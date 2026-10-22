@@ -67,3 +67,6 @@ frontend/admin/.test-harness/
 !/frontend/admin/src/workspace/factory-hardware.css
 
 !/frontend/admin/src/workspace/ProviderCards.tsx
+
+!/frontend/admin/src/workspace/Agents.tsx
+!/frontend/admin/src/workspace/agents.css

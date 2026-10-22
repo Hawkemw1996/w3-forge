@@ -1,3 +1,4 @@
+import Agents from './Agents';
 import { ServiceCards, serviceLabel } from './ProviderCards';
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -68,7 +69,8 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
     { to: 'requests', label: 'Requests', icon: ClipboardList },
     { to: 'environments', label: 'Test Environments', icon: FlaskConical },
     { to: 'hardware', label: 'Hardware', icon: Activity },
-    { to: 'agents', label: 'Agents & AI', icon: Bot },
+    { to: 'agents', label: 'Agents', icon: Bot },
+    { to: 'ai-connections', label: 'AI Connections', icon: Bot },
     { to: 'assistant', label: 'Forge Assistant', icon: MessageSquare },
     { to: 'updates', label: 'Updates', icon: Bell },
   ];
@@ -129,7 +131,8 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
           <Route path="requests" element={<><ErrorBox error={snapshot.error} />{data && <Requests snapshot={data} selectedId={selectedRequest} onSelect={setSelectedRequest} mutate={mutate} busy={busy || !!authenticationError} models={models.isError ? [] : models.data?.models.map(item => item.name) ?? []} />}</>} />
           <Route path="environments" element={<><ErrorBox error={environments.error} />{environments.isPending && <p role="status">Checking test environments…</p>}{inventory && <Environments inventory={inventory} />}</>} />
           <Route path="hardware" element={<><ErrorBox error={hardware.error} />{hardware.isPending && <p role="status">Checking Forge hardware…</p>}{hardwareData && <ForgeHardwarePanel inventory={hardwareData} />}</>} />
-          <Route path="agents" element={<><ErrorBox error={services.error} />{services.isPending && <p role="status">Checking AI services…</p>}{serviceData && <><ServiceCards services={serviceData.services} onChecked={() => services.refetch()} disabled={!!authenticationError} /><p className="factory-footnote">Observed {stamp(serviceData.observedAt)}. Connections are verified from Forge configuration and live observations. Credentials are managed on the server.</p></>}</>} />
+          <Route path="agents" element={<Agents models={models.isError ? [] : models.data?.models.map(item => item.name) ?? []} disabled={!!authenticationError} />} />
+          <Route path="ai-connections" element={<><ErrorBox error={services.error} />{services.isPending && <p role="status">Checking AI services…</p>}{serviceData && <><ServiceCards services={serviceData.services} onChecked={() => services.refetch()} disabled={!!authenticationError} /><p className="factory-footnote">Observed {stamp(serviceData.observedAt)}. Connections are verified from Forge configuration and live observations. Credentials are managed on the server.</p></>}</>} />
           <Route path="assistant" element={null} />
           <Route path="updates" element={<><ErrorBox error={snapshot.error} />{data && <Updates notifications={data.notifications} runs={data.runs} onRequest={openRequest} mutate={mutate} busy={busy} />}</>} />
           <Route path="*" element={<Navigate to="." replace />} />
@@ -146,7 +149,8 @@ function pageDescription(title: string) {
     Requests: 'A FIFO feature queue with explicit planning, approval, evidence, and review.',
     'Test Environments': 'Live observations of registered Codex environments and Forge pipeline tests.',
     Hardware: 'CPU, memory, storage, and GPU hardware visible inside the Forge virtual machine.',
-    'Agents & AI': 'See which services Forge can use and the capabilities each connection provides.',
+    Agents: 'Review agent profiles, edit instructions, and choose the AI model for each role.',
+    'AI Connections': 'Check provider sign-ins, available local models, and connection test results.',
     'Forge Assistant': 'Work through a question with the models installed on Forge.',
     Updates: 'Review changes in the factory and the evidence behind an update.',
   };
@@ -173,7 +177,7 @@ function Dashboard({ snapshot, inventory, services, hardware, onRequest }: { sna
       <Section title="Needs your attention" description="Approvals, review, and blocked work.">
         {attention.length ? <div className="factory-attention-list">{attention.slice(0, 5).map(item => <button key={item.id} onClick={() => onRequest(item.id)}><span><strong>{item.title}</strong><small>{item.projectName} · #{item.sequence}</small></span><Status value={item.status} /></button>)}</div> : <div className="factory-inline-empty">No requests currently need your attention.</div>}
       </Section>
-      <Section title="AI services" action={<Link className="factory-text-link" to="agents">Manage visibility <ArrowRight size={14} /></Link>}>
+      <Section title="AI services" action={<Link className="factory-text-link" to="ai-connections">Manage connections <ArrowRight size={14} /></Link>}>
         <div className="factory-service-summary">{services ? services.map(service => <div key={service.id}><span className={`factory-service-dot factory-service-${service.status}`} /><strong>{service.name}</strong><span>{serviceLabel(service)}</span></div>) : <div className="factory-inline-empty">Service status is unavailable.</div>}</div>
       </Section>
       <ForgeHardwareSummary inventory={hardware} />
