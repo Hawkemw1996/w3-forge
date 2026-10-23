@@ -82,6 +82,8 @@ Record storage intentionally retains originals, with per-record bounds and a fin
 
 ## Validation
 
+The complete Linux workflow passed for implementation commit **a87e9a3b60865c7d61d2d1914b2890ff7af92a74**: [GitHub Actions run 39895760272](https://github.com/Hawkemw1996/w3-forge/actions/runs/39895760272). **472 tests passed**: 311 backend, 117 frontend, 28 operator/delegate, 12 console-integration and 4 Test Dev integration tests; zero failures or skips. Installation, immutable-console verification, parity, type checking and build passed. This report update changes documentation only.
+
 Exact repository commands and outcomes:
 
 | Command | Result |
@@ -118,11 +120,11 @@ These are deliberately noisy synthetic workloads. Local per-view processing p95 
 
 Implemented: gateway modes/budgets, original records, settings revisions/snapshots, usage sources, bounded retries/deadlines, interruption reconciliation, filtered metrics and existing-interface integration.
 
-Remaining acceptance: exact-commit Linux CI; operator-controlled migration/rollback rehearsal; a real installed Codex/Claude/Ollama smoke run through the existing protected Forge runtime. Browser verification uses the real built frontend and synthetic APIs; it is not live-provider or production verification. No new provider/framework was installed.
+Remaining acceptance: operator-controlled migration/rollback rehearsal; a real installed Codex/Claude/Ollama smoke run through the existing protected Forge runtime. Browser verification uses the real built frontend and synthetic APIs; it is not live-provider or production verification. No new provider/framework was installed.
 
 The existing worker still dispatches the seven established roles. The profile catalog is extensible for future roles, but this change does not invent dynamic role dispatch or new provider adapters. Historic calls are not backfilled with invented metrics. Output limits can stop execution; interrupted providers may have partial or unavailable output. Summary is deliberately deterministic and conservative, not a second summarizing LLM.
 
-The development changes are prepared for owner review. Production release acceptance remains conditional on the existing full checks and operator prerequisites. No production package, tag, main merge, credential rotation, server provisioning, live migration or deployment occurred.
+The implementation passed the complete Linux CI workflow and is prepared for owner review. Production release acceptance remains conditional on operator prerequisites. No production package, tag, main merge, credential rotation, server provisioning, live migration or deployment occurred.
 
 ## Files changed
 
