@@ -57,7 +57,7 @@ export function createOllama(options: { baseUrl?: string; preferredModel?: strin
       throw new AdminError(503, 'OLLAMA_UNAVAILABLE', 'Ollama could not be reached or returned an invalid model list.');
     }
   }
-  async function chat(model: string, messages: ChatMessage[], signal: AbortSignal, emit: (data: { delta: string }) => Promise<void>): Promise<void> {
+  async function chat(model: string, messages: ChatMessage[], signal: AbortSignal, emit: (data: { delta: string }) => Promise<void>, onUsage?: (value: { inputTokens: number | null; outputTokens: number | null }) => void): Promise<void> {
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
     const upstream = new AbortController();
     let rejectAbort!: (error: Error) => void;
@@ -78,7 +78,7 @@ export function createOllama(options: { baseUrl?: string; preferredModel?: strin
         const delta = event.message?.content ?? '';
         total += delta.length; if (total > 65536) throw Error();
         if (delta) await emit({ delta });
-        if (event.done === true) complete = true;
+        if (event.done === true) { complete = true; onUsage?.({ inputTokens: Number.isSafeInteger(event.prompt_eval_count) && event.prompt_eval_count >= 0 ? event.prompt_eval_count : null, outputTokens: Number.isSafeInteger(event.eval_count) && event.eval_count >= 0 ? event.eval_count : null }); }
       };
       while (!complete) {
         const { done, value } = await Promise.race([reader.read(), aborted]);

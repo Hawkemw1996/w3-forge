@@ -302,8 +302,11 @@ export class WorkspaceRuntime {
             const code = await closed;
             if (pid && group(pid) && !await stopGroup(pid))
                 fail('PROCESS_CLEANUP_FAILED');
-            if (problem)
-                fail(problem);
+            if (problem) {
+                const stopped=Error('EXECUTION_'+problem);
+                if(binary==='/usr/bin/docker'&&args.includes('--attach'))Object.assign(stopped,{executionEvidence:JSON.stringify({stdout:Buffer.concat(out).toString('utf8'),stderr:Buffer.concat(err).toString('utf8'),exitCode:code,reason:problem})});
+                throw stopped;
+            }
             if (spawnError || !pid)
                 fail('PROCESS_START_FAILED');
             return { code, stdout: Buffer.concat(out), stderr: Buffer.concat(err) };
@@ -581,6 +584,7 @@ export class WorkspaceRuntime {
         }
     }
     async test(j: ExecutionJob, commit: string, signal?: AbortSignal) {
+        const started=Date.now();
         return this.exclusive(j.id, async () => {
             abort(signal);
             const { meta, repo, binding } = await this.metadata(j);
@@ -608,7 +612,7 @@ export class WorkspaceRuntime {
                 if (created.code !== 0)
                     fail('TEST_RUNNER_UNAVAILABLE');
                 const run = await this.docker(j.id, ['start', '--attach', this.container(j.id)], { signal, timeoutMs: this.config.testTimeoutMs, maxBytes: 4194304 });
-                return { commit, passed: run.code === 0, exitCode: run.code, summary: (run.code === 42 ? 'Offline dependency installation failed.\n' : 'Configured checks: ' + binding.checks.join(', ') + '; exit ' + run.code + '\n') + safeLog(Buffer.concat([run.stdout, run.stderr]).toString('utf8')) };
+                return { commit, passed: run.code === 0, exitCode: run.code, durationMs:Date.now()-started, fullOutput: JSON.stringify({stdout:run.stdout.toString('utf8'),stderr:run.stderr.toString('utf8'),exitCode:run.code,checks:binding.checks,durationMs:Date.now()-started}), summary: (run.code === 42 ? 'Offline dependency installation failed.\n' : 'Configured checks: ' + binding.checks.join(', ') + '; exit ' + run.code + '\n') + safeLog(Buffer.concat([run.stdout, run.stderr]).toString('utf8')) };
             }
             finally {
                 if (!await this.stopContainer(j.id))

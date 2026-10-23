@@ -33,6 +33,8 @@ export function buildExecutionRouter(engine: ExecutionEngine) {
                 respond.err(res, 503, 'EXECUTION_UNAVAILABLE', 'Execution storage is unavailable. Check the Forge database and migrations.');
         }
     };
+    router.get('/metrics', handle(req=>engine.store.metrics.snapshot(req.query)));
+    router.get('/records/:id', handle(req=>engine.store.metrics.record(id(req))));
     router.get('/status', handle(() => engine.status()));
     router.get('/requests/:id/jobs', handle(async (req) => ({ jobs: await engine.store.list(id(req)) })));
     router.post('/requests/:id/start', handle(async (req) => {
@@ -44,6 +46,7 @@ export function buildExecutionRouter(engine: ExecutionEngine) {
         return job;
     }));
     router.get('/jobs/:id', handle(req => engine.store.get(id(req))));
+    router.get('/jobs/:id/records',handle(async req=>{await engine.store.get(id(req));return {records:await engine.store.metrics.records(id(req))};}));
     router.get('/jobs/:id/events', handle(async (req) => ({ events: await engine.store.events(id(req)) })));
     router.post('/jobs/:id/approve', handle(async (req) => { const job = await engine.store.approve(actor(req), id(req), revision(req)); void engine.tick(); return job; }));
     router.post('/jobs/:id/cancel', handle(req => engine.store.cancel(actor(req), id(req), revision(req))));

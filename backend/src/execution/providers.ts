@@ -4,15 +4,18 @@ import { readFile, writeFile, mkdir, rm, chmod, mkdtemp, open, rename } from 'no
 import path from 'node:path';
 import { planProviderInvocation, parseIdentity } from '../workspace/providerConnections';
 import { createOllama } from '../workspace/ollama';
+import { usage, type ModelUsage } from './metrics';
 import type { ExecutionProfile } from './types';
 export class ExecutionFailure extends Error {
-    constructor(public code: string, message: string) { super(message); }
+    constructor(public code: string, message: string, public evidence?: string) { super(message); }
 }
 export interface ModelResult {
     text: string;
     provider: string;
     requestedModel: string | null;
     resolvedModel: string | null;
+    usage?: ModelUsage;
+    rawOutput?: string;
 }
 const failure = () => new ExecutionFailure('PROVIDER_FAILED', 'The assigned provider did not complete. Check its connection, quota and CLI compatibility.');
 export function parseModelResult(provider: 'codex' | 'claude', output: string): string {
@@ -34,6 +37,17 @@ export function parseModelResult(provider: 'codex' | 'claude', output: string): 
     catch {
         throw failure();
     }
+}
+export function parseProviderUsage(provider: 'codex' | 'claude', output: string): ModelUsage {
+    try {
+        if(provider==='claude') { const data=JSON.parse(output); const u=data.usage; const extra=[u?.cache_creation_input_tokens,u?.cache_read_input_tokens];
+            const result=usage(u?.input_tokens,u?.output_tokens); if(result.inputTokens!==null)result.inputTokens+=extra.reduce((n,v)=>n+(typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:0),0);
+            return {...result,cachedInputTokens:extra.reduce((n,v)=>n+(typeof v==='number'&&Number.isSafeInteger(v)&&v>=0?v:0),0)};
+        }
+        const events=output.trim().split('\n').map(l=>JSON.parse(l)).filter(e=>e.type==='turn.completed');
+        if(events.length!==1)return usage(null,null);
+        return {...usage(events[0].usage?.input_tokens,events[0].usage?.output_tokens),cachedInputTokens:events[0].usage?.cached_input_tokens??null};
+    }catch{return usage(null,null);}
 }
 export function parseObject(text: string): Record<string, unknown> {
     try {
@@ -139,8 +153,9 @@ export class ModelBroker {
         const controller = new AbortController();
         const stop = () => controller.abort();
         signal.addEventListener('abort', stop, { once: true });
-        let timedOut = false;
-        const timer = setTimeout(() => { timedOut = true; stop(); }, this.timeoutMs);
+        let timedOut = false, captured = '';
+        let metrics: ModelUsage | undefined;
+        const timer = setTimeout(() => { timedOut = true; stop(); }, Math.min(this.timeoutMs, profile.executionSettings?.timeoutMs ?? this.timeoutMs));
         try {
             if (profile.provider === 'ollama') {
                 const available = await this.ollama.inventory(controller.signal);
@@ -149,13 +164,14 @@ export class ModelBroker {
                     throw new ExecutionFailure('MODEL_NOT_INSTALLED', 'The frozen Ollama model is not installed.');
                 let text = '';
                 await this.ollama.chat(model, [{ role: 'user', content: prompt }], controller.signal, async ({ delta }) => {
-                    text += delta;
+                    text += delta; captured=text;
                     if (text.length > 65536)
                         throw failure();
-                });
+                }, value => { metrics=usage(value.inputTokens,value.outputTokens); });
+                captured = text;
                 if (controller.signal.aborted)
                     throw failure();
-                return { text, provider: profile.provider, requestedModel: profile.model, resolvedModel: model };
+                return { text, provider: profile.provider, requestedModel: profile.model, resolvedModel: model, usage: metrics, rawOutput: text };
             }
             if (process.platform !== 'linux')
                 throw failure();
@@ -175,7 +191,7 @@ export class ModelBroker {
             await persist(file, { launching: true, cwd, bootId, createdAt: new Date().toISOString() });
             const text = await new Promise<string>((resolve, reject) => {
                 const child = spawn(invocation.file, invocation.args, { cwd, env: invocation.env, shell: false, detached: true, stdio: ['pipe', 'pipe', 'pipe'] });
-                let output = '', bytes = 0, stopped = false;
+                let output = '', stderr = '', bytes = 0, stopped = false;
                 const kill = () => {
                     stopped = true;
                     try {
@@ -210,12 +226,13 @@ export class ModelBroker {
                 });
                 child.stderr.on('data', (buf: Buffer) => {
                     bytes += buf.length;
-                    if (bytes > 262144)
-                        kill();
+                    if (bytes > 262144) kill(); else stderr += buf.toString('utf8');
                 });
                 child.stdin.on('error', () => kill());
                 child.once('error', () => { controller.signal.removeEventListener('abort', kill); reject(failure()); });
                 child.once('close', code => {
+                    captured = JSON.stringify({stdout:output,stderr,outputLimitExceeded:bytes>262144});
+                    metrics = parseProviderUsage(profile.provider as 'codex'|'claude',output);
                     controller.signal.removeEventListener('abort', kill);
                     // Kill residual descendants before resolving or deleting the operation record.
                     try {
@@ -238,14 +255,13 @@ export class ModelBroker {
             if (!await this.recover(jobId))
                 throw new ExecutionFailure('CLEANUP_REQUIRED', 'Provider cleanup must be verified before continuing.');
             await rm(cwd, { recursive: true, force: true });
-            return { text, provider: profile.provider, requestedModel: profile.model, resolvedModel: null };
+            return { text, provider: profile.provider, requestedModel: profile.model, resolvedModel: null, usage: metrics, rawOutput: captured };
         }
         catch (e) {
             if (timedOut)
-                throw new ExecutionFailure('PROVIDER_TIMEOUT', 'The assigned provider exceeded its execution deadline.');
-            if (e instanceof ExecutionFailure)
-                throw e;
-            throw failure();
+                throw new ExecutionFailure('PROVIDER_TIMEOUT', 'The assigned provider exceeded its execution deadline.', captured);
+            if (e instanceof ExecutionFailure) { e.evidence ??= captured; throw e; }
+            const failed=failure(); failed.evidence=captured; throw failed;
         }
         finally {
             clearTimeout(timer);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, apiGet, apiPost, errorMessages } from '../lib/authApi';
 import { AgentMarkdown } from './Agents';
+import ExecutionRecords from './ExecutionRecords';
 import './execution.css';
 export interface ExecutionJob {
     id: string;
@@ -127,6 +128,7 @@ export default function ExecutionPanel({ request, disabled, onChanged }: {
    <dl className="execution-facts"><div><dt>Branch</dt><dd><code>{job.context.request.branch}</code></dd></div><div><dt>Development attempt</dt><dd>{job.round === 0 ? 'Not started' : job.round + ' of 3'}</dd></div><div><dt>Base commit</dt><dd><code>{job.baseCommit || 'Not recorded yet'}</code></dd></div><div><dt>Candidate commit</dt><dd><code>{job.candidateCommit || 'Not recorded yet'}</code></dd></div></dl>
    {job.specification && <details className="execution-details" open={job.status === 'awaiting_approval'}><summary>Specification{job.status === 'awaiting_approval' ? ' · review before approving' : ''}</summary><div className="execution-markdown"><AgentMarkdown source={job.specification}/></div></details>}
    <details className="execution-details"><summary>Frozen profiles and model assignments · {job.context.profiles.length} profiles</summary><p className="factory-muted">This run keeps these profile versions and model assignments even if the Agents or AI Connections settings change.</p><div className="execution-profile-list">{job.context.profiles.map(p => <div className="execution-profile" key={p.id}><strong>{p.name}</strong> <span className="badge">v{p.profileVersion}</span><p>{p.purpose}</p><p className="factory-muted">{p.provider} · {p.model || 'Provider default model'}</p><details><summary>Profile Markdown</summary><div className="execution-markdown"><AgentMarkdown source={p.profileMarkdown}/></div><p className="execution-checksum">Checksum: <code>{p.profileChecksum}</code></p></details></div>)}</div><details className="execution-rules"><summary>Project rules · v{String(job.context.rules.version)}</summary><div className="execution-markdown"><AgentMarkdown source={job.context.rules.markdown}/></div><p className="execution-checksum"><code>{job.context.rules.checksum}</code></p></details></details>
+   <ExecutionRecords key={job.id} jobId={job.id}/>
    <div className="execution-evidence-heading"><div><h3>Execution evidence</h3><p className="factory-muted">Recorded factory events. Earlier administrator-reported receipts are separate.</p></div>{diff && <button className="btn" onClick={download}>Download candidate diff</button>}</div><ErrorBox error={evidence.error}/>
    {!evidence.isError && <ol className="execution-events">{events.map(e => <li key={e.id}><details><summary><strong>{e.kind.replace(/[_-]+/g, ' ')}</strong><time dateTime={e.createdAt}>{date(e.createdAt)}</time></summary><pre>{e.kind === 'candidate_diff' ? String(e.data.diff) : JSON.stringify(e.data, null, 2)}</pre></details></li>)}</ol>}
    </div>}

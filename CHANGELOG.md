@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.8 — Context Gateway and agent observability (unreleased)
+
+- Add configurable Full, Structured, Compact and Summary views while retaining immutable original execution records. Keep required context and failure evidence; block over-budget prompts.
+- Persist provider attempts, usage sources, timeouts, retries, interrupted calls and configured model-specific cost estimates. Add filtered metrics to Agents and the dashboard.
+- Version execution settings independently from Markdown instructions and model assignments, and freeze all revisions per job.
+- Retain complete command output alongside previews, including bounded interrupted output, and provide protected record viewing and downloads with display redaction.
+- Preserve the seven profiles, existing W3 layout, Core authorization, shared console pin and owner-controlled release gates. No new dependencies.
+
+
 ## v0.4.7 — Factory execution (unreleased)
 
 - Add durable, revision-checked execution jobs with frozen request/rules/profile/model snapshots and append-only evidence.

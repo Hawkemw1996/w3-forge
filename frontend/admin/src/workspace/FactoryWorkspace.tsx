@@ -1,5 +1,6 @@
 import ExecutionPanel, {type ExecutionJob} from './ExecutionPanel';
 import Agents from './Agents';
+import AgentMetrics from './AgentMetrics';
 import { ServiceCards, serviceLabel } from './ProviderCards';
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -127,7 +128,7 @@ export default function FactoryWorkspace({ assistant, signedInAs, onSignOut, sig
         <div className="factory-page-heading"><div><h1>{pageTitle === 'Dashboard' ? 'Engineering overview' : pageTitle}</h1><p>{pageTitle === 'Dashboard' ? 'Every change starts with a project, follows its rules, and leaves a verified record.' : pageDescription(pageTitle)}</p></div>
           {pageTitle === 'Dashboard' && <Link className="btn btn-primary" to="requests"><Plus size={16} /> New request</Link>}</div>
         <Routes>
-          <Route index element={<><ErrorBox error={snapshot.error} />{snapshot.isPending && <p className="factory-muted" role="status">Loading the software factory…</p>}{data && <Dashboard snapshot={data} inventory={inventory} services={serviceData?.services} hardware={hardwareData} onRequest={openRequest} />}<ErrorBox error={environments.error} /><ErrorBox error={services.error} /><ErrorBox error={hardware.error} /></>} />
+          <Route index element={<><ErrorBox error={snapshot.error} />{snapshot.isPending && <p className="factory-muted" role="status">Loading the software factory…</p>}{data && <Dashboard snapshot={data} inventory={inventory} services={serviceData?.services} hardware={hardwareData} onRequest={openRequest} />}{data&&<AgentMetrics compact/>}<ErrorBox error={environments.error} /><ErrorBox error={services.error} /><ErrorBox error={hardware.error} /></>} />
           <Route path="projects" element={<><ErrorBox error={snapshot.error} />{data && <Projects projects={data.projects} mutate={mutate} busy={busy || !!authenticationError} />}</>} />
           <Route path="requests" element={<><ErrorBox error={snapshot.error} />{data && <Requests snapshot={data} selectedId={selectedRequest} onSelect={setSelectedRequest} mutate={mutate} busy={busy || !!authenticationError} models={models.isError ? [] : models.data?.models.map(item => item.name) ?? []} />}</>} />
           <Route path="environments" element={<><ErrorBox error={environments.error} />{environments.isPending && <p role="status">Checking test environments…</p>}{inventory && <Environments inventory={inventory} />}</>} />

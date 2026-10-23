@@ -73,3 +73,9 @@ frontend/admin/.test-harness/
 
 !/frontend/admin/src/workspace/ExecutionPanel.tsx
 !/frontend/admin/src/workspace/execution.css
+
+# App-owned agent observability.
+!/frontend/admin/src/workspace/AgentExecutionSettings.tsx
+!/frontend/admin/src/workspace/AgentMetrics.tsx
+!/frontend/admin/src/workspace/ExecutionRecords.tsx
+!/frontend/admin/src/workspace/agent-metrics.css

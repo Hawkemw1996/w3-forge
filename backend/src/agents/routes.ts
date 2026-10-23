@@ -23,6 +23,7 @@ export function buildAgentRouter(db: Database, options: AgentServiceOptions = {}
   router.get('/:id/history',handle(req=>{actor(req);return service.history(id(req));}));
   router.post('/:id/profile',handle(req=>service.updateProfile(actor(req),id(req),req.body)));
   router.post('/:id/assignment',handle(req=>service.assign(actor(req),id(req),req.body)));
+  router.post('/:id/execution',handle(req=>service.configure(actor(req),id(req),req.body)));
   router.post('/:id/status',handle(req=>service.status(actor(req),id(req),req.body)));
   router.post('/:id/delete',handle(req=>service.delete(actor(req),id(req),req.body)));
   router.post('/:id/duplicate',handle(req=>service.duplicate(actor(req),id(req),req.body)));

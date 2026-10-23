@@ -1,7 +1,7 @@
 {
   "name": "w3-forge-backend",
   "private": true,
-  "version": "0.4.7",
+  "version": "0.4.8",
   "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {

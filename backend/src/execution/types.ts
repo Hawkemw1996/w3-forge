@@ -1,3 +1,4 @@
+import type { ExecutionSettings } from '../agents/settings';
 export const EXECUTION_STATUSES = ['queued', 'planning', 'awaiting_approval', 'developing', 'testing', 'reviewing', 'ready', 'blocked', 'cancelled'] as const;
 export type ExecutionStatus = typeof EXECUTION_STATUSES[number];
 export type ExecutionNextStage = 'planning' | 'developing';
@@ -18,6 +19,8 @@ export interface ExecutionProfile {
     model: string | null;
     revision: number;
     assignmentRevision: number;
+    executionSettings?: ExecutionSettings;
+    executionRevision?: number;
     enabled: true;
 }
 export interface ExecutionContext {

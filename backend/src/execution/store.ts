@@ -1,6 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto';
 import type { Database, Queryable } from '../db/database';
 import { audit, type AuditActor } from '../db/audit';
+import { executionSettings } from '../agents/settings';
+import { ExecutionMetrics, keepRecord, beginCall, finishCall, interruptCalls } from './metrics';
+import type { ExecutionProfile } from './types';
 import { AdminError } from '../admin/envelope';
 import { EXECUTION_AGENT_SLUGS, EXECUTION_REVIEW_ROLES, type ExecutionContext, type ExecutionJob, type ExecutionEvent, type ExecutionPatch, type ExecutionStatus } from './types';
 type Row = Record<string, any>;
@@ -54,7 +57,14 @@ async function changed(q: Queryable, id: string) {
     return j;
 }
 export class ExecutionStore {
-    constructor(private db: Database) { }
+    readonly metrics: ExecutionMetrics;
+    constructor(private db: Database) { this.metrics=new ExecutionMetrics(db); }
+    private observe<T>(id: string, token: string, fn: (q: Queryable,j: ExecutionJob)=>Promise<T>, allowCancel=true) {
+        return this.db.transaction(async q=>{const s=await slot(q),j=await locked(q,id);owned(s,j,token,allowCancel);return fn(q,j);});
+    }
+    record(id: string, token: string, kind: string, content: string) { return this.observe(id,token,q=>keepRecord(q,id,kind,content)); }
+    beginCall(id:string,token:string,profile:ExecutionProfile,original:string,prompt:string,attempt:number) { return this.observe(id,token,(q,j)=>beginCall(q,j,profile,original,prompt,attempt),false); }
+    finishCall(id:string,token:string,observationId:string,result:Parameters<typeof finishCall>[3],status:Parameters<typeof finishCall>[4],code?:string) { return this.observe(id,token,q=>finishCall(q,id,observationId,result,status,code)); }
     async pendingRecovery() { const r = (await this.db.query<Row>(select + " WHERE j.reconciliation_required=true AND s.job_id=j.id LIMIT 1")).rows[0]; return r ? dto(r) : null; }
     get(id: string) { return load(this.db, id); }
     async list(requestId: string) { return (await this.db.query<Row>(select + ' WHERE j.request_id=$1 ORDER BY j.created_at DESC,j.id DESC LIMIT 100', [requestId])).rows.map(dto); }
@@ -82,10 +92,10 @@ export class ExecutionStore {
             const rules = (await q.query<Row>('SELECT * FROM public.factory_rules WHERE project_id=$1 AND version=$2', [r.project_id, r.rules_version])).rows[0];
             if (!rules || rules.checksum !== r.rules_checksum || hash(rules.content) !== rules.checksum)
                 fail('EXECUTION_RULES_INVALID', 'Pinned project rules could not be verified.');
-            const rows = (await q.query<Row>('SELECT a.*,p.name,p.purpose,p.version,p.content,p.checksum,m.provider,m.model FROM public.factory_agents a JOIN public.factory_agent_profiles p ON p.agent_id=a.id AND p.revision=a.profile_revision JOIN public.factory_agent_assignments m ON m.agent_id=a.id AND m.revision=a.assignment_revision WHERE a.slug=ANY($1::text[]) AND a.deleted_at IS NULL ORDER BY a.slug FOR SHARE OF a', [[...EXECUTION_AGENT_SLUGS]])).rows;
+            const rows = (await q.query<Row>('SELECT a.*,p.name,p.purpose,p.version,p.content,p.checksum,m.provider,m.model,e.config execution_settings FROM public.factory_agents a JOIN public.factory_agent_profiles p ON p.agent_id=a.id AND p.revision=a.profile_revision JOIN public.factory_agent_assignments m ON m.agent_id=a.id AND m.revision=a.assignment_revision JOIN public.factory_agent_execution_settings e ON e.agent_id=a.id AND e.revision=a.execution_revision WHERE a.slug=ANY($1::text[]) AND a.deleted_at IS NULL ORDER BY a.slug FOR SHARE OF a', [[...EXECUTION_AGENT_SLUGS]])).rows;
             if (rows.length !== 7 || rows.some(x => !x.enabled || !x.provider || hash(x.content) !== x.checksum))
                 fail('EXECUTION_PROFILES_INVALID', 'Enable and assign all seven verifiable agent profiles.');
-            const context: ExecutionContext = { request: { id: r.id, title: r.title, description: r.description, acceptanceCriteria: r.acceptance_criteria, repositoryUrl: r.repository_url, branch: r.branch, revision: r.revision, rulesVersion: r.rules_version, rulesChecksum: r.rules_checksum, projectName: r.project_name }, rules: { version: rules.version, title: rules.title, checksum: rules.checksum, markdown: rules.content }, profiles: EXECUTION_AGENT_SLUGS.map(slug => { const p = rows.find(x => x.slug === slug)!; return { id: p.id, slug, name: p.name, purpose: p.purpose, profileVersion: p.version, profileMarkdown: p.content, profileChecksum: p.checksum, provider: p.provider, model: p.model, revision: p.profile_revision, assignmentRevision: p.assignment_revision, enabled: true }; }), actor };
+            const context: ExecutionContext = { request: { id: r.id, title: r.title, description: r.description, acceptanceCriteria: r.acceptance_criteria, repositoryUrl: r.repository_url, branch: r.branch, revision: r.revision, rulesVersion: r.rules_version, rulesChecksum: r.rules_checksum, projectName: r.project_name }, rules: { version: rules.version, title: rules.title, checksum: rules.checksum, markdown: rules.content }, profiles: EXECUTION_AGENT_SLUGS.map(slug => { const p = rows.find(x => x.slug === slug)!; return { id: p.id, slug, name: p.name, purpose: p.purpose, profileVersion: p.version, profileMarkdown: p.content, profileChecksum: p.checksum, provider: p.provider, model: p.model, revision: p.profile_revision, assignmentRevision: p.assignment_revision, executionSettings: executionSettings(p.execution_settings), executionRevision: p.execution_revision, enabled: true }; }), actor };
             const encoded = canonical(context);
             if (Buffer.byteLength(encoded) > 120000)
                 fail('EXECUTION_CONTEXT_TOO_LARGE', 'Shorten project rules or profiles before starting.');
@@ -239,6 +249,7 @@ export class ExecutionStore {
             const j = await locked(q, s.job_id);
             await q.query('UPDATE public.factory_execution_jobs SET status=\'blocked\',reconciliation_required=true,error_code=\'WORKER_INTERRUPTED\',summary=\'Worker interrupted. Verify runtime cleanup before retrying.\',revision=revision+1,updated_at=now() WHERE id=$1', [j.id]);
             await q.query('UPDATE public.factory_execution_slot SET owner_token=NULL,heartbeat_at=NULL WHERE singleton=true');
+            await interruptCalls(q,j.id);
             await append(q, j.id, 'worker_interrupted', {});
             return changed(q, j.id);
         });
