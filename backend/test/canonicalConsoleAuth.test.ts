@@ -32,7 +32,7 @@ beforeAll(async () => {
   ({ createTerminalRuntime } = await import('../src/console/terminal/runtime'));
 });
 afterEach(() => { for (const runtime of runtimes.splice(0)) runtime.manager.shutdown(); });
-afterAll(async () => { vi.unstubAllEnvs(); await fs.rm(root, { recursive: true, force: true }); });
+afterAll(async () => { vi.unstubAllEnvs(); await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }); });
 
 function setup() {
   const fixture = createCoreFixture();

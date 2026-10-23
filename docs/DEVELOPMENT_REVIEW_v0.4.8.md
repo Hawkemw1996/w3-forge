@@ -82,7 +82,7 @@ Record storage intentionally retains originals, with per-record bounds and a fin
 
 ## Validation
 
-The complete Linux workflow passed for implementation commit **a87e9a3b60865c7d61d2d1914b2890ff7af92a74**: [GitHub Actions run 39895760272](https://github.com/Hawkemw1996/w3-forge/actions/runs/39895760272). **472 tests passed**: 311 backend, 117 frontend, 28 operator/delegate, 12 console-integration and 4 Test Dev integration tests; zero failures or skips. Installation, immutable-console verification, parity, type checking and build passed. This report update changes documentation only.
+The complete Linux workflow passed for implementation commit **a87e9a3b60865c7d61d2d1914b2890ff7af92a74**: [GitHub Actions run 39895760272](https://github.com/Hawkemw1996/w3-forge/actions/runs/39895760272). **472 tests passed**: 311 backend, 117 frontend, 28 operator/delegate, 12 console-integration and 4 Test Dev integration tests; zero failures or skips. Installation, immutable-console verification, parity, type checking and build passed. A documentation-only follow-up exposed an existing asynchronous audit-file teardown race on Linux (all 311 assertions passed, fixture removal returned ENOTEMPTY). The app-owned auth integration test now uses five bounded filesystem cleanup retries at 50 ms intervals. No assertions or production behavior changed.
 
 Exact repository commands and outcomes:
 
@@ -99,7 +99,7 @@ Exact repository commands and outcomes:
 | node scripts/benchmark-context.cjs | Passed; all required evidence markers retained. |
 | git diff --check | Passed. |
 
-No test was removed or skipped to obtain a pass. The Windows Bash failures are reported rather than weakening shell:false. Linux CI on the exact development commit must pass the existing full workflow, including console verification, parity and native script tests, before release acceptance.
+No test was removed or skipped to obtain a pass. The canonical auth fixture teardown retains errors after bounded retries rather than ignoring them. The Windows Bash failures are reported rather than weakening shell:false. Linux CI on the exact development commit must pass the existing full workflow, including console verification, parity and native script tests, before release acceptance.
 
 Internal browser screenshots and full local logs are retained in ignored cache files. They use synthetic data and are not release artifacts.
 
@@ -147,6 +147,7 @@ The implementation passed the complete Linux CI workflow and is prepared for own
 - backend/src/execution/types.ts
 - backend/src/workspace/ollama.ts
 - backend/test/agentObservability.test.ts
+- backend/test/canonicalConsoleAuth.test.ts
 - backend/test/consoleReadiness.test.ts
 - backend/test/contextGateway.test.ts
 - backend/test/observabilityEngine.test.ts
