@@ -1,4 +1,4 @@
-# Factory execution — v0.4.7
+# Factory execution - v0.4.7
 
 The Requests page has a Factory execution panel. Start creates an immutable context from the queued FIFO request, project rules and all seven enabled profile/assignment revisions. Qwen/Ollama coordinates planning; the Specification Writer can request bounded repository files. The owner approves the saved specification before a developer runs. Forge applies structured text changes in a separate clone, commits the candidate, runs configured checks in Docker, then collects independent code, security, UI and UX verdicts for that commit. A failed check or CHANGES verdict can trigger two corrections, for three development attempts total.
 
@@ -31,3 +31,17 @@ Candidate clones and immutable evidence are retained for review. The operator ma
 ## Rollback
 
 Restore the prior application release through the normal release gate. Retain migration 004 tables, contexts, evidence and candidate workspaces. Do not reverse-migrate or delete persistent records. Stop and reconcile active workers before rollback or runtime reconfiguration. Existing manual workflows and profiles remain readable; an active automated request must be cancelled through its execution controls before manual mutation.
+
+## Offline native-build correction - v0.4.8
+
+The Node Bookworm execution container uses `NPM_CONFIG_NODEDIR=/usr/local`
+so node-gyp builds against the headers bundled with its Node runtime rather
+than trying to download headers without network access. The `/work` tmpfs
+explicitly permits execution so dependency install scripts can run binaries
+such as esbuild. Network isolation, non-root execution, dropped capabilities,
+the read-only container root and the existing resource limits remain in place.
+
+Operator verification must use both settings. Passing a manually corrected
+container does not update the installed Forge runner: package and deploy the
+corrected Forge source through the existing pipeline before starting jobs.
+The selected image must contain matching Node headers, Python, make and g++.
