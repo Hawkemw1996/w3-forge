@@ -13,10 +13,44 @@ function fixture(s:{failTests?:boolean;changeReviews?:boolean;visual?:boolean;ma
  const response=(p:ExecutionProfile,v:unknown)=>({text:JSON.stringify(v),provider:p.provider,requestedModel:p.model,resolvedModel:p.provider==='ollama'?'qwen-fixture':null});
  const runtime:RuntimePort={prepare:async()=>({baseCommit:BASE,files:['AGENTS.md','package.json','backend/src/pilot.ts']}),read:async(_j,paths)=>paths.map(p=>({path:p,content:p==='package.json'?'{}':'# Scoped repository context'})),apply:async(_j,_changes,round)=>{applied.push(round);return{commit:COMMITS[round-1],diff:'diff --git a/backend/src/pilot.ts b/backend/src/pilot.ts\n+change\n',visual:!!s.visual};},test:async(_j,commit)=>{checked.push(commit);return{commit,passed:!s.failTests&&!s.dependencyFailure,exitCode:s.dependencyFailure?42:s.failTests?1:0,summary:s.failTests?'Configured check failed.':'Configured check passed.'};},recover:async()=>true,dispose:async()=>undefined};
  const broker:BrokerPort={recover:async()=>true,invoke:async(_id,p,prompt)=>{calls.push({role:p.slug,prompt});let value:unknown;if(p.slug==='orchestrator')value=prompt.includes('Prepare the owner handoff')?{summary:'Verified backend candidate; owner release remains.'}:{summary:'Coordinate scoped change.',instructions:'Inspect source and write checkable criteria.'};else if(p.slug==='specification-writer')value={specification:'# Specification\nImplement and check backend behavior.'};else if(p.slug==='developer'){value=s.malformed?{summary:'Malformed',changes:'not an array'}:{summary:'Implemented scoped behavior.',changes:[{path:'backend/src/pilot.ts',content:'export const result=true;\n'}]};if(s.hold)return new Promise(r=>{release=r;});}else value={verdict:s.changeReviews?'CHANGES':['ui-reviewer','ux-reviewer'].includes(p.slug)? (s.uiPass?'PASS':'NOT_APPLICABLE'):'PASS',reason:s.changeReviews?'Acceptance criterion unmet.':'Backend only; no visual or interaction effect.'};return response(p,value);}};
- const engine=new ExecutionEngine(f.store,runtime,broker);engines.push(engine);return{engine,calls,applied,checked,release:()=>release?.(response({provider:'codex',model:null} as ExecutionProfile,{summary:'Late completion.',changes:[{path:'backend/src/pilot.ts',content:'late'}]}))};
+ const engine=new ExecutionEngine(f.store,runtime,broker);engines.push(engine);return{engine,runtime,broker,calls,applied,checked,release:()=>release?.(response({provider:'codex',model:null} as ExecutionProfile,{summary:'Late completion.',changes:[{path:'backend/src/pilot.ts',content:'late'}]}))};
 }
 async function approve(id:string,e:ExecutionEngine){await e.tick();const p=await wait(id,'awaiting_approval');await f.store.approve(actor,id,p.revision);await new Promise(r=>setTimeout(r,0));await e.tick();}
 describe('actual factory orchestration with controlled adapters',()=>{
+ it('plans a repository with an oversized README without dropping governance context',async()=>{
+  const j=await f.start(),s=fixture(),readPaths:string[][]=[];
+  const readme='LARGE_README_BODY'+ 'r'.repeat(80431);
+  const agents='# REQUIRED_REPOSITORY_GOVERNANCE\n'+'a'.repeat(19286);
+  const inventory=['README.md','AGENTS.md','package.json',...Array.from({length:750},(_,i)=>`backend/src/example-${i.toString().padStart(4,'0')}.ts`)];
+  s.runtime.prepare=async()=>({baseCommit:BASE,files:inventory});
+  s.runtime.read=async(_job,paths)=>{readPaths.push(paths);return paths.map(path=>({path,content:path==='README.md'?readme:path==='AGENTS.md'?agents:'{}'}));};
+  await s.engine.tick();await wait(j.id,'awaiting_approval');
+  expect(s.calls.map(c=>c.role)).toEqual(['orchestrator','specification-writer']);
+  expect(readPaths.every(paths=>!paths.includes('README.md'))).toBe(true);
+  for(const call of s.calls){
+   expect(call.prompt).toContain('README.md');
+   expect(call.prompt).not.toContain('LARGE_README_BODY');
+   expect(call.prompt).toContain('REQUIRED_REPOSITORY_GOVERNANCE');
+   expect(call.prompt).toContain('Preserve the requested scope.');
+   expect(Buffer.byteLength(call.prompt)).toBeLessThan(120000);
+  }
+ });
+ it('still supplies the complete README when an agent explicitly requests it',async()=>{
+  const j=await f.start(),s=fixture(),reads:string[][]=[];
+  const invoke=s.broker.invoke.bind(s.broker);
+  s.runtime.prepare=async()=>({baseCommit:BASE,files:['README.md','AGENTS.md','package.json']});
+  s.runtime.read=async(_job,paths)=>{reads.push(paths);return paths.map(path=>({path,content:path==='README.md'?'README_REQUESTED_BODY':'# Mandatory context'}));};
+  let requested=false,delivered=false;
+  s.broker.invoke=async(id,profile,prompt,signal)=>{
+   if(profile.slug==='orchestrator'&&!requested){requested=true;return{text:JSON.stringify({readFiles:['README.md']}),provider:profile.provider,requestedModel:profile.model,resolvedModel:'qwen-fixture'};}
+   if(profile.slug==='orchestrator')delivered=prompt.includes('README_REQUESTED_BODY');
+   return invoke(id,profile,prompt,signal);
+  };
+  await s.engine.tick();await wait(j.id,'awaiting_approval');
+  expect(requested).toBe(true);expect(delivered).toBe(true);
+  expect(reads[0]).not.toContain('README.md');
+  expect(reads.some(paths=>paths.includes('README.md'))).toBe(true);
+ });
  it('waits for approval then checks and reviews the same candidate',async()=>{const j=await f.start(),s=fixture();await s.engine.tick();const p=await wait(j.id,'awaiting_approval');expect(p.baseCommit).toBe(BASE);expect(s.calls.map(c=>c.role)).toEqual(['orchestrator','specification-writer']);expect(s.applied).toEqual([]);await s.engine.tick();expect(s.checked).toEqual([]);await f.store.approve(actor,j.id,p.revision);const done=await wait(j.id,'ready',s.engine);expect(done.candidateCommit).toBe(COMMITS[0]);expect(s.checked).toEqual([COMMITS[0]]);const ev=await f.store.events(j.id);expect(ev.filter(e=>e.kind==='review')).toHaveLength(4);expect(ev.filter(e=>e.kind==='review').every(e=>e.data.commit===done.candidateCommit)).toBe(true);expect(ev.find(e=>e.kind==='handoff')?.data).toMatchObject({commit:COMMITS[0],published:false});expect(s.calls.every(c=>c.prompt.includes('Preserve the requested scope.'))).toBe(true);});
  it('blocks malformed developer output before applying changes',async()=>{const j=await f.start(),s=fixture({malformed:true});await approve(j.id,s.engine);const b=await wait(j.id,'blocked',s.engine);expect(b.errorCode).toBe('INVALID_CHANGESET');expect(s.applied).toEqual([]);expect(s.checked).toEqual([]);});
  it('blocks unavailable offline dependencies without futile corrections',async()=>{const j=await f.start(),s=fixture({dependencyFailure:true});await approve(j.id,s.engine);expect((await wait(j.id,'blocked',s.engine)).errorCode).toBe('OFFLINE_DEPENDENCIES_UNAVAILABLE');expect(s.applied).toEqual([1]);expect(s.checked).toHaveLength(1);});

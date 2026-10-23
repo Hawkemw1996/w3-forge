@@ -45,3 +45,16 @@ Operator verification must use both settings. Passing a manually corrected
 container does not update the installed Forge runner: package and deploy the
 corrected Forge source through the existing pipeline before starting jobs.
 The selected image must contain matching Node headers, Python, make and g++.
+## Initial prompt size - v0.4.8
+
+The initial agent prompt includes the project rules, current role profile,
+repository AGENTS.md instructions and root package.json. README.md remains in
+the repository inventory and is available through an explicit readFiles request;
+its body is no longer automatically repeated in every agent prompt. This avoids
+blocking planning on large repository documentation before an agent can select
+relevant files. Explicit file requests remain subject to the existing context
+budget and 120,000-byte prompt cap. No mandatory instructions are truncated.
+
+A blocked run can be retried after deploying this prompt-assembly correction:
+retry retains its frozen source context and settings but uses the installed
+runner. Retain the earlier blocked evidence for review.

@@ -128,7 +128,7 @@ export class ExecutionEngine {
             const previous = (await this.store.events(job.id)).find(e => e.kind === 'model' && e.data.role === slug && typeof e.data.resolvedModel === 'string');
             if (profile.provider === 'ollama' && previous)
                 profile = { ...profile, model: String(previous.data.resolvedModel) };
-            const files = await this.runtime!.read(job, inventory.filter(p => /(^|\/)AGENTS\.md$/.test(p) || p === 'README.md' || p === 'package.json'));
+            const files = await this.runtime!.read(job, inventory.filter(p => /(^|\/)AGENTS\.md$/.test(p) || p === 'package.json'));
             const settings = executionSettings(profile.executionSettings);
             const context = { request: job.context.request, rules: job.context.rules, baseCommit: job.baseCommit, candidateCommit: job.candidateCommit, specification: job.specification, round: job.round, inventory: inventory.slice(0, 1500), files, extra };
             let requested: unknown[] = [];
